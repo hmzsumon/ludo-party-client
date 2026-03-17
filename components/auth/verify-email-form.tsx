@@ -2,33 +2,74 @@
 
 import { CircleAlert, Mail } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "react-hot-toast";
 
 import Logo from "@/components/branding/logo";
+import {
+  useResendVerificationEmailMutation,
+  useVerifyEmailMutation,
+} from "@/redux/features/auth/authApi";
 
 type Props = {
   email?: string;
 };
 
-export default function VerifyEmailForm({
-  email = "hmzwork2222@gmail.com",
-}: Props): JSX.Element {
+function getApiError(error: any): string {
+  return (
+    error?.data?.message ||
+    error?.message ||
+    "Something went wrong. Please try again."
+  );
+}
+
+export default function VerifyEmailForm({ email = "" }: Props): JSX.Element {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const queryEmail = searchParams.get("email");
+  const queryCode = searchParams.get("code");
+  const currentEmail = queryEmail || email;
+
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState("");
+
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  const maskedEmail = maskEmail(email);
+  const [verifyEmail, { isLoading: isVerifying }] = useVerifyEmailMutation();
+  const [resendVerificationEmail, { isLoading: isResending }] =
+    useResendVerificationEmailMutation();
 
+  useEffect(() => {
+    if (!queryCode) return;
+
+    const cleaned = queryCode.replace(/\D/g, "").slice(0, 6);
+    if (!cleaned) return;
+
+    const next = ["", "", "", "", "", ""];
+    cleaned.split("").forEach((char, index) => {
+      next[index] = char;
+    });
+
+    setOtp(next);
+  }, [queryCode]);
+
+  /* ────────── Handle OTP Change ────────── */
   const handleChange = (value: string, index: number) => {
     const digit = value.replace(/\D/g, "").slice(-1);
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
 
+    if (otpError) setOtpError("");
+
     if (digit && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
+  /* ────────── Handle OTP Backspace ────────── */
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>,
     index: number,
@@ -38,8 +79,10 @@ export default function VerifyEmailForm({
     }
   };
 
+  /* ────────── Handle OTP Paste ────────── */
   const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault();
+
     const pasted = event.clipboardData
       .getData("text")
       .replace(/\D/g, "")
@@ -53,24 +96,60 @@ export default function VerifyEmailForm({
     });
 
     setOtp(next);
-
-    const focusIndex = Math.min(pasted.length, 5);
-    inputRefs.current[focusIndex]?.focus();
+    setOtpError("");
   };
 
-  const code = otp.join("");
-
-  const handleSubmit = (event: React.FormEvent) => {
+  /* ────────── Submit Verify Email ────────── */
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log({
-      email,
-      code,
-    });
+
+    const code = otp.join("");
+
+    if (!currentEmail) {
+      setOtpError("Email address is missing");
+      return;
+    }
+
+    if (code.length !== 6) {
+      setOtpError("Please enter the 6-digit verification code");
+      return;
+    }
+
+    try {
+      const response = await verifyEmail({
+        email: currentEmail.trim().toLowerCase(),
+        code,
+      }).unwrap();
+
+      toast.success(response?.message || "Email verified successfully");
+      router.push("/login");
+    } catch (error: any) {
+      setOtpError(getApiError(error));
+    }
+  };
+
+  /* ────────── Resend Verification Email ────────── */
+  const handleResend = async () => {
+    try {
+      if (!currentEmail) {
+        setOtpError("Email address is missing");
+        return;
+      }
+
+      const response = await resendVerificationEmail({
+        email: currentEmail.trim().toLowerCase(),
+      }).unwrap();
+
+      toast.success(response?.message || "Verification code sent");
+      setOtpError("");
+    } catch (error: any) {
+      setOtpError(getApiError(error));
+    }
   };
 
   return (
     <div className="flex flex-1 flex-col items-center">
-      <div className=" scale-90 sm:scale-100">
+      <div className="scale-90 sm:scale-100">
         <Logo />
       </div>
 
@@ -85,7 +164,7 @@ export default function VerifyEmailForm({
         <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[rgba(10,14,30,0.88)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <Mail className="h-5 w-5 text-white/65" />
           <span className="truncate text-sm font-medium text-white">
-            {email}
+            {currentEmail || "No email found"}
           </span>
         </div>
 
@@ -93,12 +172,7 @@ export default function VerifyEmailForm({
           <div className="flex items-start gap-2">
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
             <p className="text-[0.70rem] leading-7">
-              We&apos;ve sent a verification code to{" "}
-              <span className="font-semibold text-emerald-200">
-                {maskedEmail}
-              </span>
-              . Please check your inbox (and spam folder) and enter the code
-              below.
+              Please check your inbox and enter the 6-digit verification code.
             </p>
           </div>
         </div>
@@ -123,28 +197,37 @@ export default function VerifyEmailForm({
                 onChange={(e) => handleChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 onPaste={handlePaste}
-                className="h-10 w-10 rounded-[.70rem] border border-white/15 bg-[rgba(10,14,30,0.88)] text-center text-sm font-bold text-white outline-none transition focus:border-[#6b8cff] focus:shadow-[0_0_0_2px_rgba(107,140,255,0.20)] "
+                className={`h-10 w-10 rounded-[.70rem] border bg-[rgba(10,14,30,0.88)] text-center text-sm font-bold outline-none transition ${
+                  otpError
+                    ? "border-red-500 text-red-200 focus:border-red-500 focus:shadow-[0_0_0_2px_rgba(239,68,68,0.20)]"
+                    : "border-white/15 text-white focus:border-[#6b8cff] focus:shadow-[0_0_0_2px_rgba(107,140,255,0.20)]"
+                }`}
               />
             ))}
           </div>
 
+          {otpError ? (
+            <p className="mt-2 text-xs font-semibold text-red-400">
+              {otpError}
+            </p>
+          ) : null}
+
           <button
             type="button"
-            className="mx-auto mt-5 block text-center text-[1rem] font-bold text-[#f4b400] underline underline-offset-4 transition hover:text-[#ffd45a]"
-            onClick={() => {
-              console.log("Resend verification code");
-            }}
+            className="mx-auto mt-5 block text-center text-[1rem] font-bold text-[#f4b400] underline underline-offset-4 transition hover:text-[#ffd45a] disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleResend}
+            disabled={isResending}
           >
-            Get a new code
+            {isResending ? "Sending..." : "Get a new code"}
           </button>
         </div>
 
         <button
           type="submit"
-          disabled={code.length !== 6}
-          className="mt-6 w-full rounded-xl border border-lime-300/30 bg-[linear-gradient(180deg,#8cf61e_0%,#46c81d_56%,#0a991f_100%)] py-3 text-xl font-extrabold tracking-tight text-white shadow-[inset_0_8px_14px_rgba(255,255,255,0.12),inset_0_-6px_10px_rgba(0,0,0,0.16),0_8px_22px_rgba(0,0,0,0.34)] transition hover:-translate-y-[1px] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isVerifying}
+          className="mt-6 w-full rounded-xl border border-lime-300/30 bg-[linear-gradient(180deg,#8cf61e_0%,#46c81d_56%,#0a991f_100%)] py-3 text-lg font-extrabold tracking-tight text-white shadow-[inset_0_8px_14px_rgba(255,255,255,0.12),inset_0_-6px_10px_rgba(0,0,0,0.16),0_8px_22px_rgba(0,0,0,0.34)] transition hover:-translate-y-[1px] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Verify Email
+          {isVerifying ? "Verifying..." : "Verify Email"}
         </button>
 
         <Link
@@ -156,14 +239,4 @@ export default function VerifyEmailForm({
       </form>
     </div>
   );
-}
-
-function maskEmail(email: string): string {
-  const [name, domain] = email.split("@");
-  if (!name || !domain) return email;
-
-  const visible = Math.min(4, name.length);
-  const hidden = "*".repeat(Math.max(name.length - visible, 0));
-
-  return `${name.slice(0, visible)}${hidden}@${domain}`;
 }

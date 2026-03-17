@@ -1,9 +1,8 @@
 "use client";
 
-import Header from "@/components/auth/Header";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { DesktopSidebar, MobileSidebar } from "../sidebar";
+import { MobileSidebar } from "../sidebar";
 
 export default function DashboardLayout({
   children,
@@ -20,18 +19,18 @@ export default function DashboardLayout({
     : "md:grid-cols-[280px_1fr]";
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+    <div className="min-h-screen  text-neutral-100">
       {/* pass open + toggle to header so icon swaps (Menu/X) */}
-      <Header open={mobileOpen} onToggle={() => setMobileOpen((v) => !v)} />
+      {/* <Header open={mobileOpen} onToggle={() => setMobileOpen((v) => !v)} /> */}
 
       {/* push content below fixed header */}
-      <div className={`pt-16 md:grid ${gridCols}`}>
+      <div className={` md:grid ${gridCols}`}>
         {/* desktop sidebar is a column, not overlay */}
-        <aside className="hidden md:block">
+        {/* <aside className="hidden md:block">
           <DesktopSidebar />
-        </aside>
+        </aside> */}
 
-        <main className="min-h-[calc(100dvh-4rem)] px-4 ">{children}</main>
+        <main className="min-h-[calc(100dvh-4rem)]  ">{children}</main>
       </div>
 
       {/* mobile drawer (starts just below header) */}

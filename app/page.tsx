@@ -57,7 +57,7 @@ export default function PublicHomePage(): JSX.Element {
           </Link>
 
           <ActionButton
-            href="/register-login?tab=signin"
+            href="/login"
             className="border-green-300/25 bg-[linear-gradient(180deg,#7dff12_0%,#23ad0f_55%,#048b12_100%)] text-white"
           >
             Sign In

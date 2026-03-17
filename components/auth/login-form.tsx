@@ -1,30 +1,142 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 
 import AuthInput from "@/components/auth/auth-input";
 import Logo from "@/components/branding/logo";
+import { useLoginUserMutation } from "@/redux/features/auth/authApi";
 
 type LoginFormValues = {
   mobileNumber: string;
   password: string;
 };
 
+function getApiError(error: any): string {
+  return (
+    error?.data?.error ||
+    error?.data?.message ||
+    error?.error ||
+    error?.message ||
+    "Login failed. Please try again."
+  );
+}
+
 export default function LoginForm(): JSX.Element {
+  const router = useRouter();
+  const [loginUser, { isLoading }] = useLoginUserMutation();
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>();
+    watch,
+    clearErrors,
+    setError,
+    formState: { errors, touchedFields },
+  } = useForm<LoginFormValues>({
+    mode: "onTouched",
+    reValidateMode: "onChange",
+    defaultValues: {
+      mobileNumber: "",
+      password: "",
+    },
+  });
 
+  const mobileNumber = watch("mobileNumber");
+  const password = watch("password");
+
+  /* ────────── Clear Field Errors On Typing ────────── */
+  useEffect(() => {
+    if (touchedFields.mobileNumber && mobileNumber) {
+      clearErrors("mobileNumber");
+    }
+  }, [mobileNumber, touchedFields.mobileNumber, clearErrors]);
+
+  useEffect(() => {
+    if (touchedFields.password && password) {
+      clearErrors("password");
+    }
+  }, [password, touchedFields.password, clearErrors]);
+
+  /* ────────── Submit Login Form ────────── */
   const onSubmit = async (data: LoginFormValues) => {
-    console.log("Login form data:", data);
+    try {
+      const response = await loginUser({
+        phone: data.mobileNumber.trim(),
+        password: data.password,
+      }).unwrap();
+
+      toast.success(response?.message || "Login successful");
+      router.push("/dashboard");
+    } catch (error: any) {
+      const message = getApiError(error);
+      const lowerMessage = message.toLowerCase();
+      console.error("Login error:", error.status);
+
+      /* ────────── Handle Mobile Related Error ────────── */
+      if (lowerMessage.includes("mobile") || lowerMessage.includes("phone")) {
+        setError("mobileNumber", {
+          type: "server",
+          message,
+        });
+
+        toast.error(message);
+        return;
+      }
+
+      /* ────────── Handle Password Related Error ────────── */
+      if (lowerMessage.includes("password")) {
+        setError("password", {
+          type: "server",
+          message,
+        });
+
+        toast.error(message);
+        return;
+      }
+
+      /* ────────── Handle Invalid Credential Error ────────── */
+      if (
+        lowerMessage.includes("invalid") ||
+        lowerMessage.includes("credential") ||
+        lowerMessage.includes("not found") ||
+        lowerMessage.includes("verify your email")
+      ) {
+        setError("mobileNumber", {
+          type: "server",
+          message,
+        });
+
+        setError("password", {
+          type: "server",
+          message,
+        });
+
+        toast.error(message);
+        return;
+      }
+
+      /* ────────── Handle Fallback Error ────────── */
+      setError("mobileNumber", {
+        type: "server",
+        message,
+      });
+
+      setError("password", {
+        type: "server",
+        message,
+      });
+
+      toast.error(message);
+    }
   };
 
   return (
     <div className="flex flex-1 flex-col items-center">
-      <div className=" scale-90 sm:scale-100">
+      <div className="scale-90 sm:scale-100">
         <Logo />
       </div>
 
@@ -42,6 +154,15 @@ export default function LoginForm(): JSX.Element {
           error={errors.mobileNumber?.message}
           {...register("mobileNumber", {
             required: "Mobile number is required",
+            minLength: {
+              value: 6,
+              message: "Please enter a valid mobile number",
+            },
+            onChange: () => {
+              if (errors.mobileNumber) {
+                clearErrors("mobileNumber");
+              }
+            },
           })}
         />
 
@@ -51,6 +172,15 @@ export default function LoginForm(): JSX.Element {
           error={errors.password?.message}
           {...register("password", {
             required: "Password is required",
+            minLength: {
+              value: 6,
+              message: "Password must be at least 6 characters",
+            },
+            onChange: () => {
+              if (errors.password) {
+                clearErrors("password");
+              }
+            },
           })}
         />
 
@@ -65,10 +195,10 @@ export default function LoginForm(): JSX.Element {
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className=" py-2 w-full rounded-xl border border-lime-300/30 bg-[linear-gradient(180deg,#8cf61e_0%,#46c81d_56%,#0a991f_100%)] text-xl font-extrabold tracking-tight text-white shadow-[inset_0_8px_14px_rgba(255,255,255,0.12),inset_0_-6px_10px_rgba(0,0,0,0.16),0_8px_22px_rgba(0,0,0,0.34)] transition hover:-translate-y-[1px] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-80"
+          disabled={isLoading}
+          className="py-2 w-full rounded-xl border border-lime-300/30 bg-[linear-gradient(180deg,#8cf61e_0%,#46c81d_56%,#0a991f_100%)] text-xl font-extrabold tracking-tight text-white shadow-[inset_0_8px_14px_rgba(255,255,255,0.12),inset_0_-6px_10px_rgba(0,0,0,0.16),0_8px_22px_rgba(0,0,0,0.34)] transition hover:-translate-y-[1px] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-80"
         >
-          {isSubmitting ? "Signing In..." : "Sign In"}
+          {isLoading ? "Signing In..." : "Sign In"}
         </button>
 
         <Link
