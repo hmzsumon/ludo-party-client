@@ -41,7 +41,7 @@ export default function PublicHomePage(): JSX.Element {
 
         <div className="mt-10 space-y-5">
           <Link
-            href="/guest"
+            href="/offline"
             className="flex items-center gap-4 rounded-[20px] border border-red-300/20 bg-[linear-gradient(180deg,#ea244e_0%,#9b0028_100%)] px-4 py-2 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),0_10px_25px_rgba(0,0,0,0.35)]"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-yellow-300/10 text-yellow-300">

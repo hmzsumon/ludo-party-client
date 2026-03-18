@@ -30,7 +30,7 @@ export default function DashboardLayout({
           <DesktopSidebar />
         </aside> */}
 
-        <main className="min-h-[calc(100dvh-4rem)]  ">{children}</main>
+        <main className="min-h-[calc(100dvh-4rem)] w-full  ">{children}</main>
       </div>
 
       {/* mobile drawer (starts just below header) */}

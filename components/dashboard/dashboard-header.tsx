@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSelector } from "react-redux";
 import Logo from "../branding/logo";
 
@@ -12,7 +13,7 @@ const DashboardHeader = () => {
       : user?.name || "User";
 
   return (
-    <div className="relative mt-8">
+    <div className="relative w-full mt-8">
       {/* ────────── Logo Block ────────── */}
       <div className="">
         <Logo />
@@ -46,9 +47,12 @@ const DashboardHeader = () => {
               ৳ {user?.m_balance?.toLocaleString()}
             </span>
           </div>
-          <button className="bg-[linear-gradient(180deg,#15cf2d_0%,#0eaf22_100%)] px-4 text-sm font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]">
-            + Add
-          </button>
+          <Link
+            href="/deposit"
+            className="bg-[linear-gradient(180deg,#15cf2d_0%,#0eaf22_100%)] flex items-center justify-center px-4 text-sm font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+          >
+            <button>+ Add</button>
+          </Link>
         </div>
       </div>
     </div>
