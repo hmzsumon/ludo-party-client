@@ -52,9 +52,20 @@ export const SocketContextProvider = ({
       withCredentials: true,
     });
 
+    /* ────────── socket context debug events ────────── */
     newSocket.on("connect", () => {
-      console.log("✅ Socket connected:", newSocket.id);
+      console.log("🟢 context socket connected:", newSocket.id);
+    });
 
+    newSocket.on("connect_error", (err: any) => {
+      console.error("🔴 context socket connect_error:", err?.message, err);
+    });
+
+    newSocket.on("disconnect", (reason: string) => {
+      console.warn("🟠 context socket disconnected:", reason);
+    });
+
+    newSocket.on("connect", () => {
       /* ────────── standard personal room join ────────── */
       newSocket.emit("join-room", String(user._id));
 
