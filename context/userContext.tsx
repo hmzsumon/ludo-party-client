@@ -28,6 +28,7 @@ const UserProvider = ({ children }: { children: React.ReactNode }) => {
           email: u.email,
           mobile: u.phone ?? u.mobile,
         },
+        email: u.email,
         serviceError: false,
       };
     } else {
@@ -36,6 +37,7 @@ const UserProvider = ({ children }: { children: React.ReactNode }) => {
         isAuth: false,
         authOptions: [],
         user: null,
+        email: "",
         serviceError: false,
       };
     }
@@ -45,6 +47,7 @@ const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuth: false,
       authOptions: [],
       user: null,
+      email: "",
       serviceError: true,
     };
   }
@@ -52,7 +55,7 @@ const UserProvider = ({ children }: { children: React.ReactNode }) => {
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
-const  useUserContext = (): IAuth => {
+const useUserContext = (): IAuth => {
   const context = useContext(UserContext);
 
   if (!context) {

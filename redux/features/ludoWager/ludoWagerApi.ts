@@ -20,7 +20,7 @@ export const ludoWagerApi = apiSlice.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Wallet"],
+      invalidatesTags: ["Wallet", "User"],
     }),
 
     cancelLudoWager: builder.mutation<
@@ -32,7 +32,7 @@ export const ludoWagerApi = apiSlice.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Wallet"],
+      invalidatesTags: ["Wallet", "User"],
     }),
   }),
 });

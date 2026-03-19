@@ -1,37 +1,36 @@
-// frontend/redux/api/notificationApi.ts  (RTK Query with tags)
 import { apiSlice } from "../api/apiSlice";
 
-/* ──────────  notification api slice  ────────── */
+/* ────────── notification api ────────── */
 export const notificationApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    /* ──────────  my unread list  ────────── */
+    /* ────────── my unread list ────────── */
     getMyUnreadNotifications: builder.query<any, void>({
-      query: () => "/my-unread-notifications",
+      query: () => "/my-unread-notifications?limit=50&skip=0",
       providesTags: ["MyUnreadNotifications"],
     }),
 
-    /* ──────────  my unread count  ────────── */
+    /* ────────── my unread count ────────── */
     getMyUnreadNotificationsCount: builder.query<{ dataCount: number }, void>({
       query: () => "/my-unread-notifications-count",
       providesTags: ["MyUnreadNotificationsCount"],
     }),
 
-    /* ──────────  mark one notification read  ────────── */
+    /* ────────── mark one read ────────── */
     updateNotification: builder.mutation<any, string>({
       query: (id) => ({
-        url: `/update-notification/${id}`,
+        url: `/notification/${id}`,
         method: "PUT",
       }),
       invalidatesTags: ["MyUnreadNotifications", "MyUnreadNotificationsCount"],
     }),
 
-    /* ──────────  admin list  ────────── */
+    /* ────────── admin list ────────── */
     getAdminNotifications: builder.query<any, void>({
-      query: () => "/admin-notifications",
+      query: () => "/admin-notifications?limit=50&skip=0",
       providesTags: ["AdminNotifications"],
     }),
 
-    /* ──────────  admin mark read  ────────── */
+    /* ────────── admin mark read ────────── */
     updateAdminNotificationIsRead: builder.mutation<
       any,
       { notificationIds: string[] }

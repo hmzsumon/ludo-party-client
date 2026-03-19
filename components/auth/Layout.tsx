@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+
+import BottomNav from "../dashboard/bottom-nav";
 import { MobileSidebar } from "../sidebar";
 
 export default function DashboardLayout({
@@ -30,7 +32,10 @@ export default function DashboardLayout({
           <DesktopSidebar />
         </aside> */}
 
-        <main className="min-h-[calc(100dvh-4rem)] w-full  ">{children}</main>
+        <main className="min-h-[calc(100dvh-4rem)] w-full  ">
+          <div className="pb-10">{children}</div>
+          <BottomNav />
+        </main>
       </div>
 
       {/* mobile drawer (starts just below header) */}

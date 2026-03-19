@@ -101,6 +101,7 @@ export interface IUser {
   photo?: string;
   socketID?: string;
   color?: TColors;
+  mobile?: string;
 }
 
 export interface IPlayer extends IUser {
@@ -186,7 +187,7 @@ export interface IAuthOptions {
 export interface IAuth {
   isAuth: boolean;
   authOptions: IAuthOptions[];
-  user?: IUser;
+  user?: IUser | null;
   serviceError?: boolean;
   email: string;
 }

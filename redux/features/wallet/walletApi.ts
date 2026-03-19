@@ -10,6 +10,7 @@ export const walletApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getWallet: builder.query<{ balance: number }, void>({
       query: () => ({ url: "/wallet/me", method: "GET" }),
+      providesTags: ["Wallet", "User"],
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;

@@ -12,28 +12,33 @@ import type {
   IDataSocket,
   TSocketErrors,
 } from "@/interfaces";
+import { apiSlice } from "@/redux/features/api/apiSlice";
+import {
+  useCancelLudoWagerMutation,
+  useReserveLudoWagerMutation,
+} from "@/redux/features/ludoWager/ludoWagerApi";
 import {
   SOCKET_ERROR_MESSAGES,
   SocketErrors,
   TYPES_ONLINE_GAMEPLAY,
 } from "@/utils/constants";
 import { getDataOnlineGame, updateDataRoomSocket } from "@/utils/sockets";
+import { useDispatch } from "react-redux";
 import useShowMessageRedirect from "./useShowMessageRedirect";
-import {
-  useCancelLudoWagerMutation,
-  useReserveLudoWagerMutation,
-} from "@/redux/features/ludoWager/ludoWagerApi";
 
 const useSocket = (connectionData: IDataSocket) => {
+  const dispatch = useDispatch();
   const setRedirect = useShowMessageRedirect();
   const [reserveWager] = useReserveLudoWagerMutation();
   const [cancelWager] = useCancelLudoWagerMutation();
 
   const [socket, setSocket] = useState<Socket | null>(null);
   const [dataRoomSocket, setDataRoomSocket] = useState<IDataRoomSocket | null>(
-    null
+    null,
   );
-  const [dataOnlineGame, setDataOnlineGame] = useState<IDataOnline | null>(null);
+  const [dataOnlineGame, setDataOnlineGame] = useState<IDataOnline | null>(
+    null,
+  );
 
   const currentUser = useMemo(() => connectionData.user, [connectionData.user]);
   const reservationIdRef = useRef<string>(connectionData.reservationId || "");
@@ -41,7 +46,8 @@ const useSocket = (connectionData: IDataSocket) => {
 
   /* ────────── keep current reservation id synced ────────── */
   useEffect(() => {
-    reservationIdRef.current = connectionData.reservationId || reservationIdRef.current;
+    reservationIdRef.current =
+      connectionData.reservationId || reservationIdRef.current;
   }, [connectionData.reservationId]);
 
   useEffect(() => {
@@ -160,7 +166,7 @@ const useSocket = (connectionData: IDataSocket) => {
                   timer: 5000,
                 },
               });
-            }
+            },
           );
         };
 
@@ -173,7 +179,7 @@ const useSocket = (connectionData: IDataSocket) => {
             matchedRef.current = true;
             const newDataOnlineGame = getDataOnlineGame(
               newDataRoomSocket,
-              dataRoom
+              dataRoom,
             );
             setDataOnlineGame({
               ...newDataOnlineGame,
@@ -185,6 +191,8 @@ const useSocket = (connectionData: IDataSocket) => {
 
         /* ────────── wager settled notification ────────── */
         const handleWagerSettled = () => {
+          /* ────────── balance update instantly (refetch load-user) ────────── */
+          dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
           reservationIdRef.current = "";
         };
 
@@ -195,7 +203,10 @@ const useSocket = (connectionData: IDataSocket) => {
       } catch (error: any) {
         swal({
           title: "Match setup failed",
-          text: error?.data?.message || error?.message || "Unable to start wager match",
+          text:
+            error?.data?.message ||
+            error?.message ||
+            "Unable to start wager match",
           icon: "error",
         });
         setRedirect({

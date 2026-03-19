@@ -1,79 +1,147 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { useSelector } from 'react-redux';
-import socketUrl from '@/config/socketUrl'; // ✅ Use dedicated socket URL
-import { SocketUser } from '@/types';
+import socketUrl from "@/config/socketUrl";
+import { apiSlice } from "@/redux/features/api/apiSlice";
+import { SocketUser } from "@/types";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { io, Socket } from "socket.io-client";
 
 interface iSocketContextType {
-	socket: Socket | null;
-	isSocketConnected: boolean;
-	onlineUsers: SocketUser[]; // Optional
+  socket: Socket | null;
+  isSocketConnected: boolean;
+  onlineUsers: SocketUser[];
 }
 
 export const SocketContext = createContext<iSocketContextType | null>(null);
 
 export const SocketContextProvider = ({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) => {
-	const { user } = useSelector((state: any) => state.auth);
-	const [socket, setSocket] = useState<Socket | null>(null);
-	const [isSocketConnected, setIsSocketConnected] = useState(false);
-	const [onlineUsers, setOnlineUsers] = useState<SocketUser[]>([]);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: any) => state.auth);
 
-	useEffect(() => {
-		if (!user || !user._id) return;
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<SocketUser[]>([]);
 
-		// ✅ No token passed
-		const newSocket = io(socketUrl, {
-			transports: ['websocket'],
-		});
+  /* ────────── sound ────────── */
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-		newSocket.on('connect', () => {
-			console.log('✅ Socket connected:', newSocket.id);
-			newSocket.emit('join-room', user._id); // Join user's room
-			setSocket(newSocket);
-			setIsSocketConnected(true);
-		});
+  useEffect(() => {
+    audioRef.current = new Audio("/sounds/ball.mp3");
 
-		newSocket.on('disconnect', () => {
-			console.log('🔴 Socket disconnected');
-			setIsSocketConnected(false);
-		});
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
-		return () => {
-			newSocket.disconnect();
-			setSocket(null);
-			setIsSocketConnected(false);
-		};
-	}, [user?._id]);
+  /* ────────── connect socket ────────── */
+  useEffect(() => {
+    if (!user?._id) return;
 
-	useEffect(() => {
-		if (!socket) return;
+    const newSocket = io(socketUrl, {
+      transports: ["websocket"],
+      withCredentials: true,
+    });
 
-		socket.on('getUsers', (users: SocketUser[]) => {
-			setOnlineUsers(users);
-		});
+    newSocket.on("connect", () => {
+      console.log("✅ Socket connected:", newSocket.id);
 
-		return () => {
-			socket.off('getUsers');
-		};
-	}, [socket]);
+      /* ────────── standard personal room join ────────── */
+      newSocket.emit("join-room", String(user._id));
 
-	return (
-		<SocketContext.Provider value={{ socket, isSocketConnected, onlineUsers }}>
-			{children}
-		</SocketContext.Provider>
-	);
+      if (user?.role === "admin") {
+        newSocket.emit("join-admin-room");
+      }
+
+      if (user?.role === "agent") {
+        newSocket.emit("join-agent-room");
+      }
+
+      setSocket(newSocket);
+      setIsSocketConnected(true);
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("🔴 Socket disconnected");
+      setIsSocketConnected(false);
+    });
+
+    return () => {
+      newSocket.disconnect();
+      setSocket(null);
+      setIsSocketConnected(false);
+    };
+  }, [user?._id, user?.role]);
+
+  /* ────────── socket listeners ────────── */
+  useEffect(() => {
+    if (!socket) return;
+
+    const onGetUsers = (users: SocketUser[]) => {
+      setOnlineUsers(users);
+    };
+
+    const onUserNotification = (payload: any) => {
+      const n = payload?.notification;
+      if (!n?._id) return;
+
+      toast.success(payload?.message || n?.title || "New notification");
+
+      /* ────────── balance update instantly (refetch load-user) ────────── */
+      dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
+
+      /* ────────── optional: deposit list refresh (if you want) ────────── */
+      dispatch(apiSlice.util.invalidateTags(["Deposits"]));
+
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    };
+
+    const onAdminNotification = (payload: any) => {
+      const n = payload?.notification;
+      if (!n?._id) return;
+
+      toast.success(payload?.message || n?.title || "Admin notification");
+
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    };
+
+    socket.on("getUsers", onGetUsers);
+    socket.on("user-notification", onUserNotification);
+    socket.on("admin-notification", onAdminNotification);
+
+    return () => {
+      socket.off("getUsers", onGetUsers);
+      socket.off("user-notification", onUserNotification);
+      socket.off("admin-notification", onAdminNotification);
+    };
+  }, [socket, dispatch]);
+
+  return (
+    <SocketContext.Provider value={{ socket, isSocketConnected, onlineUsers }}>
+      {children}
+    </SocketContext.Provider>
+  );
 };
 
 export const useSocket = () => {
-	const context = useContext(SocketContext);
-	if (!context) {
-		throw new Error('useSocket must be used within a SocketProvider');
-	}
-	return context;
+  const context = useContext(SocketContext);
+  if (!context) {
+    throw new Error("useSocket must be used within a SocketProvider");
+  }
+  return context;
 };

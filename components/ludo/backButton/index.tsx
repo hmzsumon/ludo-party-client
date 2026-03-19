@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "../icon";
 import { handleBack } from "./helpers";
@@ -10,26 +9,26 @@ interface BackButtonProps {
   withConfirmation?: boolean;
 }
 
-const RenderAnchor = ({ to }: { to: string }) => (
-  <Link href={to} className="button blue game-back-button">
-    <Icon type="back" />
-  </Link>
-);
-
-/**
- * Next.js version of BackButton
- * - আর react-router-dom নাই
- * - ROUTES import বাদ
- * - default path: "/ludo" (Lobby page)
- */
 const BackButton = ({
   to = "/",
   withConfirmation = false,
 }: BackButtonProps) => {
   const router = useRouter();
 
+  const goBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(to);
+    }
+  };
+
   if (!withConfirmation) {
-    return <RenderAnchor to={to} />;
+    return (
+      <button className="button blue game-back-button" onClick={goBack}>
+        <Icon type="back" />
+      </button>
+    );
   }
 
   return (
@@ -38,7 +37,7 @@ const BackButton = ({
       onClick={() =>
         handleBack((action) => {
           if (action) {
-            router.push(to);
+            goBack();
           }
         })
       }

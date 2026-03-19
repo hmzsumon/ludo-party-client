@@ -130,9 +130,9 @@ const AmountChip = ({
     type="button"
     onClick={onClick}
     className={[
-      "rounded-lg border bg-white px-2 py-2 text-center text-sm font-semibold transition shadow-sm",
+      "rounded-lg border bg-white text-gray-500 px-2 py-2 text-center text-sm font-semibold transition shadow-sm",
       active
-        ? "border-red-400 ring-2 ring-red-200"
+        ? "border-red-400 ring-2 ring-red-200 text-gray-800 font-bold"
         : "border-neutral-200 hover:border-neutral-300",
     ].join(" ")}
   >
@@ -445,7 +445,7 @@ export default function DepositPage() {
                 >
                   <div className="mt-1 font-bold text-neutral-600">৳</div>
                   <input
-                    className="w-full text-sm font-extrabold outline-none"
+                    className="w-full text-sm font-extrabold outline-none text-neutral-600 placeholder:text-neutral-400"
                     placeholder={`${MIN_AMOUNT.toLocaleString()} - ${MAX_AMOUNT.toLocaleString()}`}
                     value={amountInput}
                     onChange={(e) => onAmountChange(e.target.value)}

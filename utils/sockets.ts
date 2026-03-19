@@ -115,6 +115,7 @@ const getUsersPlay = (
     users.push({
       id,
       name,
+      email: "",
       photo,
       socketID,
       color,
