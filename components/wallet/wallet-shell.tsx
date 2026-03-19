@@ -26,7 +26,7 @@ const WalletShell = () => {
           </div>
 
           {/* ────────── Content Grid ────────── */}
-          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-4 ">
             <WalletTransactionCard />
             {/* <WalletPromoCard /> */}
             <WalletPaymentCard />

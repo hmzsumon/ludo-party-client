@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 
 import BottomNav from "../dashboard/bottom-nav";
-import { MobileSidebar } from "../sidebar";
 
 export default function DashboardLayout({
   children,
@@ -16,30 +15,29 @@ export default function DashboardLayout({
 
   // desktop sidebar width reacts to global collapse state
   const collapsed = useSelector((s: any) => s.ui.sidebarCollapsed) as boolean;
-  const gridCols = collapsed
-    ? "md:grid-cols-[72px_1fr]"
-    : "md:grid-cols-[280px_1fr]";
 
   return (
-    <div className="min-h-screen  text-neutral-100">
+    <div className="min-h-screen w-full text-neutral-100 bg-[#02081f]">
       {/* pass open + toggle to header so icon swaps (Menu/X) */}
       {/* <Header open={mobileOpen} onToggle={() => setMobileOpen((v) => !v)} /> */}
 
       {/* push content below fixed header */}
-      <div className={` md:grid ${gridCols}`}>
+      <div className="w-full">
         {/* desktop sidebar is a column, not overlay */}
         {/* <aside className="hidden md:block">
           <DesktopSidebar />
         </aside> */}
 
-        <main className="min-h-[calc(100dvh-4rem)] w-full  ">
-          <div className="pb-10">{children}</div>
-          <BottomNav />
+        <main className="min-h-screen w-full md:flex md:items-start md:justify-center md:px-0 md:py-6 lg:px-10 lg:py-8">
+          <div className="relative w-full md:w-[430px] md:max-w-[430px] pb-10">
+            {children}
+            <BottomNav />
+          </div>
         </main>
       </div>
 
       {/* mobile drawer (starts just below header) */}
-      <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      {/* <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} /> */}
     </div>
   );
 }

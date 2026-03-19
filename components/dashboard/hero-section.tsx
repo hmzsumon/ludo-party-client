@@ -1,9 +1,9 @@
 const HeroSection = () => {
   return (
-    <section className=" flex items-center justify-center w-full ">
+    <section className="flex w-full items-center justify-center pt-2">
       {/* ────────── Left Content ────────── */}
-      <div className="">
-        <h1 className="leading-[1.02]">
+      <div className="w-full">
+        <h1 className="leading-[1.02] text-left">
           <span className="block text-[32px] font-extrabold tracking-tight text-white">
             Play Ludo &
           </span>
