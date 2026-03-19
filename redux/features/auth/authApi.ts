@@ -1,3 +1,5 @@
+/* ────────── imports ────────── */
+import { removeAccessToken, saveAccessToken } from "@/utils/authToken";
 import { apiSlice } from "../api/apiSlice";
 import { loadUser, logoutUser, setUser } from "./authSlice";
 
@@ -78,6 +80,11 @@ export const authApi = apiSlice.injectEndpoints({
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           const result = await queryFulfilled;
+
+          /* ────────── persist access token for socket auth ────────── */
+          saveAccessToken(result?.data?.token || null);
+
+          /* ────────── update redux auth state ────────── */
           dispatch(setUser(result.data));
         } catch (error) {
           console.log(error);
@@ -111,6 +118,11 @@ export const authApi = apiSlice.injectEndpoints({
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
+
+          /* ────────── clear persisted access token ────────── */
+          removeAccessToken();
+
+          /* ────────── clear redux auth state ────────── */
           dispatch(logoutUser());
         } catch (error) {
           console.log(error);

@@ -1,5 +1,6 @@
 "use client";
 
+/* ────────── imports ────────── */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import swal from "sweetalert";
@@ -25,6 +26,18 @@ import {
 import { getDataOnlineGame, updateDataRoomSocket } from "@/utils/sockets";
 import { useDispatch } from "react-redux";
 import useShowMessageRedirect from "./useShowMessageRedirect";
+
+/* ────────── token helper ────────── */
+const getSocketAccessToken = () => {
+  if (typeof window === "undefined") return null;
+
+  return (
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    null
+  );
+};
 
 const useSocket = (connectionData: IDataSocket) => {
   const dispatch = useDispatch();
@@ -54,6 +67,7 @@ const useSocket = (connectionData: IDataSocket) => {
     let mounted = true;
     let newSocket: Socket | null = null;
 
+    /* ────────── cleanup reservation on unmount if not matched ────────── */
     const cleanupReservation = async () => {
       if (
         !reservationIdRef.current ||
@@ -71,6 +85,7 @@ const useSocket = (connectionData: IDataSocket) => {
       }
     };
 
+    /* ────────── boot socket flow ────────── */
     const boot = async () => {
       try {
         let finalConnectionData = { ...connectionData };
@@ -102,6 +117,7 @@ const useSocket = (connectionData: IDataSocket) => {
               amount: Number(connectionData.betAmount),
               totalPlayers: 2,
             }).unwrap();
+
             reservationIdRef.current = reserveResponse.reservationId;
           }
 
@@ -113,38 +129,48 @@ const useSocket = (connectionData: IDataSocket) => {
 
         if (!mounted) return;
 
+        /* ────────── resolve access token for socket auth ────────── */
+        const accessToken = getSocketAccessToken();
+
+        /* ────────── socket connect debug ────────── */
+        console.log("/* ────────── game socket debug ────────── */");
+        console.log("🌐 game socket url:", socketUrl);
+        console.log(
+          "🔐 game socket access token:",
+          accessToken ? "FOUND" : "MISSING",
+        );
+        console.log(
+          "👤 game socket payload user:",
+          finalConnectionData?.user?.id || "NO_USER_ID",
+        );
+
+        /* ────────── create socket instance ────────── */
         newSocket = io(socketUrl, {
           withCredentials: true,
           transports: ["websocket", "polling"],
           autoConnect: true,
           reconnection: true,
+          auth: {
+            token: accessToken,
+          },
         });
 
-        /* ────────── socket context debug events ────────── */
-        newSocket.on("connect", () => {
-          console.log("🟢 context socket connected:", newSocket?.id);
-        });
-
-        newSocket.on("connect_error", (err: any) => {
-          console.error("🔴 context socket connect_error:", err?.message, err);
-        });
-
-        newSocket.on("disconnect", (reason: string) => {
-          console.warn("🟠 context socket disconnected:", reason);
-        });
-
+        /* ────────── set socket state ────────── */
         setSocket(newSocket);
 
-        /* ────────── socket connection error ────────── */
-        const handleConnectError = (err: Error) => {
-          console.error("🔴 socket connect_error:", err?.message, err);
-          setRedirect({
-            message: {
-              title: "Error connecting to socket",
-              icon: "error",
-              timer: 5000,
-            },
-          });
+        /* ────────── socket connected debug ────────── */
+        const handleDebugConnect = () => {
+          console.log("🟢 game socket connected:", newSocket?.id);
+        };
+
+        /* ────────── socket connection error debug ────────── */
+        const handleDebugConnectError = (err: any) => {
+          console.error("🔴 game socket connect_error:", err?.message, err);
+        };
+
+        /* ────────── socket disconnect debug ────────── */
+        const handleDebugDisconnect = (reason: string) => {
+          console.warn("🟠 game socket disconnected:", reason);
         };
 
         /* ────────── socket connected and send payload ────────── */
@@ -190,10 +216,12 @@ const useSocket = (connectionData: IDataSocket) => {
 
           if (newDataRoomSocket.isFull) {
             matchedRef.current = true;
+
             const newDataOnlineGame = getDataOnlineGame(
               newDataRoomSocket,
               dataRoom,
             );
+
             setDataOnlineGame({
               ...newDataOnlineGame,
               socket: newSocket as Socket,
@@ -204,15 +232,17 @@ const useSocket = (connectionData: IDataSocket) => {
 
         /* ────────── wager settled notification ────────── */
         const handleWagerSettled = () => {
-          /* ────────── balance update instantly (refetch load-user) ────────── */
           dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
           reservationIdRef.current = "";
         };
 
+        /* ────────── bind socket listeners ────────── */
+        newSocket.on("connect", handleDebugConnect);
         newSocket.on("connect", handleConnect);
-        newSocket.on("connect_error", handleConnectError);
+        newSocket.on("connect_error", handleDebugConnectError);
         newSocket.on("UPDATE_OPPONENT", handleOpponentUpdate);
         newSocket.on("WAGER_SETTLED", handleWagerSettled);
+        newSocket.on("disconnect", handleDebugDisconnect);
       } catch (error: any) {
         swal({
           title: "Match setup failed",
@@ -222,6 +252,7 @@ const useSocket = (connectionData: IDataSocket) => {
             "Unable to start wager match",
           icon: "error",
         });
+
         setRedirect({
           message: {
             title: "Unable to start wager match",
@@ -234,17 +265,28 @@ const useSocket = (connectionData: IDataSocket) => {
 
     boot();
 
+    /* ────────── cleanup ────────── */
     return () => {
       mounted = false;
+
       if (newSocket) {
         newSocket.disconnect();
       }
+
       setSocket(null);
       setDataRoomSocket(null);
       setDataOnlineGame(null);
+
       void cleanupReservation();
     };
-  }, [cancelWager, connectionData, currentUser, reserveWager, setRedirect]);
+  }, [
+    cancelWager,
+    connectionData,
+    currentUser,
+    reserveWager,
+    setRedirect,
+    dispatch,
+  ]);
 
   return { socket, dataRoomSocket, dataOnlineGame };
 };
