@@ -50,10 +50,7 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
   const [customAmount, setCustomAmount] = useState<string>("");
 
   /* ────────── derived wallet balance ────────── */
-  const walletBalance = useMemo(
-    () => Number(user?.m_balance || 0) + Number(data?.balance || 0),
-    [data, user],
-  );
+  const walletBalance = useMemo(() => Number(data?.balance || 0), [data, user]);
 
   /* ────────── final amount resolver ────────── */
   const finalAmount = useMemo(() => {
