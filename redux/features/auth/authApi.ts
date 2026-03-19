@@ -177,6 +177,25 @@ export const authApi = apiSlice.injectEndpoints({
         body,
       }),
     }),
+
+    /* ────────── add user payment method ────────── */
+    addUserPaymentMethod: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `/add-user-payment-method`,
+        method: "POST",
+        body,
+      }),
+
+      invalidatesTags: ["User"],
+    }),
+
+    /* ────────── get user payment methods ────────── */
+    getUserPaymentMethods: builder.query<any, any>({
+      query: () => ({
+        url: `/get-user-payment-methods`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -191,4 +210,6 @@ export const {
   useSendResetCodeMutation,
   useVerifyResetCodeMutation,
   useResetForgotPasswordMutation,
+  useAddUserPaymentMethodMutation,
+  useGetUserPaymentMethodsQuery,
 } = authApi;

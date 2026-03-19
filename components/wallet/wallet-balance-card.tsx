@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSelector } from "react-redux";
 
 const WalletBalanceCard = () => {
@@ -16,12 +17,18 @@ const WalletBalanceCard = () => {
 
         {/* ────────── Action Buttons ────────── */}
         <div className="mt-4 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-          <button className="rounded-full bg-[linear-gradient(180deg,#32ee58_0%,#0da93c_100%)] px-6 py-4 text-[18px] font-black text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10 sm:text-[20px]">
+          <Link
+            href="/deposit"
+            className="rounded-full bg-[linear-gradient(180deg,#32ee58_0%,#0da93c_100%)] px-6 py-4 text-[18px] font-black text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10 sm:text-[20px]"
+          >
             Deposit
-          </button>
-          <button className="rounded-full bg-[linear-gradient(180deg,#ff724b_0%,#ca2446_100%)] px-6 py-4 text-[18px] font-black text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10 sm:text-[20px]">
+          </Link>
+          <Link
+            href="/withdraw"
+            className="rounded-full bg-[linear-gradient(180deg,#ff724b_0%,#ca2446_100%)] px-6 py-4 text-[18px] font-black text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10 sm:text-[20px]"
+          >
             Withdraw
-          </button>
+          </Link>
         </div>
       </div>
     </section>
