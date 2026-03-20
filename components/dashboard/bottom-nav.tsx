@@ -14,7 +14,7 @@ const BottomNav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed -bottom-2 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2  pb-3 md:bottom-2">
+    <nav className="fixed -bottom-2.5 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2  pb-3 md:bottom-2">
       {/* ────────── Bottom Navigation ────────── */}
       <div className="grid grid-cols-4 overflow-hidden w-full rounded-t-2xl  bg-[rgba(9,18,56,0.96)] shadow-[0_-8px_24px_rgba(0,0,0,0.25),0_12px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur">
         {navItems.map((item) => {

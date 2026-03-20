@@ -139,7 +139,7 @@ export default function WithdrawPage() {
   const canWithdraw = wagerRemaining <= 0;
 
   return (
-    <div className="min-h-screen bg-[#01241D] text-white">
+    <div className="min-h-screen bg-[#01241D] text-white pb-10">
       {/* Topbar */}
 
       <div className="sticky top-0 z-10 flex items-center justify-between bg-[#0b3c3f] px-4 py-3">
