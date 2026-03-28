@@ -224,6 +224,8 @@ export interface IUserSocket {
   photo?: string;
   socketID: string;
   color: TColors;
+  isBot?: boolean;
+  isOnline?: boolean;
 }
 
 /* ────────── socket room data ────────── */

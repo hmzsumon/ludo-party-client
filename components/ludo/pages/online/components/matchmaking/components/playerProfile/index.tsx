@@ -4,9 +4,14 @@ import Loading from "@/components/ludo/loading";
 interface PlayerProfileProps {
   photo?: string;
   name: string;
+  isBot?: boolean;
 }
 
-const PlayerProfile = ({ photo = "", name = "" }: PlayerProfileProps) => {
+const PlayerProfile = ({
+  photo = "",
+  name = "",
+  isBot = false,
+}: PlayerProfileProps) => {
   const searching = !name;
 
   return (
@@ -20,7 +25,7 @@ const PlayerProfile = ({ photo = "", name = "" }: PlayerProfileProps) => {
         <Avatar photo={photo} name={name} className="page-matchmaking-image" />
       </div>
       <span className="page-matchmaking-avatar-name">
-        {!searching ? name : "Searching..."}
+        {!searching ? `${name}${isBot ? " 🤖" : ""}` : "Searching..."}
       </span>
     </div>
   );

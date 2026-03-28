@@ -110,7 +110,7 @@ const getUsersPlay = (
       continue;
     }
 
-    const { id, name, photo, socketID, color } = player;
+    const { id, name, photo, socketID, color, isBot, isOnline } = player;
 
     users.push({
       id,
@@ -119,7 +119,8 @@ const getUsersPlay = (
       photo,
       socketID,
       color,
-      isOnline: true,
+      isBot: Boolean(isBot),
+      isOnline: isBot ? false : (isOnline ?? true),
     });
   }
 
