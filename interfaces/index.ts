@@ -36,6 +36,7 @@ export type ITypeChatMessage = keyof typeof TYPES_CHAT_MESSAGES;
 export type IEOptionsGame = keyof typeof EOptionsGame;
 export type IESounds = keyof typeof ESounds;
 export type IENextStepGame = keyof typeof ENextStepGame;
+export type TOfflineBotMode = "EASY" | "ASSIST";
 
 /* ────────── misc shared types ────────── */
 export type IPredefinedChatMessages = Record<
@@ -237,6 +238,7 @@ export interface IDataRoom {
   totalPlayers: TTotalPlayers;
   betAmount?: number;
   feePercent?: number;
+  onlineBotMode?: TOfflineBotMode;
 }
 
 /* ────────── online game props ────────── */
@@ -250,6 +252,7 @@ export interface IDataOnline {
   socket: Socket;
   currentUserId?: string;
   betAmount?: number;
+  onlineBotMode?: TOfflineBotMode;
 }
 
 /* ────────── ui room ordering ────────── */

@@ -160,7 +160,7 @@ export const getDataOnlineGame = (
   dataRoom: IDataRoom,
 ) => {
   const { totalPlayers, orderPlayers, boardColor } = dataRoomSocket;
-  const { initialTurnUserID, roomName } = dataRoom;
+  const { initialTurnUserID, roomName, onlineBotMode } = dataRoom;
 
   const users = getUsersPlay(orderPlayers, totalPlayers);
   const initialTurn = users.findIndex((v) => v.id === initialTurnUserID);
@@ -172,5 +172,6 @@ export const getDataOnlineGame = (
     boardColor,
     roomName,
     typeGame: ETypeGame.ONLINE,
+    onlineBotMode: onlineBotMode || "ASSIST",
   };
 };
