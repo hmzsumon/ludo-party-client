@@ -120,7 +120,7 @@ const getUsersPlay = (
       socketID,
       color,
       isBot: Boolean(isBot),
-      isOnline: isBot ? false : (isOnline ?? true),
+      isOnline: typeof isOnline === "boolean" ? isOnline : !isBot,
     });
   }
 
@@ -160,7 +160,9 @@ export const getDataOnlineGame = (
   dataRoom: IDataRoom,
 ) => {
   const { totalPlayers, orderPlayers, boardColor } = dataRoomSocket;
-  const { initialTurnUserID, roomName, onlineBotMode } = dataRoom;
+  const { initialTurnUserID, roomName, botMode } = dataRoom;
+
+  console.log("dataRoom", dataRoom);
 
   const users = getUsersPlay(orderPlayers, totalPlayers);
   const initialTurn = users.findIndex((v) => v.id === initialTurnUserID);
@@ -172,6 +174,6 @@ export const getDataOnlineGame = (
     boardColor,
     roomName,
     typeGame: ETypeGame.ONLINE,
-    onlineBotMode: onlineBotMode || "ASSIST",
+    botMode,
   };
 };

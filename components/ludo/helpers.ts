@@ -818,36 +818,6 @@ export const getInitialDataPlayers = (
   return players;
 };
 
-/* ────────── online hvb players data init ────────── */
-export const getInitialOnlineHvBPlayers = (
-  users: IUser[],
-  boardColor: TBoardColors,
-  totalPlayers: TTotalPlayers,
-) => {
-  const players: IPlayer[] = [];
-  const seatColors = getPlayersColors(boardColor, totalPlayers);
-
-  for (let i = 0; i < totalPlayers; i++) {
-    players.push({
-      ...(users[i] || {}),
-      index: i,
-
-      // online human vs bot এর ক্ষেত্রে profile color use করা যাবে না
-      // seat অনুযায়ী board color ধরতে হবে
-      color: seatColors[i],
-
-      finished: false,
-      isOffline: false,
-      isMuted: false,
-      chatMessage: "",
-      counterMessage: 0,
-      ranking: 0,
-    } as IPlayer);
-  }
-
-  return players;
-};
-
 /* ────────── initial turn state ────────── */
 export const getInitialActionsTurnValue = (
   indexTurn: number,
@@ -869,6 +839,496 @@ export const getInitialActionsTurnValue = (
  * @returns
  */
 export const randomValueDice = () => randomNumber(1, 6) as TDicevalues;
+
+const getTokenProgressScore = (token: IToken) => {
+  if (token.typeTile === EtypeTile.END) {
+    return 1000 + token.index;
+  }
+
+  if (token.typeTile === EtypeTile.EXIT) {
+    return 500 + token.positionTile;
+  }
+
+  if (token.typeTile === EtypeTile.NORMAL) {
+    return 100 + token.positionTile;
+  }
+
+  return 0;
+};
+
+const incrementBoardPosition = (positionTile: number) => {
+  const newPosition = positionTile + 1;
+
+  if (newPosition >= TOTAL_TILES) {
+    return 0;
+  }
+
+  return newPosition;
+};
+
+const getPredictedTokenState = (
+  token: IToken,
+  diceValue: TDicevalues,
+  positionGame: TPositionGame,
+) => {
+  const { exitTileIndex, startTileIndex } =
+    POSITION_ELEMENTS_BOARD[positionGame];
+  let { typeTile, positionTile } = token;
+  const valid = true;
+
+  if (typeTile === EtypeTile.JAIL) {
+    if (diceValue !== DICE_VALUE_GET_OUT_JAIL) {
+      return {
+        valid: false,
+        typeTile,
+        positionTile,
+        progress: getTokenProgressScore(token),
+      };
+    }
+
+    typeTile = EtypeTile.NORMAL;
+    positionTile = startTileIndex;
+
+    return {
+      valid: true,
+      typeTile,
+      positionTile,
+      progress: 100 + positionTile,
+    };
+  }
+
+  if (typeTile === EtypeTile.EXIT) {
+    const remainingCells = TOTAL_EXIT_TILES - positionTile - 1;
+
+    if (diceValue > remainingCells) {
+      return {
+        valid: false,
+        typeTile,
+        positionTile,
+        progress: getTokenProgressScore(token),
+      };
+    }
+  }
+
+  for (let i = 0; i < diceValue; i++) {
+    if (typeTile === EtypeTile.NORMAL) {
+      if (positionTile !== exitTileIndex) {
+        positionTile = incrementBoardPosition(positionTile);
+      } else {
+        typeTile = EtypeTile.EXIT;
+        positionTile = 0;
+      }
+      continue;
+    }
+
+    if (typeTile === EtypeTile.EXIT) {
+      positionTile = positionTile + 1;
+
+      if (positionTile === TOTAL_EXIT_TILES - 1) {
+        typeTile = EtypeTile.END;
+        positionTile = token.index;
+        break;
+      }
+    }
+  }
+
+  return {
+    valid,
+    typeTile,
+    positionTile,
+    progress:
+      typeTile === EtypeTile.END
+        ? 1000 + token.index
+        : typeTile === EtypeTile.EXIT
+          ? 500 + positionTile
+          : 100 + positionTile,
+  };
+};
+
+const getOpponentTokensOnTile = (
+  currentTurn: number,
+  listTokens: IListTokens[],
+  positionTile: number,
+) =>
+  listTokens
+    .filter((_, index) => index !== currentTurn)
+    .flatMap((player) => player.tokens)
+    .filter(
+      (token) =>
+        token.typeTile === EtypeTile.NORMAL &&
+        token.positionTile === positionTile,
+    );
+
+const getBoardDistance = (from: number, to: number) => {
+  if (to >= from) return to - from;
+  return TOTAL_TILES - from + to;
+};
+
+const getCaptureThreatCount = (
+  currentTurn: number,
+  listTokens: IListTokens[],
+  positionTile: number,
+) => {
+  if (validateSafeArea(positionTile)) return 0;
+
+  return listTokens
+    .filter((_, index) => index !== currentTurn)
+    .flatMap((player) => player.tokens)
+    .filter((token) => token.typeTile === EtypeTile.NORMAL)
+    .reduce((total, token) => {
+      const distance = getBoardDistance(token.positionTile, positionTile);
+      return distance >= 1 && distance <= 6 ? total + 1 : total;
+    }, 0);
+};
+
+const getUnsafeTokens = (currentTurn: number, listTokens: IListTokens[]) =>
+  listTokens[currentTurn].tokens.filter(
+    (token) =>
+      token.typeTile === EtypeTile.NORMAL &&
+      !validateSafeArea(token.positionTile) &&
+      getCaptureThreatCount(currentTurn, listTokens, token.positionTile) > 0,
+  );
+
+const weightedPick = <T>(
+  items: Array<{ item: T; weight: number }>,
+  fallback: T,
+): T => {
+  const totalWeight = items.reduce(
+    (sum, entry) => sum + Math.max(0, entry.weight),
+    0,
+  );
+
+  if (totalWeight <= 0) {
+    return fallback;
+  }
+
+  let target = Math.random() * totalWeight;
+
+  for (const entry of items) {
+    target -= Math.max(0, entry.weight);
+    if (target <= 0) {
+      return entry.item;
+    }
+  }
+
+  return items[items.length - 1]?.item ?? fallback;
+};
+
+const getBestControlledMove = (
+  currentTurn: number,
+  listTokens: IListTokens[],
+  diceList: IDiceList[],
+  favoredBotIndex: number,
+  mode: TOfflineBotMode = "EASY",
+) => {
+  const playerTokens = listTokens[currentTurn];
+  const tokensCanMove = playerTokens.tokens.filter(
+    (token) => token.diceAvailable.length !== 0,
+  );
+
+  if (tokensCanMove.length === 0) {
+    return null;
+  }
+
+  const isFavoredBot = currentTurn === favoredBotIndex;
+  const { positionGame } = playerTokens;
+  const rankedMoves: Array<{
+    tokenIndex: number;
+    diceKey: number;
+    score: number;
+  }> = [];
+  const unsafeTokens = getUnsafeTokens(currentTurn, listTokens);
+
+  for (const token of tokensCanMove) {
+    for (const dice of token.diceAvailable) {
+      const predicted = getPredictedTokenState(token, dice.value, positionGame);
+
+      if (!predicted.valid) continue;
+
+      let score = predicted.progress;
+      const currentThreat =
+        token.typeTile === EtypeTile.NORMAL &&
+        !validateSafeArea(token.positionTile)
+          ? getCaptureThreatCount(currentTurn, listTokens, token.positionTile)
+          : 0;
+      const nextThreat =
+        predicted.typeTile === EtypeTile.NORMAL &&
+        !validateSafeArea(predicted.positionTile)
+          ? getCaptureThreatCount(
+              currentTurn,
+              listTokens,
+              predicted.positionTile,
+            )
+          : 0;
+      const opponentsOnLanding =
+        predicted.typeTile === EtypeTile.NORMAL
+          ? getOpponentTokensOnTile(
+              currentTurn,
+              listTokens,
+              predicted.positionTile,
+            )
+          : [];
+      const captureChance =
+        predicted.typeTile === EtypeTile.NORMAL &&
+        !validateSafeArea(predicted.positionTile) &&
+        opponentsOnLanding.length > 0;
+      const movesUnsafeToken = unsafeTokens.some(
+        (unsafeToken) => unsafeToken.index === token.index,
+      );
+      const reachesSafeArea =
+        predicted.typeTile === EtypeTile.NORMAL &&
+        validateSafeArea(predicted.positionTile);
+      const reducesThreat = currentThreat > 0 && nextThreat < currentThreat;
+
+      if (
+        token.typeTile === EtypeTile.JAIL &&
+        dice.value === DICE_VALUE_GET_OUT_JAIL
+      ) {
+        score += isFavoredBot ? 180 : 80;
+      }
+
+      if (predicted.typeTile === EtypeTile.END) {
+        score += 1500;
+      }
+
+      if (predicted.typeTile === EtypeTile.EXIT) {
+        score += 350;
+      }
+
+      if (mode === "EASY") {
+        if (reachesSafeArea) {
+          score += movesUnsafeToken ? 2050 : 260;
+        }
+
+        if (reducesThreat) {
+          score += 980 + (currentThreat - nextThreat) * 180;
+        }
+
+        if (captureChance) {
+          score += 1320 + opponentsOnLanding.length * 120;
+        }
+
+        if (
+          movesUnsafeToken &&
+          !captureChance &&
+          !reachesSafeArea &&
+          nextThreat > 0
+        ) {
+          score -= 320 + nextThreat * 90;
+        }
+      } else {
+        if (captureChance) {
+          score += 1600 + opponentsOnLanding.length * 120;
+        }
+
+        if (reachesSafeArea) {
+          score += movesUnsafeToken ? 1150 : 180;
+        }
+
+        if (reducesThreat) {
+          score += 520 + (currentThreat - nextThreat) * 140;
+        }
+
+        if (
+          movesUnsafeToken &&
+          !captureChance &&
+          !reachesSafeArea &&
+          nextThreat > 0
+        ) {
+          score -= 260 + nextThreat * 80;
+        }
+      }
+
+      if (
+        predicted.typeTile === EtypeTile.NORMAL &&
+        validateSafeArea(predicted.positionTile)
+      ) {
+        score += 80;
+      }
+
+      if (
+        predicted.typeTile === EtypeTile.NORMAL &&
+        !captureChance &&
+        nextThreat > 0
+      ) {
+        score -= nextThreat * (mode === "ASSIST" && isFavoredBot ? 35 : 55);
+      }
+
+      if (unsafeTokens.length > 0 && !movesUnsafeToken && !captureChance) {
+        score -= mode === "EASY" ? 360 : 180;
+      }
+
+      if (mode === "ASSIST" && isFavoredBot) {
+        score += dice.value * 18;
+      } else {
+        score += dice.value * 8;
+      }
+
+      rankedMoves.push({ tokenIndex: token.index, diceKey: dice.key, score });
+    }
+  }
+
+  if (rankedMoves.length === 0) {
+    return null;
+  }
+
+  rankedMoves.sort((a, b) => b.score - a.score);
+
+  if (mode === "ASSIST") {
+    if (isFavoredBot) {
+      const topMoves = rankedMoves.slice(0, Math.min(3, rankedMoves.length));
+      return weightedPick(
+        topMoves.map((move) => ({
+          item: move,
+          weight: Math.max(
+            1,
+            move.score - topMoves[topMoves.length - 1].score + 1,
+          ),
+        })),
+        rankedMoves[0],
+      );
+    }
+
+    const saferMoves = rankedMoves.slice(0, Math.min(2, rankedMoves.length));
+    return weightedPick(
+      saferMoves.map((move, index) => ({
+        item: move,
+        weight: index === 0 ? 3 : 1,
+      })),
+      rankedMoves[0],
+    );
+  }
+
+  return rankedMoves[0];
+};
+
+export const getOfflineWeightedDice = ({
+  actionsTurn,
+  currentTurn,
+  listTokens,
+  favoredBotIndex,
+  currentRollCount = 0,
+  assistOpeningDelay = 2,
+}: {
+  actionsTurn: IActionsTurn;
+  currentTurn: number;
+  listTokens: IListTokens[];
+  favoredBotIndex: number;
+  currentRollCount?: number;
+  assistOpeningDelay?: number;
+}): TDicevalues => {
+  console.log("actionsTurn", actionsTurn);
+  const currentTokens = listTokens[currentTurn];
+  const usedValues = actionsTurn.diceList.map((dice) => dice.value);
+  const sixesInRow = usedValues.every(
+    (value) => value === DICE_VALUE_GET_OUT_JAIL,
+  )
+    ? usedValues.length
+    : 0;
+  const isFavoredBot = currentTurn === favoredBotIndex;
+  const candidateValues: TDicevalues[] = [1, 2, 3, 4, 5, 6];
+  const allTokensInJail = currentTokens.tokens.every(
+    (token) => token.typeTile === EtypeTile.JAIL,
+  );
+  const holdOpeningSix =
+    isFavoredBot &&
+    allTokensInJail &&
+    currentRollCount < Math.max(1, assistOpeningDelay - 1);
+  const safeCandidates = candidateValues.filter((value) => {
+    if (value === DICE_VALUE_GET_OUT_JAIL && sixesInRow >= 2) {
+      return false;
+    }
+
+    if (holdOpeningSix && value === DICE_VALUE_GET_OUT_JAIL) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const weightedCandidates = safeCandidates.map((value) => {
+    const diceList = [{ key: Number(value), value }];
+    const evaluated = validateDiceForTokenMovement({
+      currentTurn,
+      listTokens,
+      diceList,
+    });
+
+    if (!evaluated.canMoveTokens) {
+      return { item: value, weight: isFavoredBot ? 0.25 : 0.15 };
+    }
+
+    const bestMove = getBestControlledMove(
+      currentTurn,
+      evaluated.copyListTokens,
+      diceList,
+      favoredBotIndex,
+      "ASSIST",
+    );
+
+    let weight = 1;
+
+    if (bestMove) {
+      weight += Math.max(0, bestMove.score) / (isFavoredBot ? 55 : 110);
+    }
+
+    if (
+      currentTokens.tokens.some(
+        (token) => token.typeTile === EtypeTile.JAIL && value === 6,
+      )
+    ) {
+      const isDelayedOpeningTrigger =
+        isFavoredBot &&
+        allTokensInJail &&
+        currentRollCount === Math.max(1, assistOpeningDelay - 1);
+
+      weight += isFavoredBot ? 2.4 : 0.8;
+
+      if (isDelayedOpeningTrigger) {
+        weight += 7;
+      }
+    }
+
+    if (!isFavoredBot) {
+      weight *= value >= 5 ? 0.65 : 1;
+    }
+
+    const repeatedCount = usedValues.filter((used) => used === value).length;
+    if (repeatedCount > 0) {
+      weight *= 1 / (repeatedCount + 0.35);
+    }
+
+    return { item: value, weight };
+  });
+
+  const fallback = isFavoredBot ? 4 : (randomNumber(1, 6) as TDicevalues);
+  return weightedPick(weightedCandidates, fallback);
+};
+
+export const getOfflineControlledTokenSelection = (
+  currentTurn: number,
+  listTokens: IListTokens[],
+  diceList: IDiceList[],
+  favoredBotIndex: number,
+  mode: TOfflineBotMode = "EASY",
+) => {
+  const bestMove = getBestControlledMove(
+    currentTurn,
+    listTokens,
+    diceList,
+    favoredBotIndex,
+    mode,
+  );
+
+  if (!bestMove) {
+    return validateSelectTokenRandomly(currentTurn, listTokens, diceList);
+  }
+
+  return {
+    tokenIndex: bestMove.tokenIndex,
+    diceIndex: getDiceIndexSelected(diceList, bestMove.diceKey),
+  };
+};
 
 /**
  * Obtiene un valor aleatorio del dado
@@ -919,43 +1379,6 @@ export const getInitialPositionTokens = (
     );
 
     listTokens.push({ index: i, positionGame, tokens });
-  }
-
-  return listTokens;
-};
-
-/* ────────── online hvb tokens init ────────── */
-export const getInitialOnlineHvBTokens = (
-  boardColor: TBoardColors,
-  totalPlayers: TTotalPlayers,
-  players: IPlayer[],
-  currentUserId?: string,
-) => {
-  const seatColors = getPlayersColors(boardColor, totalPlayers);
-  const seatPositions = getTokensPositionsOnBoard(totalPlayers);
-  const listTokens: IListTokens[] = [];
-
-  for (let i = 0; i < totalPlayers; i++) {
-    const { isBot = false, isOnline = false, id } = players[i];
-    const isCurrentOnlineUser = !!currentUserId && id === currentUserId;
-    const canSelectToken = isOnline ? isCurrentOnlineUser : !isBot;
-
-    // online human vs bot এর জন্য সবসময় seat color + seat position use হবে
-    // profile color বা fixed color-position map use হবে না
-    const color = seatColors[i];
-    const positionGame = seatPositions[i];
-
-    const tokens: IToken[] = getTokensInJail(
-      positionGame,
-      color,
-      canSelectToken,
-    );
-
-    listTokens.push({
-      index: i,
-      positionGame,
-      tokens,
-    });
   }
 
   return listTokens;
@@ -1487,504 +1910,4 @@ export const validateSelectTokenRandomly = (
   );
 
   return { diceIndex, tokenIndex };
-};
-
-/* ────────── get token progress score for controlled bot mode ────────── */
-const getTokenProgressScore = (token: IToken) => {
-  if (token.typeTile === EtypeTile.END) return 1000 + token.index;
-  if (token.typeTile === EtypeTile.EXIT) return 500 + token.positionTile;
-  if (token.typeTile === EtypeTile.NORMAL) return token.positionTile;
-  return -100 + token.index;
-};
-
-/* ────────── predict token state after dice value ────────── */
-const getPredictedTokenState = (
-  token: IToken,
-  diceValue: TDicevalues,
-  positionGame: TPositionGame,
-) => {
-  let typeTile = token.typeTile;
-  let positionTile = token.positionTile;
-  const { exitTileIndex, startTileIndex } =
-    POSITION_ELEMENTS_BOARD[positionGame];
-
-  if (typeTile === EtypeTile.JAIL) {
-    if (diceValue !== DICE_VALUE_GET_OUT_JAIL) {
-      return {
-        valid: false,
-        typeTile,
-        positionTile,
-        progress: getTokenProgressScore(token),
-      };
-    }
-
-    typeTile = EtypeTile.NORMAL;
-    positionTile = startTileIndex;
-
-    return {
-      valid: true,
-      typeTile,
-      positionTile,
-      progress: 100 + positionTile,
-    };
-  }
-
-  if (typeTile === EtypeTile.EXIT) {
-    const remainingCells = TOTAL_EXIT_TILES - positionTile - 1;
-
-    if (diceValue > remainingCells) {
-      return {
-        valid: false,
-        typeTile,
-        positionTile,
-        progress: getTokenProgressScore(token),
-      };
-    }
-  }
-
-  for (let i = 0; i < diceValue; i++) {
-    if (typeTile === EtypeTile.NORMAL) {
-      if (positionTile !== exitTileIndex) {
-        positionTile = validateIncrementTokenMovement(positionTile);
-      } else {
-        typeTile = EtypeTile.EXIT;
-        positionTile = 0;
-      }
-
-      continue;
-    }
-
-    if (typeTile === EtypeTile.EXIT) {
-      positionTile = positionTile + 1;
-
-      if (positionTile === TOTAL_EXIT_TILES - 1) {
-        typeTile = EtypeTile.END;
-        positionTile = token.index;
-        break;
-      }
-    }
-  }
-
-  return {
-    valid: true,
-    typeTile,
-    positionTile,
-    progress:
-      typeTile === EtypeTile.END
-        ? 1000 + token.index
-        : typeTile === EtypeTile.EXIT
-          ? 500 + positionTile
-          : 100 + positionTile,
-  };
-};
-
-/* ────────── get opponent tokens on tile ────────── */
-const getOpponentTokensOnTile = (
-  currentTurn: number,
-  listTokens: IListTokens[],
-  positionTile: number,
-) =>
-  listTokens
-    .filter((_, index) => index !== currentTurn)
-    .flatMap((player) => player.tokens)
-    .filter(
-      (token) =>
-        token.typeTile === EtypeTile.NORMAL &&
-        token.positionTile === positionTile,
-    );
-
-/* ────────── get board distance between positions ────────── */
-const getBoardDistance = (from: number, to: number) => {
-  if (to >= from) return to - from;
-  return TOTAL_TILES - from + to;
-};
-
-/* ────────── get capture threat count ────────── */
-const getCaptureThreatCount = (
-  currentTurn: number,
-  listTokens: IListTokens[],
-  positionTile: number,
-) => {
-  if (validateSafeArea(positionTile)) return 0;
-
-  return listTokens
-    .filter((_, index) => index !== currentTurn)
-    .flatMap((player) => player.tokens)
-    .filter((token) => token.typeTile === EtypeTile.NORMAL)
-    .reduce((total, token) => {
-      const distance = getBoardDistance(token.positionTile, positionTile);
-      return distance >= 1 && distance <= 6 ? total + 1 : total;
-    }, 0);
-};
-
-/* ────────── get unsafe tokens for current player ────────── */
-const getUnsafeTokens = (currentTurn: number, listTokens: IListTokens[]) =>
-  listTokens[currentTurn].tokens.filter(
-    (token) =>
-      token.typeTile === EtypeTile.NORMAL &&
-      !validateSafeArea(token.positionTile) &&
-      getCaptureThreatCount(currentTurn, listTokens, token.positionTile) > 0,
-  );
-
-/* ────────── weighted pick helper ────────── */
-const weightedPick = <T>(
-  items: Array<{ item: T; weight: number }>,
-  fallback: T,
-): T => {
-  const totalWeight = items.reduce(
-    (sum, entry) => sum + Math.max(0, entry.weight),
-    0,
-  );
-
-  if (totalWeight <= 0) {
-    return fallback;
-  }
-
-  let target = Math.random() * totalWeight;
-
-  for (const entry of items) {
-    target -= Math.max(0, entry.weight);
-
-    if (target <= 0) {
-      return entry.item;
-    }
-  }
-
-  return items[items.length - 1]?.item ?? fallback;
-};
-
-/* ────────── get best controlled move for easy / assist bot ────────── */
-const getBestControlledMove = (
-  currentTurn: number,
-  listTokens: IListTokens[],
-  diceList: IDiceList[],
-  favoredBotIndex: number,
-  mode: TOfflineBotMode = "EASY",
-) => {
-  const playerTokens = listTokens[currentTurn];
-  const tokensCanMove = playerTokens.tokens.filter(
-    (token) => token.diceAvailable.length !== 0,
-  );
-
-  if (tokensCanMove.length === 0) {
-    return null;
-  }
-
-  const isFavoredBot = currentTurn === favoredBotIndex;
-  const { positionGame } = playerTokens;
-  const rankedMoves: Array<{
-    tokenIndex: number;
-    diceKey: number;
-    score: number;
-  }> = [];
-  const unsafeTokens = getUnsafeTokens(currentTurn, listTokens);
-
-  for (const token of tokensCanMove) {
-    for (const dice of token.diceAvailable) {
-      const predicted = getPredictedTokenState(token, dice.value, positionGame);
-
-      if (!predicted.valid) continue;
-
-      let score = predicted.progress;
-      const currentThreat =
-        token.typeTile === EtypeTile.NORMAL &&
-        !validateSafeArea(token.positionTile)
-          ? getCaptureThreatCount(currentTurn, listTokens, token.positionTile)
-          : 0;
-
-      const nextThreat =
-        predicted.typeTile === EtypeTile.NORMAL &&
-        !validateSafeArea(predicted.positionTile)
-          ? getCaptureThreatCount(
-              currentTurn,
-              listTokens,
-              predicted.positionTile,
-            )
-          : 0;
-
-      const opponentsOnLanding =
-        predicted.typeTile === EtypeTile.NORMAL
-          ? getOpponentTokensOnTile(
-              currentTurn,
-              listTokens,
-              predicted.positionTile,
-            )
-          : [];
-
-      const captureChance =
-        predicted.typeTile === EtypeTile.NORMAL &&
-        !validateSafeArea(predicted.positionTile) &&
-        opponentsOnLanding.length > 0;
-
-      const movesUnsafeToken = unsafeTokens.some(
-        (unsafeToken) => unsafeToken.index === token.index,
-      );
-
-      const reachesSafeArea =
-        predicted.typeTile === EtypeTile.NORMAL &&
-        validateSafeArea(predicted.positionTile);
-
-      const reducesThreat = currentThreat > 0 && nextThreat < currentThreat;
-
-      if (
-        token.typeTile === EtypeTile.JAIL &&
-        dice.value === DICE_VALUE_GET_OUT_JAIL
-      ) {
-        score += isFavoredBot ? 180 : 80;
-      }
-
-      if (predicted.typeTile === EtypeTile.END) {
-        score += 1500;
-      }
-
-      if (predicted.typeTile === EtypeTile.EXIT) {
-        score += 350;
-      }
-
-      if (mode === "EASY") {
-        if (reachesSafeArea) {
-          score += movesUnsafeToken ? 2050 : 260;
-        }
-
-        if (reducesThreat) {
-          score += 980 + (currentThreat - nextThreat) * 180;
-        }
-
-        if (captureChance) {
-          score += 1320 + opponentsOnLanding.length * 120;
-        }
-
-        if (
-          movesUnsafeToken &&
-          !captureChance &&
-          !reachesSafeArea &&
-          nextThreat > 0
-        ) {
-          score -= 320 + nextThreat * 90;
-        }
-      } else {
-        if (captureChance) {
-          score += 1600 + opponentsOnLanding.length * 120;
-        }
-
-        if (reachesSafeArea) {
-          score += movesUnsafeToken ? 1150 : 180;
-        }
-
-        if (reducesThreat) {
-          score += 520 + (currentThreat - nextThreat) * 140;
-        }
-
-        if (
-          movesUnsafeToken &&
-          !captureChance &&
-          !reachesSafeArea &&
-          nextThreat > 0
-        ) {
-          score -= 260 + nextThreat * 80;
-        }
-      }
-
-      if (
-        predicted.typeTile === EtypeTile.NORMAL &&
-        validateSafeArea(predicted.positionTile)
-      ) {
-        score += 80;
-      }
-
-      if (
-        predicted.typeTile === EtypeTile.NORMAL &&
-        !captureChance &&
-        nextThreat > 0
-      ) {
-        score -= nextThreat * (mode === "ASSIST" && isFavoredBot ? 35 : 55);
-      }
-
-      if (unsafeTokens.length > 0 && !movesUnsafeToken && !captureChance) {
-        score -= mode === "EASY" ? 360 : 180;
-      }
-
-      if (mode === "ASSIST" && isFavoredBot) {
-        score += dice.value * 18;
-      } else {
-        score += dice.value * 8;
-      }
-
-      rankedMoves.push({
-        tokenIndex: token.index,
-        diceKey: dice.key,
-        score,
-      });
-    }
-  }
-
-  if (rankedMoves.length === 0) {
-    return null;
-  }
-
-  rankedMoves.sort((a, b) => b.score - a.score);
-
-  if (mode === "ASSIST") {
-    if (isFavoredBot) {
-      const topMoves = rankedMoves.slice(0, Math.min(3, rankedMoves.length));
-
-      return weightedPick(
-        topMoves.map((move) => ({
-          item: move,
-          weight: Math.max(
-            1,
-            move.score - topMoves[topMoves.length - 1].score + 1,
-          ),
-        })),
-        rankedMoves[0],
-      );
-    }
-
-    const saferMoves = rankedMoves.slice(0, Math.min(2, rankedMoves.length));
-
-    return weightedPick(
-      saferMoves.map((move, index) => ({
-        item: move,
-        weight: index === 0 ? 3 : 1,
-      })),
-      rankedMoves[0],
-    );
-  }
-
-  return rankedMoves[0];
-};
-
-/* ────────── get weighted dice for assist bot ────────── */
-export const getOfflineWeightedDice = ({
-  actionsTurn,
-  currentTurn,
-  listTokens,
-  favoredBotIndex,
-  currentRollCount = 0,
-  assistOpeningDelay = 2,
-}: {
-  actionsTurn: IActionsTurn;
-  currentTurn: number;
-  listTokens: IListTokens[];
-  favoredBotIndex: number;
-  currentRollCount?: number;
-  assistOpeningDelay?: number;
-}): TDicevalues => {
-  const currentTokens = listTokens[currentTurn];
-  const usedValues = actionsTurn.diceList.map((dice) => dice.value);
-  const sixesInRow = usedValues.every(
-    (value) => value === DICE_VALUE_GET_OUT_JAIL,
-  )
-    ? usedValues.length
-    : 0;
-
-  const isFavoredBot = currentTurn === favoredBotIndex;
-  const candidateValues: TDicevalues[] = [1, 2, 3, 4, 5, 6];
-  const allTokensInJail = currentTokens.tokens.every(
-    (token) => token.typeTile === EtypeTile.JAIL,
-  );
-
-  const holdOpeningSix =
-    isFavoredBot &&
-    allTokensInJail &&
-    currentRollCount < Math.max(1, assistOpeningDelay - 1);
-
-  const safeCandidates = candidateValues.filter((value) => {
-    if (value === DICE_VALUE_GET_OUT_JAIL && sixesInRow >= 2) {
-      return false;
-    }
-
-    if (holdOpeningSix && value === DICE_VALUE_GET_OUT_JAIL) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const weightedCandidates = safeCandidates.map((value) => {
-    const diceList = [{ key: Number(value), value }];
-    const evaluated = validateDiceForTokenMovement({
-      currentTurn,
-      listTokens,
-      diceList,
-    });
-
-    if (!evaluated.canMoveTokens) {
-      return { item: value, weight: isFavoredBot ? 0.25 : 0.15 };
-    }
-
-    const bestMove = getBestControlledMove(
-      currentTurn,
-      evaluated.copyListTokens,
-      diceList,
-      favoredBotIndex,
-      "ASSIST",
-    );
-
-    let weight = 1;
-
-    if (bestMove) {
-      weight += Math.max(0, bestMove.score) / (isFavoredBot ? 55 : 110);
-    }
-
-    if (
-      currentTokens.tokens.some(
-        (token) =>
-          token.typeTile === EtypeTile.JAIL &&
-          value === DICE_VALUE_GET_OUT_JAIL,
-      )
-    ) {
-      const isDelayedOpeningTrigger =
-        isFavoredBot &&
-        allTokensInJail &&
-        currentRollCount === Math.max(1, assistOpeningDelay - 1);
-
-      weight += isFavoredBot ? 2.4 : 0.8;
-
-      if (isDelayedOpeningTrigger) {
-        weight += 7;
-      }
-    }
-
-    if (!isFavoredBot) {
-      weight *= value >= 5 ? 0.65 : 1;
-    }
-
-    const repeatedCount = usedValues.filter((used) => used === value).length;
-
-    if (repeatedCount > 0) {
-      weight *= 1 / (repeatedCount + 0.35);
-    }
-
-    return { item: value, weight };
-  });
-
-  const fallback = isFavoredBot ? 4 : (randomNumber(1, 6) as TDicevalues);
-  return weightedPick(weightedCandidates, fallback);
-};
-
-/* ────────── get controlled token selection for easy / assist bot ────────── */
-export const getOfflineControlledTokenSelection = (
-  currentTurn: number,
-  listTokens: IListTokens[],
-  diceList: IDiceList[],
-  favoredBotIndex: number,
-  mode: TOfflineBotMode = "EASY",
-) => {
-  const bestMove = getBestControlledMove(
-    currentTurn,
-    listTokens,
-    diceList,
-    favoredBotIndex,
-    mode,
-  );
-
-  if (!bestMove) {
-    return validateSelectTokenRandomly(currentTurn, listTokens, diceList);
-  }
-
-  return {
-    tokenIndex: bestMove.tokenIndex,
-    diceIndex: getDiceIndexSelected(diceList, bestMove.diceKey),
-  };
 };

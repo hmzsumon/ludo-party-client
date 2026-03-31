@@ -8,7 +8,6 @@ interface PlayersProps {
   players: {
     name: string;
     photo: string;
-    isBot?: boolean;
   }[];
 }
 
@@ -46,7 +45,7 @@ const PlayersInfo = ({ dataRoomSocket }: PlayerInfoProps) => {
 
   const players = getPositionPlayers(
     dataRoomSocket.orderPlayers,
-    dataRoomSocket.totalPlayers,
+    dataRoomSocket.totalPlayers
   );
 
   return (

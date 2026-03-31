@@ -28,6 +28,7 @@ export type TPositionProfiles = keyof typeof EPositionProfiles;
 export type TPositionProfile = keyof typeof EPositionProfile;
 export type TActionsBoardGame = keyof typeof EActionsBoardGame;
 export type TTypeGame = keyof typeof ETypeGame;
+export type TOfflineBotMode = "EASY" | "ASSIST";
 export type TTotalPlayers = 2 | 3 | 4;
 export type TTypesOnlineGameplay = keyof typeof TYPES_ONLINE_GAMEPLAY;
 export type TSocketErrors = keyof typeof SocketErrors;
@@ -36,7 +37,6 @@ export type ITypeChatMessage = keyof typeof TYPES_CHAT_MESSAGES;
 export type IEOptionsGame = keyof typeof EOptionsGame;
 export type IESounds = keyof typeof ESounds;
 export type IENextStepGame = keyof typeof ENextStepGame;
-export type TOfflineBotMode = "EASY" | "ASSIST";
 
 /* ────────── misc shared types ────────── */
 export type IPredefinedChatMessages = Record<
@@ -238,7 +238,7 @@ export interface IDataRoom {
   totalPlayers: TTotalPlayers;
   betAmount?: number;
   feePercent?: number;
-  onlineBotMode?: TOfflineBotMode;
+  botMode?: TOfflineBotMode;
 }
 
 /* ────────── online game props ────────── */
@@ -252,7 +252,7 @@ export interface IDataOnline {
   socket: Socket;
   currentUserId?: string;
   betAmount?: number;
-  onlineBotMode?: TOfflineBotMode;
+  botMode?: TOfflineBotMode;
 }
 
 /* ────────── ui room ordering ────────── */

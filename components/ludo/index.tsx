@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 
 import { useOptionsContext } from "@/context/optionContext";
@@ -47,8 +41,6 @@ import Gameover from "./gameover";
 import {
   getInitialActionsTurnValue,
   getInitialDataPlayers,
-  getInitialOnlineHvBPlayers,
-  getInitialOnlineHvBTokens,
   getInitialPositionTokens,
   getOfflineControlledTokenSelection,
   getOfflineWeightedDice,
@@ -73,8 +65,7 @@ interface GameProps {
   socket?: Socket;
   currentUserId?: string;
   betAmount?: number;
-  offlineBotMode?: TOfflineBotMode;
-  onlineBotMode?: TOfflineBotMode;
+  botMode?: TOfflineBotMode;
 }
 
 const Game = ({
@@ -88,117 +79,48 @@ const Game = ({
   socket,
   currentUserId = "",
   betAmount = 0,
-  offlineBotMode = "EASY",
-  onlineBotMode = "EASY",
+  botMode = "EASY",
 }: GameProps) => {
   const { playSound } = useOptionsContext();
   const [refreshWallet] = useLazyGetWalletQuery();
   const didEmitMatchResultRef = useRef(false);
-  const assistOpeningDelayRef = useRef(2);
-  const botActionLockRef = useRef(false);
-
-  /* ────────── online human vs bot setup detect ────────── */
-  const isOnlineHumanVsBotSetup = useMemo(() => {
-    if (typeGame !== ETypeGame.ONLINE) return false;
-    if (totalPlayers !== 2) return false;
-
-    const totalBots = users.filter((user) => user?.isBot).length;
-    const totalHumans = users.filter((user) => !user?.isBot).length;
-
-    return totalBots === 1 && totalHumans === 1;
-  }, [typeGame, totalPlayers, users]);
 
   /* ────────── initial players data ────────── */
-  const initialPlayers = useMemo(() => {
-    // offline আগের মতোই থাকবে
-    if (!isOnlineHumanVsBotSetup) {
-      return getInitialDataPlayers(users, boardColor, totalPlayers);
-    }
-
-    // online human vs bot এর জন্য seat based player init
-    return getInitialOnlineHvBPlayers(users, boardColor, totalPlayers);
-  }, [users, boardColor, totalPlayers, isOnlineHumanVsBotSetup]);
+  const initialPlayers = useMemo(
+    () => getInitialDataPlayers(users, boardColor, totalPlayers),
+    [users, boardColor, totalPlayers]
+  );
 
   /* ────────── players state init ────────── */
   const [players, setPlayers] = useState<IPlayer[]>(initialPlayers);
 
   /* ────────── tokens state init ────────── */
-  const [listTokens, setListTokens] = useState<IListTokens[]>(() => {
-    // offline আগের মতোই থাকবে
-    if (!isOnlineHumanVsBotSetup) {
-      return getInitialPositionTokens(
-        boardColor,
-        totalPlayers,
-        initialPlayers,
-        currentUserId,
-      );
-    }
-
-    // online human vs bot এর জন্য আলাদা token init
-    return getInitialOnlineHvBTokens(
-      boardColor,
-      totalPlayers,
-      initialPlayers,
-      currentUserId,
-    );
-  });
+  const [listTokens, setListTokens] = useState<IListTokens[]>(() =>
+    getInitialPositionTokens(boardColor, totalPlayers, initialPlayers, currentUserId)
+  );
 
   /* ────────── turn init ────────── */
   const [actionsTurn, setActionsTurn] = useState<IActionsTurn>(() =>
-    getInitialActionsTurnValue(initialTurn, initialPlayers, currentUserId),
+    getInitialActionsTurnValue(initialTurn, initialPlayers, currentUserId)
   );
 
   const [currentTurn, setCurrentTurn] = useState(initialTurn);
   const [actionsMoveToken, setActionsMoveToken] = useState<IActionsMoveToken>(
-    INITIAL_ACTIONS_MOVE_TOKEN,
+    INITIAL_ACTIONS_MOVE_TOKEN
   );
   const [totalTokens, setTotalTokens] = useState<TShowTotalTokens>({});
   const [isGameOver, setIsGameOver] = useState<IGameOver>({
     showModal: false,
     gameOver: false,
   });
+  const offlineBotRollCountRef = useRef<Record<number, number>>({});
+  const assistOpeningDelayRef = useRef<number>(Math.floor(Math.random() * 3) + 2);
 
   /* ────────── online mode flags ────────── */
   const isOnlineGame = useMemo(
     () => typeGame === ETypeGame.ONLINE && Boolean(socket) && Boolean(roomName),
-    [roomName, socket, typeGame],
+    [roomName, socket, typeGame]
   );
-
-  /* ────────── sync players and tokens when users/room data update ────────── */
-  useEffect(() => {
-    const nextPlayers = !isOnlineHumanVsBotSetup
-      ? getInitialDataPlayers(users, boardColor, totalPlayers)
-      : getInitialOnlineHvBPlayers(users, boardColor, totalPlayers);
-
-    const nextTokens = !isOnlineHumanVsBotSetup
-      ? getInitialPositionTokens(
-          boardColor,
-          totalPlayers,
-          nextPlayers,
-          currentUserId,
-        )
-      : getInitialOnlineHvBTokens(
-          boardColor,
-          totalPlayers,
-          nextPlayers,
-          currentUserId,
-        );
-
-    setPlayers(nextPlayers);
-    setListTokens(nextTokens);
-    setCurrentTurn(initialTurn);
-    setActionsTurn(
-      getInitialActionsTurnValue(initialTurn, nextPlayers, currentUserId),
-    );
-    setTotalTokens({});
-  }, [
-    users,
-    boardColor,
-    totalPlayers,
-    currentUserId,
-    initialTurn,
-    isOnlineHumanVsBotSetup,
-  ]);
 
   /* ────────── local player index ────────── */
   const currentPlayerIndex = useMemo(() => {
@@ -207,54 +129,22 @@ const Game = ({
   }, [currentUserId, players]);
 
   /* ────────── turn ownership ────────── */
+  const isCurrentTurnBot = Boolean(players[currentTurn]?.isBot);
+  const onlineBotIndex = useMemo(
+    () => players.findIndex((player) => player.isBot),
+    [players]
+  );
+  const onlineBotMode = useMemo<TOfflineBotMode>(
+    () => (botMode === "ASSIST" ? "ASSIST" : "EASY"),
+    [botMode]
+  );
+  const hasOnlineBotControl = useMemo(
+    () => isOnlineGame && totalPlayers === 2 && onlineBotIndex >= 0,
+    [isOnlineGame, onlineBotIndex, totalPlayers]
+  );
   const isMyOnlineTurn =
-    isOnlineGame &&
-    currentPlayerIndex >= 0 &&
-    currentTurn === currentPlayerIndex;
-
-  /* ────────── current turn player detect ────────── */
-  const currentTurnPlayer = players[currentTurn];
-  const isBotTurn = Boolean(currentTurnPlayer?.isBot);
-
-  /* ────────── active bot mode source ────────── */
-  const activeBotMode = useMemo<TOfflineBotMode>(() => {
-    if (isOnlineGame) {
-      return onlineBotMode || "EASY";
-    }
-
-    return offlineBotMode || "EASY";
-  }, [isOnlineGame, offlineBotMode, onlineBotMode]);
-
-  /* ────────── detect human vs bot room ────────── */
-  const isHumanVsBotRoom = useMemo(() => {
-    if (!isOnlineGame) return false;
-    return totalPlayers === 2 && players.some((player) => player.isBot);
-  }, [isOnlineGame, players, totalPlayers]);
-
-  /* ────────── human player controls online bot ────────── */
-  const onlineBotControllerId = useMemo(() => {
-    if (!isHumanVsBotRoom) return "";
-    return players.find((player) => !player.isBot)?.id || "";
-  }, [isHumanVsBotRoom, players]);
-
-  /* ────────── allow only one client to control bot ────────── */
-  const canControlOnlineBot = useMemo(() => {
-    if (!isHumanVsBotRoom) return false;
-    return Boolean(currentUserId) && currentUserId === onlineBotControllerId;
-  }, [currentUserId, isHumanVsBotRoom, onlineBotControllerId]);
-
-  /* ────────── controlled bot mode enable ────────── */
-  const hasControlledBotMode = useMemo(() => {
-    if (!isOnlineGame) return true;
-    return players.some((player) => player.isBot);
-  }, [isOnlineGame, players]);
-
-  /* ────────── favored bot index for assist / easy control ────────── */
-  const favoredBotIndex = useMemo(() => {
-    return players.findIndex(
-      (player) => player.isBot && player.index === currentTurn,
-    );
-  }, [currentTurn, players]);
+    isOnlineGame && currentPlayerIndex >= 0 && currentTurn === currentPlayerIndex;
+  const canControlCurrentTurn = isMyOnlineTurn || isCurrentTurnBot;
 
   /* ────────── room action emit ────────── */
   const emitRoomAction = useCallback(
@@ -262,7 +152,7 @@ const Game = ({
       if (!socket || !roomName) return;
       socket.emit("ACTIONS", payload);
     },
-    [roomName, socket],
+    [roomName, socket]
   );
 
   /* ────────── handle opponent leave result ────────── */
@@ -271,7 +161,7 @@ const Game = ({
       setPlayers((prevPlayers) => {
         const copyPlayers = prevPlayers.map((player) => ({ ...player }));
         const leftPlayerIndex = copyPlayers.findIndex(
-          (player) => player.id === leftUserId,
+          (player) => player.id === leftUserId
         );
 
         if (leftPlayerIndex >= 0) {
@@ -281,7 +171,7 @@ const Game = ({
         }
 
         const remainingPlayers = copyPlayers.filter(
-          (player) => player.id !== leftUserId && !player.isOffline,
+          (player) => player.id !== leftUserId && !player.isOffline
         );
 
         remainingPlayers.sort((a, b) => {
@@ -310,20 +200,29 @@ const Game = ({
       playSound(ESounds.GAMER_OVER);
       setIsGameOver({ showModal: false, gameOver: true });
     },
-    [currentUserId, playSound],
+    [currentUserId, playSound]
   );
 
   /* ────────── token selection handler ────────── */
   const handleSelectedToken = useCallback(
     ({ diceIndex, tokenIndex }: ISelectTokenValues, isActionSocket = false) => {
       if (isOnlineGame && !isActionSocket) {
-        if (isBotTurn) {
-          if (!canControlOnlineBot) return;
-          if (botActionLockRef.current) return;
+        if (!canControlCurrentTurn) return;
 
-          botActionLockRef.current = true;
-        } else {
-          if (!isMyOnlineTurn) return;
+        if (isCurrentTurnBot) {
+          validateSelectToken({
+            actionsTurn,
+            currentTurn,
+            diceIndex,
+            listTokens,
+            tokenIndex,
+            totalTokens,
+            setActionsMoveToken,
+            setActionsTurn,
+            setTotalTokens,
+            setListTokens,
+          });
+          return;
         }
 
         emitRoomAction({
@@ -336,8 +235,6 @@ const Game = ({
         });
         return;
       }
-
-      botActionLockRef.current = false;
 
       validateSelectToken({
         actionsTurn,
@@ -355,15 +252,14 @@ const Game = ({
     [
       actionsTurn,
       currentTurn,
-      canControlOnlineBot,
       emitRoomAction,
-      isBotTurn,
-      isMyOnlineTurn,
+      canControlCurrentTurn,
+      isCurrentTurnBot,
       isOnlineGame,
       listTokens,
       roomName,
       totalTokens,
-    ],
+    ]
   );
 
   /* ────────── timer handler ────────── */
@@ -374,12 +270,8 @@ const Game = ({
 
       const { isBot } = currentPlayer;
 
-      if (isOnlineGame) {
-        if (isBot) {
-          if (!canControlOnlineBot) return;
-        } else if (!isMyOnlineTurn) {
-          return;
-        }
+      if (isOnlineGame && !canControlCurrentTurn) {
+        return;
       }
 
       const makeAutomaticMovement = ends || isBot;
@@ -390,30 +282,20 @@ const Game = ({
         }
 
         if (actionsTurn.actionsBoardGame === EActionsBoardGame.SELECT_TOKEN) {
-          if (
-            isBot &&
-            hasControlledBotMode &&
-            favoredBotIndex >= 0 &&
-            activeBotMode
-          ) {
-            const { diceIndex, tokenIndex } =
-              getOfflineControlledTokenSelection(
-                currentTurn,
-                listTokens,
-                actionsTurn.diceList,
-                favoredBotIndex,
-                activeBotMode,
-              );
-
-            handleSelectedToken({ diceIndex, tokenIndex });
-            return;
-          }
-
-          const { diceIndex, tokenIndex } = validateSelectTokenRandomly(
-            currentTurn,
-            listTokens,
-            actionsTurn.diceList,
-          );
+          const { diceIndex, tokenIndex } =
+            hasOnlineBotControl && isCurrentTurnBot
+              ? getOfflineControlledTokenSelection(
+                  currentTurn,
+                  listTokens,
+                  actionsTurn.diceList,
+                  onlineBotIndex,
+                  onlineBotMode
+                )
+              : validateSelectTokenRandomly(
+                  currentTurn,
+                  listTokens,
+                  actionsTurn.diceList
+                );
 
           handleSelectedToken({ diceIndex, tokenIndex });
         }
@@ -422,99 +304,100 @@ const Game = ({
     [
       actionsTurn.actionsBoardGame,
       actionsTurn.diceList,
-      activeBotMode,
-      canControlOnlineBot,
       currentTurn,
-      favoredBotIndex,
       handleSelectedToken,
-      hasControlledBotMode,
-      isMyOnlineTurn,
+      canControlCurrentTurn,
+      isCurrentTurnBot,
       isOnlineGame,
       listTokens,
+      onlineBotIndex,
+      onlineBotMode,
       players,
-    ],
+      hasOnlineBotControl,
+    ]
   );
 
   /* ────────── dice select handler ────────── */
   const handleSelectDice = useCallback(
     (diceValue?: TDicevalues, isActionSocket = false) => {
-      /* ────────── controlled bot dice for assist mode ────────── */
-      let resolvedDiceValue = diceValue;
-
-      if (
-        !resolvedDiceValue &&
-        isBotTurn &&
-        hasControlledBotMode &&
-        activeBotMode === "ASSIST" &&
-        favoredBotIndex >= 0
-      ) {
-        resolvedDiceValue = getOfflineWeightedDice({
-          actionsTurn,
-          currentTurn,
-          listTokens,
-          favoredBotIndex,
-          currentRollCount: actionsTurn.diceRollNumber,
-          assistOpeningDelay: assistOpeningDelayRef.current,
-        });
-      }
-
-      if (!resolvedDiceValue) {
-        resolvedDiceValue = (Math.floor(Math.random() * 6) + 1) as TDicevalues;
-      }
-
       if (isOnlineGame && !isActionSocket) {
-        if (isBotTurn) {
-          if (!canControlOnlineBot) return;
-          if (botActionLockRef.current) return;
+        if (!canControlCurrentTurn) return;
 
-          botActionLockRef.current = true;
-        } else {
-          if (!isMyOnlineTurn) return;
+        if (isCurrentTurnBot) {
+          const currentRollCount = offlineBotRollCountRef.current[currentTurn] || 0;
+          const resolvedDiceValue =
+            onlineBotMode === "ASSIST" && onlineBotIndex >= 0
+              ? getOfflineWeightedDice({
+                  actionsTurn,
+                  currentTurn,
+                  listTokens,
+                  favoredBotIndex: onlineBotIndex,
+                  currentRollCount,
+                  assistOpeningDelay: assistOpeningDelayRef.current,
+                })
+              : diceValue;
+
+          offlineBotRollCountRef.current[currentTurn] = currentRollCount + 1;
+          setActionsTurn((current) =>
+            getRandomValueDice(current, resolvedDiceValue)
+          );
+          playSound(ESounds.ROLL_DICE);
+          return;
         }
+
+        const value =
+          diceValue || ((Math.floor(Math.random() * 6) + 1) as TDicevalues);
 
         emitRoomAction({
           type: EActionsBoardGame.ROLL_DICE,
           roomName,
-          [EActionsBoardGame.ROLL_DICE]: resolvedDiceValue,
+          [EActionsBoardGame.ROLL_DICE]: value,
         });
         return;
       }
 
-      botActionLockRef.current = false;
-
-      setActionsTurn((current) =>
-        getRandomValueDice(current, resolvedDiceValue),
-      );
+      const currentRollCount = offlineBotRollCountRef.current[currentTurn] || 0;
+      offlineBotRollCountRef.current[currentTurn] = currentRollCount + 1;
+      setActionsTurn((current) => getRandomValueDice(current, diceValue));
       playSound(ESounds.ROLL_DICE);
     },
     [
       actionsTurn,
-      activeBotMode,
-      canControlOnlineBot,
+      canControlCurrentTurn,
       currentTurn,
       emitRoomAction,
-      favoredBotIndex,
-      hasControlledBotMode,
-      isBotTurn,
-      isMyOnlineTurn,
+      isCurrentTurnBot,
       isOnlineGame,
       listTokens,
+      onlineBotIndex,
+      onlineBotMode,
       playSound,
       roomName,
-    ],
+    ]
   );
 
   /* ────────── dice done handler ────────── */
   const handleDoneDice = useCallback(
     (isActionSocket = false) => {
       if (isOnlineGame && !isActionSocket) {
-        if (isBotTurn) {
-          if (!canControlOnlineBot) return;
-          if (botActionLockRef.current) return;
+        if (!canControlCurrentTurn) return;
 
-          botActionLockRef.current = true;
-        } else {
-          if (!isMyOnlineTurn) return;
+        if (isCurrentTurnBot) {
+          validateDicesForTokens({
+            actionsTurn,
+            currentTurn,
+            listTokens,
+            players,
+            totalTokens,
+            currentUserId,
+            playSound,
+            setActionsMoveToken,
+            setActionsTurn,
+            setCurrentTurn,
+            setListTokens,
+            setTotalTokens,
+          });
+          return;
         }
 
         emitRoomAction({
@@ -524,8 +407,6 @@ const Game = ({
         });
         return;
       }
-
-      botActionLockRef.current = false;
 
       validateDicesForTokens({
         actionsTurn,
@@ -546,17 +427,16 @@ const Game = ({
       actionsTurn,
       currentTurn,
       currentUserId,
-      canControlOnlineBot,
       emitRoomAction,
-      isBotTurn,
-      isMyOnlineTurn,
+      canControlCurrentTurn,
+      isCurrentTurnBot,
       isOnlineGame,
       listTokens,
       players,
       playSound,
       roomName,
       totalTokens,
-    ],
+    ]
   );
 
   /* ────────── mute chat handler ────────── */
@@ -564,20 +444,9 @@ const Game = ({
     console.log("handleMuteChat: ", { playerIndex });
   }, []);
 
-  /* ────────── unlock bot action after state changes ────────── */
-  useEffect(() => {
-    botActionLockRef.current = false;
-  }, [currentTurn, actionsTurn.actionsBoardGame, actionsTurn.diceList.length]);
-
   /* ────────── settle wager when game over ────────── */
   useEffect(() => {
-    if (
-      !isOnlineGame ||
-      !socket ||
-      !roomName ||
-      !betAmount ||
-      didEmitMatchResultRef.current
-    ) {
+    if (!isOnlineGame || !socket || !roomName || !betAmount || didEmitMatchResultRef.current) {
       return;
     }
 
@@ -594,15 +463,7 @@ const Game = ({
       winnerUserId: winner.id,
     });
     refreshWallet();
-  }, [
-    betAmount,
-    isGameOver.gameOver,
-    isOnlineGame,
-    players,
-    refreshWallet,
-    roomName,
-    socket,
-  ]);
+  }, [betAmount, isGameOver.gameOver, isOnlineGame, players, refreshWallet, roomName, socket]);
 
   /* ────────── socket listeners ────────── */
   useEffect(() => {
@@ -686,14 +547,14 @@ const Game = ({
         setTotalTokens,
       });
     },
-    actionsMoveToken.isRunning ? TOKEN_MOVEMENT_INTERVAL_VALUE : null,
+    actionsMoveToken.isRunning ? TOKEN_MOVEMENT_INTERVAL_VALUE : null
   );
 
   /* ────────── game over wait ────────── */
   useWait(
     isGameOver.gameOver,
     WAIT_SHOW_MODAL_GAME_OVER,
-    useCallback(() => setIsGameOver({ showModal: true, gameOver: true }), []),
+    useCallback(() => setIsGameOver({ showModal: true, gameOver: true }), [])
   );
 
   /* ────────── profile props ────────── */

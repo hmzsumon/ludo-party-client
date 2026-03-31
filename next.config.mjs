@@ -10,6 +10,11 @@ const nextConfig = {
         hostname: "coin-images.coingecko.com",
         pathname: "/coins/images/**",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
     ],
   },
 

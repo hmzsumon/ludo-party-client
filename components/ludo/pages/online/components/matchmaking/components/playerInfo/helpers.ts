@@ -9,9 +9,9 @@ import type { TDataRoomUserOrder, TTotalPlayers } from "@/interfaces";
  */
 export const getPositionPlayers = (
   orderPlayers: TDataRoomUserOrder,
-  totalPlayers: TTotalPlayers,
+  totalPlayers: TTotalPlayers
 ) => {
-  const players: { name: string; photo: string; isBot?: boolean }[] = [];
+  const players: { name: string; photo: string }[] = [];
 
   /**
    * Se iteran la totalidad de usuarios que se conectan...
@@ -20,8 +20,8 @@ export const getPositionPlayers = (
     /**
      * Si el orden del usario existe, se extrae el nombre y la foto
      */
-    const { name = "", photo = "", isBot = false } = orderPlayers?.[i] || {};
-    players.push({ name, photo, isBot });
+    const { name = "", photo = "" } = orderPlayers?.[i] || {};
+    players.push({ name, photo });
   }
 
   return players;
