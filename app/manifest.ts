@@ -4,6 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Ludo Party",
     short_name: "Ludo Party",
+    description: "Ludo Party game app",
     start_url: "/",
     scope: "/",
     display: "standalone",
