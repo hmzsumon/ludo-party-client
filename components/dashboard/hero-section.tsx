@@ -8,7 +8,7 @@ const HeroSection = () => {
             Play Ludo &
           </span>
           <span className="mt-1 block text-[56px] font-black tracking-tight text-[#ffb400] drop-shadow-[0_3px_0_rgba(0,0,0,0.35)]">
-            Win Big!
+            Win Big Big!
           </span>
         </h1>
 
