@@ -4,19 +4,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: "Home", icon: "🏠", href: "/dashboard" },
-  { label: "Games", icon: "🎮", href: "/games" },
-  { label: "Wallet", icon: "👛", href: "/wallet" },
-  { label: "Profile", icon: "👤", href: "/profile" },
+  { label: "Home", icon: "🏠", activeIcon: "🏠", href: "/dashboard" },
+  { label: "Games", icon: "🎮", activeIcon: "🎮", href: "/games" },
+  { label: "Wallet", icon: "👛", activeIcon: "👛", href: "/wallet" },
+  { label: "Profile", icon: "👤", activeIcon: "👤", href: "/profile" },
 ];
 
 const BottomNav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed -bottom-2.5 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2  pb-3 md:bottom-2">
-      {/* ────────── Bottom Navigation ────────── */}
-      <div className="grid grid-cols-4 overflow-hidden w-full rounded-t-2xl  bg-[rgba(9,18,56,0.96)] shadow-[0_-8px_24px_rgba(0,0,0,0.25),0_12px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur">
+    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2">
+      {/* ── Nav Container ── */}
+      <div
+        className="relative grid grid-cols-4 w-full overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #1a0533 0%, #0d0221 100%)",
+          borderTop: "1px solid rgba(255,215,0,0.2)",
+          boxShadow: "0 -8px 32px rgba(0,0,0,0.6)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        {/* Top gold line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
+
         {navItems.map((item) => {
           const isActive =
             item.href === "/"
@@ -27,13 +38,53 @@ const BottomNav = () => {
             <Link
               key={item.label}
               href={item.href}
-              className="flex flex-col items-center justify-center gap-1 px-2 py-2"
+              className="relative flex flex-col items-center justify-center gap-1 px-2 py-3"
             >
-              <span className="text-lg">{item.icon}</span>
+              {/* Active background glow */}
+              {isActive && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center top, rgba(255,215,0,0.12) 0%, transparent 70%)",
+                  }}
+                />
+              )}
+
+              {/* Active top bar */}
+              {isActive && (
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full"
+                  style={{
+                    background: "linear-gradient(90deg, #ffd700, #ffec6e)",
+                  }}
+                />
+              )}
+
+              {/* Icon circle when active */}
+              <div
+                className="relative flex h-8 w-8 items-center justify-center rounded-xl"
+                style={
+                  isActive
+                    ? {
+                        background:
+                          "linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.08) 100%)",
+                        border: "1px solid rgba(255,215,0,0.3)",
+                      }
+                    : {}
+                }
+              >
+                <span className={`text-xl ${isActive ? "" : "opacity-50"}`}>
+                  {item.icon}
+                </span>
+              </div>
+
               <span
-                className={`text-xs font-bold tracking-tight ${
-                  isActive ? "text-[#55c7ff]" : "text-white"
-                }`}
+                className="text-[10px] font-black tracking-tight"
+                style={{
+                  color: isActive ? "#ffd700" : "rgba(255,255,255,0.45)",
+                  textShadow: isActive ? "0 0 8px rgba(255,215,0,0.5)" : "none",
+                }}
               >
                 {item.label}
               </span>

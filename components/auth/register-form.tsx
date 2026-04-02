@@ -34,7 +34,6 @@ function getApiError(error: any): string {
 
 export default function RegisterForm(): JSX.Element {
   const router = useRouter();
-
   const [registerUser, { isLoading }] = useRegisterUserMutation();
   const [triggerEmailCheck, emailCheckState] =
     useLazyCheckEmailExistOrNotQuery();
@@ -65,23 +64,18 @@ export default function RegisterForm(): JSX.Element {
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
   const partnerCode = watch("partnerCode");
-
   const normalizedEmail = useMemo(
     () => email?.trim().toLowerCase() || "",
     [email],
   );
 
-  /* ────────── Live Email Check ────────── */
   useEffect(() => {
     if (!normalizedEmail) return;
-
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
     if (!isValidEmail) return;
-
     const timer = setTimeout(async () => {
       try {
         const result = await triggerEmailCheck(normalizedEmail).unwrap();
-
         if (result?.exists) {
           setError("email", {
             type: "server",
@@ -90,56 +84,38 @@ export default function RegisterForm(): JSX.Element {
         } else if (errors.email?.type === "server") {
           clearErrors("email");
         }
-      } catch {
-        /* ────────── Silent Email Check Fail ────────── */
-      }
+      } catch {}
     }, 500);
-
     return () => clearTimeout(timer);
   }, [normalizedEmail, triggerEmailCheck, setError, clearErrors, errors.email]);
 
-  /* ────────── Clear Smart Errors On Typing ────────── */
   useEffect(() => {
     if (touchedFields.fullName && fullName) clearErrors("fullName");
   }, [fullName, touchedFields.fullName, clearErrors]);
-
   useEffect(() => {
     if (touchedFields.email && normalizedEmail) clearErrors("email");
   }, [normalizedEmail, touchedFields.email, clearErrors]);
-
   useEffect(() => {
-    if (touchedFields.mobileNumber && mobileNumber) {
-      clearErrors("mobileNumber");
-    }
+    if (touchedFields.mobileNumber && mobileNumber) clearErrors("mobileNumber");
   }, [mobileNumber, touchedFields.mobileNumber, clearErrors]);
-
   useEffect(() => {
     if (touchedFields.password && password) clearErrors("password");
   }, [password, touchedFields.password, clearErrors]);
-
   useEffect(() => {
-    if (touchedFields.confirmPassword && confirmPassword) {
+    if (touchedFields.confirmPassword && confirmPassword)
       clearErrors("confirmPassword");
-    }
   }, [confirmPassword, touchedFields.confirmPassword, clearErrors]);
-
   useEffect(() => {
     if (touchedFields.partnerCode && partnerCode) clearErrors("partnerCode");
   }, [partnerCode, touchedFields.partnerCode, clearErrors]);
 
-  /* ────────── Submit Register Form ────────── */
   const onSubmit = async (data: RegisterFormValues) => {
     try {
       if (emailCheckState.data?.exists) {
-        setError("email", {
-          type: "server",
-          message: "Email already exists",
-        });
-
+        setError("email", { type: "server", message: "Email already exists" });
         toast.error("Email already exists");
         return;
       }
-
       const response = await registerUser({
         name: data.fullName.trim(),
         email: data.email.trim().toLowerCase(),
@@ -147,209 +123,265 @@ export default function RegisterForm(): JSX.Element {
         password: data.password,
         partnerCode: data.partnerCode?.trim() || undefined,
       }).unwrap();
-
       toast.success(response?.message || "Verification email sent");
-
       router.push(
         `/verify-email?email=${encodeURIComponent(data.email.trim().toLowerCase())}`,
       );
     } catch (error: any) {
       const message = getApiError(error);
       const lowerMessage = message.toLowerCase();
-
       if (lowerMessage.includes("email")) {
-        setError("email", {
-          type: "server",
-          message: "Email already exists",
-        });
-
+        setError("email", { type: "server", message: "Email already exists" });
         toast.error("Email already exists");
         return;
       }
-
       if (lowerMessage.includes("mobile") || lowerMessage.includes("phone")) {
         setError("mobileNumber", {
           type: "server",
           message: "Mobile number already exists",
         });
-
         toast.error("Mobile number already exists");
         return;
       }
-
       if (lowerMessage.includes("referral")) {
-        setError("partnerCode", {
-          type: "server",
-          message,
-        });
-
+        setError("partnerCode", { type: "server", message });
         toast.error(message);
         return;
       }
-
-      setError("mobileNumber", {
-        type: "server",
-        message,
-      });
-
+      setError("mobileNumber", { type: "server", message });
       toast.error(message);
     }
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center">
-      <div className="scale-90 sm:scale-100">
+    <div className="flex flex-1 flex-col items-center w-full">
+      {/* ── Logo ── */}
+      <div className="scale-90 sm:scale-100 ls-float">
         <Logo />
       </div>
 
-      <h1 className="mt-2 text-center text-2xl font-extrabold tracking-tight text-white drop-shadow-[0_4px_6px_rgba(0,0,0,0.45)]">
-        Register
-      </h1>
+      {/* ── Title ── */}
+      <div className="mt-4 text-center">
+        <h1 className="text-[28px] font-black tracking-tight text-white">
+          Join the Game!
+        </h1>
+        <p className="text-sm text-white/50 font-semibold mt-1">
+          Create your account & start winning
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="mt-6 flex w-full flex-col gap-4"
+      {/* ── Divider ── */}
+      <div className="mt-4 flex w-full items-center gap-3">
+        <div
+          className="flex-1 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,215,0,0.3))",
+          }}
+        />
+        <span className="text-yellow-400/60 text-xs font-bold">
+          ✦ REGISTER ✦
+        </span>
+        <div
+          className="flex-1 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255,215,0,0.3), transparent)",
+          }}
+        />
+      </div>
+
+      {/* ── Form Card ── */}
+      <div
+        className="mt-4 w-full rounded-3xl overflow-hidden p-5"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(74,26,138,0.5) 0%, rgba(29,5,70,0.6) 100%)",
+          border: "1px solid rgba(255,215,0,0.15)",
+          boxShadow:
+            "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)",
+        }}
       >
-        <AuthInput
-          type="text"
-          placeholder="Full Name"
-          error={errors.fullName?.message}
-          {...register("fullName", {
-            required: "Full name is required",
-            minLength: {
-              value: 3,
-              message: "Full name must be at least 3 characters",
-            },
-            onChange: () => {
-              if (errors.fullName) {
-                clearErrors("fullName");
-              }
-            },
-          })}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          {/* Full Name */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              👤 Full Name
+            </label>
+            <AuthInput
+              type="text"
+              placeholder="Enter your full name"
+              error={errors.fullName?.message}
+              {...register("fullName", {
+                required: "Full name is required",
+                minLength: {
+                  value: 3,
+                  message: "Full name must be at least 3 characters",
+                },
+                onChange: () => {
+                  if (errors.fullName) clearErrors("fullName");
+                },
+              })}
+            />
+          </div>
 
-        <div>
-          <AuthInput
-            type="email"
-            placeholder="Email Address"
-            error={errors.email?.message}
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Enter a valid email address",
-              },
-              onChange: () => {
-                if (errors.email) {
-                  clearErrors("email");
-                }
-              },
-            })}
-          />
+          {/* Email */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              📧 Email Address
+            </label>
+            <AuthInput
+              type="email"
+              placeholder="Enter your email"
+              error={errors.email?.message}
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address",
+                },
+                onChange: () => {
+                  if (errors.email) clearErrors("email");
+                },
+              })}
+            />
+            {normalizedEmail && !errors.email && emailCheckState.isFetching && (
+              <p className="mt-1 pl-1 text-xs font-semibold text-white/50">
+                Checking email...
+              </p>
+            )}
+            {normalizedEmail &&
+              !errors.email &&
+              emailCheckState.data &&
+              !emailCheckState.data.exists && (
+                <p className="mt-1 pl-1 text-xs font-semibold text-green-400">
+                  ✓ Email is available
+                </p>
+              )}
+          </div>
 
-          {normalizedEmail && !errors.email && emailCheckState.isFetching ? (
-            <p className="mt-1 pl-1 text-xs font-semibold text-white/60">
-              Checking email...
-            </p>
-          ) : null}
+          {/* Mobile */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              📱 Mobile Number
+            </label>
+            <AuthInput
+              type="tel"
+              placeholder="Enter your mobile number"
+              error={errors.mobileNumber?.message}
+              {...register("mobileNumber", {
+                required: "Mobile number is required",
+                minLength: {
+                  value: 6,
+                  message: "Please enter a valid mobile number",
+                },
+                onChange: () => {
+                  if (errors.mobileNumber) clearErrors("mobileNumber");
+                },
+              })}
+            />
+          </div>
 
-          {normalizedEmail &&
-          !errors.email &&
-          emailCheckState.data &&
-          !emailCheckState.data.exists ? (
-            <p className="mt-1 pl-1 text-xs font-semibold text-emerald-400">
-              Email is available
-            </p>
-          ) : null}
-        </div>
+          {/* Referral Code */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              🎁 Referral Code{" "}
+              <span className="text-white/30 normal-case font-semibold">
+                (Optional)
+              </span>
+            </label>
+            <AuthInput
+              type="text"
+              placeholder="Enter referral code"
+              error={errors.partnerCode?.message}
+              {...register("partnerCode", {
+                onChange: () => {
+                  if (errors.partnerCode) clearErrors("partnerCode");
+                },
+              })}
+            />
+          </div>
 
-        <AuthInput
-          type="tel"
-          placeholder="Mobile Number"
-          error={errors.mobileNumber?.message}
-          {...register("mobileNumber", {
-            required: "Mobile number is required",
-            minLength: {
-              value: 6,
-              message: "Please enter a valid mobile number",
-            },
-            onChange: () => {
-              if (errors.mobileNumber) {
-                clearErrors("mobileNumber");
-              }
-            },
-          })}
-        />
+          {/* Password */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              🔒 Password
+            </label>
+            <AuthInput
+              type="password"
+              placeholder="Create a password"
+              error={errors.password?.message}
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+                onChange: () => {
+                  if (errors.password) clearErrors("password");
+                  if (errors.confirmPassword) clearErrors("confirmPassword");
+                },
+              })}
+            />
+          </div>
 
-        <AuthInput
-          type="text"
-          placeholder="Referral Code (Optional)"
-          error={errors.partnerCode?.message}
-          {...register("partnerCode", {
-            onChange: () => {
-              if (errors.partnerCode) {
-                clearErrors("partnerCode");
-              }
-            },
-          })}
-        />
+          {/* Confirm Password */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              🔒 Confirm Password
+            </label>
+            <AuthInput
+              type="password"
+              placeholder="Re-enter your password"
+              error={errors.confirmPassword?.message}
+              {...register("confirmPassword", {
+                required: "Confirm password is required",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+                onChange: () => {
+                  if (errors.confirmPassword) clearErrors("confirmPassword");
+                },
+              })}
+            />
+          </div>
 
-        <AuthInput
-          type="password"
-          placeholder="Password"
-          error={errors.password?.message}
-          {...register("password", {
-            required: "Password is required",
-            minLength: {
-              value: 6,
-              message: "Password must be at least 6 characters",
-            },
-            onChange: () => {
-              if (errors.password) {
-                clearErrors("password");
-              }
-              if (errors.confirmPassword) {
-                clearErrors("confirmPassword");
-              }
-            },
-          })}
-        />
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="ls-btn ls-btn-gold ls-shine-effect w-full py-3.5 text-[16px] font-black mt-1 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 rounded-full border-2 border-amber-900/50 border-t-amber-900 animate-spin" />
+                Creating Account...
+              </span>
+            ) : (
+              "🎮 Create Account"
+            )}
+          </button>
+        </form>
+      </div>
 
-        <AuthInput
-          type="password"
-          placeholder="Confirm Password"
-          error={errors.confirmPassword?.message}
-          {...register("confirmPassword", {
-            required: "Confirm password is required",
-            validate: (value) => value === password || "Passwords do not match",
-            onChange: () => {
-              if (errors.confirmPassword) {
-                clearErrors("confirmPassword");
-              }
-            },
-          })}
-        />
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="mt-2 w-full rounded-xl border border-lime-300/30 bg-[linear-gradient(180deg,#8cf61e_0%,#46c81d_56%,#0a991f_100%)] py-2 text-xl font-extrabold tracking-tight text-white shadow-[inset_0_8px_14px_rgba(255,255,255,0.12),inset_0_-6px_10px_rgba(0,0,0,0.16),0_8px_22px_rgba(0,0,0,0.34)] transition hover:-translate-y-[1px] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-80"
-        >
-          {isLoading ? "Registering..." : "Register"}
-        </button>
-      </form>
-
-      <p className="mt-4 text-center text-sm font-medium text-white/80">
+      {/* ── Login Link ── */}
+      <p className="mt-5 text-center text-sm font-semibold text-white/60">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="font-extrabold text-[#79a7ff] transition hover:text-[#9fc0ff]"
+          className="font-black text-yellow-400 hover:text-yellow-300 transition"
         >
           Sign In
         </Link>
       </p>
 
-      <div className="mt-2 h-[2px] w-[86%] rounded-full bg-[linear-gradient(90deg,transparent,rgba(74,128,255,0.95),transparent)] shadow-[0_0_12px_rgba(74,128,255,0.9)]" />
+      {/* ── Bottom Divider ── */}
+      <div
+        className="mt-6 h-[2px] w-[70%] rounded-full"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(255,215,0,0.5), transparent)",
+        }}
+      />
     </div>
   );
 }

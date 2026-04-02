@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useSelector } from "react-redux";
-import Logo from "../branding/logo";
 
 const DashboardHeader = () => {
   const { user } = useSelector((s: any) => s.auth) as any;
@@ -13,50 +12,113 @@ const DashboardHeader = () => {
       : user?.name || "User";
 
   return (
-    <div className="relative w-full mt-4">
-      {/* ────────── Logo Block ────────── */}
-      <div className="flex justify-center">
-        <Logo />
-      </div>
-
-      {/* ────────── Notification Block ────────── */}
-      <div className="absolute right-0 top-0 flex items-center gap-4">
-        <button className="relative flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(16,25,69,0.88)] shadow-[0_8px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10">
-          <span className="text-xl">🔔</span>
-          <span className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#111b4f] bg-[#ff4b4b] text-[12px] font-extrabold text-white">
-            0
-          </span>
-        </button>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-3">
-        {/* ────────── Profile Row ────────── */}
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 rounded-full bg-[rgba(16,25,69,0.88)] px-2 py-1.5 pr-4 shadow-[0_8px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-[#ffcc3d] bg-[linear-gradient(180deg,#ffc36b_0%,#ff8f2f_100%)] text-xl shadow-[0_6px_16px_rgba(0,0,0,0.28)]">
-              👨
-            </div>
-            <span className="truncate text-sm font-bold text-white">
-              {shortName}
-            </span>
-          </div>
-        </div>
-
-        {/* ────────── Wallet Row ────────── */}
-        <div className="flex shrink-0 overflow-hidden rounded-full bg-[rgba(16,25,69,0.95)] shadow-[0_10px_24px_rgba(0,0,0,0.35)] ring-1 ring-white/10">
-          <div className="flex items-center gap-1 px-2 py-2">
-            <span className="text-lg">🪙</span>
-            <span className="text-sm font-extrabold text-white">
-              ৳ {user?.m_balance?.toLocaleString?.() ?? "0"}
-            </span>
-          </div>
-          <Link
-            href="/deposit"
-            className="flex items-center justify-center bg-[linear-gradient(180deg,#15cf2d_0%,#0eaf22_100%)] px-4 text-sm font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+    <div className="relative w-full mt-2">
+      {/* ── Top Row: Profile + Notification ── */}
+      <div className="flex items-center justify-between gap-3">
+        {/* ── Profile Pill ── */}
+        <div
+          className="flex items-center gap-2 rounded-full px-1.5 py-1.5 pr-4"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(74,26,138,0.95) 0%, rgba(29,5,70,0.95) 100%)",
+            border: "1px solid rgba(255,215,0,0.3)",
+            boxShadow:
+              "0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
+          }}
+        >
+          {/* Avatar */}
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full text-xl shrink-0"
+            style={{
+              background: "linear-gradient(180deg, #ffd700 0%, #c8960a 100%)",
+              boxShadow: "0 0 0 2px #7c3aed, 0 4px 12px rgba(0,0,0,0.4)",
+            }}
           >
-            <button>+ Add</button>
-          </Link>
+            👨
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-widest leading-none mb-0.5">
+              Player
+            </p>
+            <p className="text-sm font-black text-white truncate">
+              {shortName}
+            </p>
+          </div>
         </div>
+
+        {/* ── Right: Gems + Notification ── */}
+        <div className="flex items-center gap-2">
+          {/* Gems Counter */}
+          <div
+            className="flex items-center gap-1.5 rounded-full px-3 py-2"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(74,26,138,0.95) 0%, rgba(29,5,70,0.95) 100%)",
+              border: "1px solid rgba(0,212,255,0.3)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            }}
+          >
+            <span className="text-base ">💎</span>
+            <span className="text-sm font-black text-cyan-300">
+              {user?.m_balance?.toLocaleString?.() ?? "0"}
+            </span>
+          </div>
+
+          {/* Notification Bell */}
+          <button
+            className="relative flex h-10 w-10 items-center justify-center rounded-full"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(74,26,138,0.95) 0%, rgba(29,5,70,0.95) 100%)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            }}
+          >
+            <span className="text-lg">🔔</span>
+            <span
+              className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black text-white"
+              style={{
+                background: "linear-gradient(180deg, #ff6b6b 0%, #e53935 100%)",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+              }}
+            >
+              0
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Wallet Bar ── */}
+      <div
+        className="mt-3 flex items-center justify-between rounded-2xl px-3 py-2.5"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(53,10,110,0.9) 0%, rgba(29,5,70,0.9) 100%)",
+          border: "1px solid rgba(255,215,0,0.2)",
+          boxShadow:
+            "0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)",
+        }}
+      >
+        {/* Coin balance */}
+        <div className="flex items-center gap-2">
+          <span className="text-2xl ls-coin">🪙</span>
+          <div>
+            <p className="text-[10px] text-yellow-400/80 font-bold uppercase tracking-widest leading-none">
+              Balance
+            </p>
+            <p className="text-lg font-black text-cyan-300">
+              💎 {user?.m_balance?.toLocaleString?.() ?? "0"}
+            </p>
+          </div>
+        </div>
+
+        {/* Add Money Button */}
+        <Link href="/deposit">
+          <button className="ls-btn ls-btn-gold ls-shine-effect px-5 py-2.5 text-[13px] font-black">
+            + Add Money
+          </button>
+        </Link>
       </div>
     </div>
   );

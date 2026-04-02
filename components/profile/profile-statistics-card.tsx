@@ -1,36 +1,77 @@
 const stats = [
-  { label: "Matches", value: "215", color: "text-white" },
-  { label: "Wins", value: "134", color: "text-[#68f36e]" },
-  { label: "Losses", value: "58", color: "text-[#ff74a6]" },
-  { label: "Win Streak", value: "12", color: "text-[#55c7ff]" },
+  { label: "Total Matches", value: "215", icon: "🎮", color: "#ffffff" },
+  { label: "Wins", value: "134", icon: "🏆", color: "#4cde7e" },
+  { label: "Losses", value: "58", icon: "💔", color: "#ff6b6b" },
+  { label: "Win Streak", value: "12", icon: "🔥", color: "#55c7ff" },
 ];
 
 const ProfileStatisticsCard = () => {
   return (
-    <section className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(31,28,102,0.78)_0%,rgba(10,18,62,0.82)_100%)] p-4 shadow-[0_10px_26px_rgba(0,0,0,0.28)] backdrop-blur sm:p-5">
-      {/* ────────── Card Header ────────── */}
-      <div className="flex items-center gap-3">
-        <span className="text-[28px]">📊</span>
-        <h3 className="text-[22px] font-black tracking-tight text-white">
-          Statistics
-        </h3>
+    <section
+      className="relative rounded-[20px] overflow-hidden p-4"
+      style={{
+        background:
+          "linear-gradient(145deg, rgba(74,26,138,0.6) 0%, rgba(29,5,70,0.7) 100%)",
+        border: "1px solid rgba(255,215,0,0.15)",
+        boxShadow:
+          "0 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
+      }}
+    >
+      {/* Shine line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent" />
+
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xl">📊</span>
+        <h3 className="text-[17px] font-black text-white">Statistics</h3>
       </div>
 
-      {/* ────────── Stats List ────────── */}
-      <div className="mt-5 space-y-3 rounded-[18px] bg-[rgba(255,255,255,0.04)] p-4 ring-1 ring-white/10">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-2">
         {stats.map((item) => (
           <div
             key={item.label}
-            className="flex items-center justify-between rounded-[14px] bg-[rgba(255,255,255,0.03)] px-4 py-3"
+            className="flex flex-col items-center justify-center rounded-xl py-3 px-2 text-center"
+            style={{
+              background: "rgba(0,0,0,0.25)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
           >
-            <span className="text-base font-bold text-white/85">
-              {item.label}
-            </span>
-            <span className={`text-2xl font-black ${item.color}`}>
+            <span className="text-xl mb-1">{item.icon}</span>
+            <h4
+              className="text-[22px] font-black leading-none"
+              style={{ color: item.color }}
+            >
               {item.value}
-            </span>
+            </h4>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-0.5">
+              {item.label}
+            </p>
           </div>
         ))}
+      </div>
+
+      {/* Win Rate Bar */}
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+            Win Rate
+          </span>
+          <span className="text-[11px] font-black text-green-400">62%</span>
+        </div>
+        <div
+          className="h-2 w-full rounded-full overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+        >
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: "62%",
+              background: "linear-gradient(90deg, #4cde7e, #1db954)",
+              boxShadow: "0 0 8px rgba(76,222,126,0.5)",
+            }}
+          />
+        </div>
       </div>
     </section>
   );

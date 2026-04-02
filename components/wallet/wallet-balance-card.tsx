@@ -7,27 +7,67 @@ const WalletBalanceCard = () => {
   const { user } = useSelector((s: any) => s.auth) as any;
 
   return (
-    <section className="w-full rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(49,28,118,0.80)_0%,rgba(20,17,74,0.78)_100%)] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.32)] backdrop-blur sm:p-5 lg:p-6">
-      {/* ────────── Balance Hero Wrapper ────────── */}
-      <div className="flex flex-col items-center text-center">
-        {/* ────────── Balance Amount ────────── */}
-        <h2 className="mt-5 text-2xl font-black tracking-tight text-[#ffcf45] drop-shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:text-[58px]">
-          ৳ {user?.m_balance?.toLocaleString?.() ?? 0}
+    <section
+      className="relative w-full rounded-[24px] overflow-hidden p-5"
+      style={{
+        background:
+          "linear-gradient(145deg, rgba(74,26,138,0.85) 0%, rgba(29,5,70,0.9) 100%)",
+        border: "1px solid rgba(255,215,0,0.25)",
+        boxShadow:
+          "0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+      }}
+    >
+      {/* Top shine */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
+
+      {/* Gold glow bg */}
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200px] h-[100px] opacity-20"
+        style={{
+          background: "radial-gradient(ellipse, #ffd700 0%, transparent 70%)",
+        }}
+      />
+
+      <div className="relative flex flex-col items-center text-center">
+        {/* Label */}
+        <p className="text-[11px] font-black uppercase tracking-widest text-yellow-400/60">
+          Total Balance
+        </p>
+
+        {/* Big Coin icon */}
+        <span className="mt-2 text-5xl ls-float">🪙</span>
+
+        {/* Amount */}
+        <h2
+          className="mt-2 text-xl font-black tracking-tight leading-none"
+          style={{
+            background:
+              "linear-gradient(180deg, #ffe566 0%, #ffd700 40%, #c8960a 100%)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
+          }}
+        >
+          <span className="text-xl ">💎</span>{" "}
+          {user?.m_balance?.toLocaleString?.() ?? "0"}
         </h2>
 
-        {/* ────────── Action Buttons ────────── */}
-        <div className="mt-4 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-          <Link
-            href="/deposit"
-            className="rounded-full bg-[linear-gradient(180deg,#32ee58_0%,#0da93c_100%)] px-6 py-4 text-[18px] font-black text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10 sm:text-[20px]"
-          >
-            Deposit
+        <p className="mt-1 text-[12px] font-semibold text-white/40">
+          Available for withdrawal
+        </p>
+
+        {/* Action Buttons */}
+        <div className="mt-5 grid w-full grid-cols-2 gap-3">
+          <Link href="/deposit" className="block">
+            <button className="ls-btn ls-btn-green ls-shine-effect w-full py-3.5 text-sm font-black">
+              ⬆️ Deposit
+            </button>
           </Link>
-          <Link
-            href="/withdraw"
-            className="rounded-full bg-[linear-gradient(180deg,#ff724b_0%,#ca2446_100%)] px-6 py-4 text-[18px] font-black text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] ring-1 ring-white/10 sm:text-[20px]"
-          >
-            Withdraw
+          <Link href="/withdraw" className="block">
+            <button className="ls-btn ls-btn-red w-full py-3.5 text-sm font-black">
+              ⬇️ Withdraw
+            </button>
           </Link>
         </div>
       </div>

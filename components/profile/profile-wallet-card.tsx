@@ -1,34 +1,65 @@
 "use client";
 
+import Link from "next/link";
 import { useSelector } from "react-redux";
 
 const ProfileWalletCard = () => {
   const { user } = useSelector((s: any) => s.auth) as any;
 
   return (
-    <section className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(31,28,102,0.78)_0%,rgba(10,18,62,0.82)_100%)] p-4 shadow-[0_10px_26px_rgba(0,0,0,0.28)] backdrop-blur sm:p-5">
-      {/* ────────── Card Header ────────── */}
-      <div className="flex items-center gap-3">
-        <span className="text-[28px]">💼</span>
-        <h3 className="text-[22px] font-black tracking-tight text-white">
-          Wallet
-        </h3>
+    <section
+      className="relative rounded-[20px] overflow-hidden p-4"
+      style={{
+        background:
+          "linear-gradient(145deg, rgba(74,26,138,0.6) 0%, rgba(29,5,70,0.7) 100%)",
+        border: "1px solid rgba(255,215,0,0.2)",
+        boxShadow:
+          "0 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
+      }}
+    >
+      {/* Shine line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
+
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xl">💰</span>
+        <h3 className="text-[17px] font-black text-white">Wallet</h3>
       </div>
 
-      {/* ────────── Card Body ────────── */}
-      <div className="mt-5 rounded-[18px] bg-[rgba(255,255,255,0.04)] p-4 ring-1 ring-white/10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Balance Display */}
+      <div
+        className="rounded-xl p-4 flex items-center justify-between"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.05) 100%)",
+          border: "1px solid rgba(255,215,0,0.2)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-3xl ls-coin">🪙</span>
           <div>
-            <p className="text-sm font-bold text-white/65">Current Balance</p>
-            <h4 className="mt-1 text-[34px] font-black tracking-tight text-[#ffcf45]">
-              ৳ {user?.m_balance?.toLocaleString?.() ?? 0}
+            <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400/60">
+              Total Balance
+            </p>
+            <h4 className="text-[28px] font-black text-yellow-400 leading-tight">
+              ৳ {user?.m_balance?.toLocaleString?.() ?? "0"}
             </h4>
           </div>
-
-          <button className="rounded-full bg-[linear-gradient(180deg,#2ae85f_0%,#0da93c_100%)] px-6 py-3 text-base font-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.24)]">
-            + Add Money
-          </button>
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Link href="/deposit" className="block">
+          <button className="ls-btn ls-btn-green ls-shine-effect w-full py-2.5 text-[13px] font-black">
+            ⬆️ Deposit
+          </button>
+        </Link>
+        <Link href="/withdraw" className="block">
+          <button className="ls-btn ls-btn-red w-full py-2.5 text-[13px] font-black">
+            ⬇️ Withdraw
+          </button>
+        </Link>
       </div>
     </section>
   );

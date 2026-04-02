@@ -39,177 +39,199 @@ export default function LoginForm(): JSX.Element {
   } = useForm<LoginFormValues>({
     mode: "onTouched",
     reValidateMode: "onChange",
-    defaultValues: {
-      mobileNumber: "",
-      password: "",
-    },
+    defaultValues: { mobileNumber: "", password: "" },
   });
 
   const mobileNumber = watch("mobileNumber");
   const password = watch("password");
 
-  /* ────────── Clear Field Errors On Typing ────────── */
   useEffect(() => {
-    if (touchedFields.mobileNumber && mobileNumber) {
-      clearErrors("mobileNumber");
-    }
+    if (touchedFields.mobileNumber && mobileNumber) clearErrors("mobileNumber");
   }, [mobileNumber, touchedFields.mobileNumber, clearErrors]);
 
   useEffect(() => {
-    if (touchedFields.password && password) {
-      clearErrors("password");
-    }
+    if (touchedFields.password && password) clearErrors("password");
   }, [password, touchedFields.password, clearErrors]);
 
-  /* ────────── Submit Login Form ────────── */
   const onSubmit = async (data: LoginFormValues) => {
     try {
       const response = await loginUser({
         phone: data.mobileNumber.trim(),
         password: data.password,
       }).unwrap();
-
       toast.success(response?.message || "Login successful");
       router.push("/dashboard");
     } catch (error: any) {
       const message = getApiError(error);
       const lowerMessage = message.toLowerCase();
-      console.error("Login error:", error.status);
 
-      /* ────────── Handle Mobile Related Error ────────── */
       if (lowerMessage.includes("mobile") || lowerMessage.includes("phone")) {
-        setError("mobileNumber", {
-          type: "server",
-          message,
-        });
-
+        setError("mobileNumber", { type: "server", message });
         toast.error(message);
         return;
       }
-
-      /* ────────── Handle Password Related Error ────────── */
       if (lowerMessage.includes("password")) {
-        setError("password", {
-          type: "server",
-          message,
-        });
-
+        setError("password", { type: "server", message });
         toast.error(message);
         return;
       }
-
-      /* ────────── Handle Invalid Credential Error ────────── */
-      if (
-        lowerMessage.includes("invalid") ||
-        lowerMessage.includes("credential") ||
-        lowerMessage.includes("not found") ||
-        lowerMessage.includes("verify your email")
-      ) {
-        setError("mobileNumber", {
-          type: "server",
-          message,
-        });
-
-        setError("password", {
-          type: "server",
-          message,
-        });
-
-        toast.error(message);
-        return;
-      }
-
-      /* ────────── Handle Fallback Error ────────── */
-      setError("mobileNumber", {
-        type: "server",
-        message,
-      });
-
-      setError("password", {
-        type: "server",
-        message,
-      });
-
+      setError("mobileNumber", { type: "server", message });
+      setError("password", { type: "server", message });
       toast.error(message);
     }
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center">
-      <div className="scale-90 sm:scale-100">
+    <div className="flex flex-1 flex-col items-center w-full">
+      {/* ── Logo ── */}
+      <div className="scale-90 sm:scale-100 ls-float">
         <Logo />
       </div>
 
-      <h1 className="mt-4 text-center text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_4px_6px_rgba(0,0,0,0.45)]">
-        Sign In
-      </h1>
+      {/* ── Title ── */}
+      <div className="mt-6 text-center">
+        <h1 className="text-[32px] font-black tracking-tight text-white">
+          Welcome Back!
+        </h1>
+        <p className="text-sm text-white/50 font-semibold mt-1">
+          Sign in to continue playing
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="mt-10 flex w-full flex-col gap-5"
+      {/* ── Decorative Divider ── */}
+      <div className="mt-5 flex w-full items-center gap-3">
+        <div
+          className="flex-1 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,215,0,0.3))",
+          }}
+        />
+        <span className="text-yellow-400/60 text-xs font-bold">✦ LOGIN ✦</span>
+        <div
+          className="flex-1 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255,215,0,0.3), transparent)",
+          }}
+        />
+      </div>
+
+      {/* ── Form Card ── */}
+      <div
+        className="mt-5 w-full rounded-3xl overflow-hidden p-5"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(74,26,138,0.5) 0%, rgba(29,5,70,0.6) 100%)",
+          border: "1px solid rgba(255,215,0,0.15)",
+          boxShadow:
+            "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)",
+        }}
       >
-        <AuthInput
-          type="tel"
-          placeholder="Mobile Number"
-          error={errors.mobileNumber?.message}
-          {...register("mobileNumber", {
-            required: "Mobile number is required",
-            minLength: {
-              value: 6,
-              message: "Please enter a valid mobile number",
-            },
-            onChange: () => {
-              if (errors.mobileNumber) {
-                clearErrors("mobileNumber");
-              }
-            },
-          })}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          {/* Mobile Number Input */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              📱 Mobile Number
+            </label>
+            <AuthInput
+              type="tel"
+              placeholder="Enter your mobile number"
+              error={errors.mobileNumber?.message}
+              {...register("mobileNumber", {
+                required: "Mobile number is required",
+                minLength: {
+                  value: 6,
+                  message: "Please enter a valid mobile number",
+                },
+                onChange: () => {
+                  if (errors.mobileNumber) clearErrors("mobileNumber");
+                },
+              })}
+            />
+          </div>
 
-        <AuthInput
-          type="password"
-          placeholder="Password"
-          error={errors.password?.message}
-          {...register("password", {
-            required: "Password is required",
-            minLength: {
-              value: 6,
-              message: "Password must be at least 6 characters",
-            },
-            onChange: () => {
-              if (errors.password) {
-                clearErrors("password");
-              }
-            },
-          })}
-        />
+          {/* Password Input */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
+              🔒 Password
+            </label>
+            <AuthInput
+              type="password"
+              placeholder="Enter your password"
+              error={errors.password?.message}
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+                onChange: () => {
+                  if (errors.password) clearErrors("password");
+                },
+              })}
+            />
+          </div>
 
-        <div className="-mt-1 mb-2 text-center">
-          <Link
-            href="/forgot-password"
-            className="text-sm font-semibold text-white/70 transition hover:text-white"
+          {/* Forgot Password */}
+          <div className="text-right -mt-1">
+            <Link
+              href="/forgot-password"
+              className="text-[12px] font-bold text-yellow-400/70 hover:text-yellow-400 transition"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="ls-btn ls-btn-green ls-shine-effect w-full py-3.5 text-[16px] font-black disabled:opacity-70 disabled:cursor-not-allowed mt-1"
           >
-            Forgot Password?
-          </Link>
-        </div>
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                Signing In...
+              </span>
+            ) : (
+              "🎲 Sign In & Play"
+            )}
+          </button>
+        </form>
+      </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="py-2 w-full rounded-xl border border-lime-300/30 bg-[linear-gradient(180deg,#8cf61e_0%,#46c81d_56%,#0a991f_100%)] text-xl font-extrabold tracking-tight text-white shadow-[inset_0_8px_14px_rgba(255,255,255,0.12),inset_0_-6px_10px_rgba(0,0,0,0.16),0_8px_22px_rgba(0,0,0,0.34)] transition hover:-translate-y-[1px] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-80"
-        >
-          {isLoading ? "Signing In..." : "Sign In"}
-        </button>
-
-        <Link
-          href="/register"
-          className="mt-2 flex py-2 w-full items-center justify-center rounded-[14px] border border-[#5f72d5]/50 bg-[rgba(8,14,40,0.24)] text-center text-xl font-extrabold tracking-tight text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_18px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(12,20,56,0.32)]"
-        >
-          Create New Account
+      {/* ── Register Link ── */}
+      <div className="mt-4 w-full">
+        <Link href="/register" className="block w-full">
+          <div
+            className="ls-btn w-full py-3.5 text-center text-[15px] font-black text-white"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(74,26,138,0.6) 0%, rgba(29,5,70,0.7) 100%)",
+              border: "1px solid rgba(255,215,0,0.25)",
+              boxShadow: "0 4px 0 rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.3)",
+              borderRadius: "50px",
+              display: "block",
+              textAlign: "center",
+              lineHeight: "1",
+              padding: "14px 0",
+              cursor: "pointer",
+            }}
+          >
+            ✨ Create New Account
+          </div>
         </Link>
-      </form>
+      </div>
 
-      <div className="mt-8 h-[2px] w-[86%] rounded-full bg-[linear-gradient(90deg,transparent,rgba(74,128,255,0.95),transparent)] shadow-[0_0_12px_rgba(74,128,255,0.9)]" />
+      {/* ── Bottom Divider ── */}
+      <div
+        className="mt-8 h-[2px] w-[70%] rounded-full"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(255,215,0,0.5), transparent)",
+        }}
+      />
     </div>
   );
 }

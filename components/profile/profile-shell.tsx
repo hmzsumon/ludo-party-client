@@ -12,38 +12,54 @@ import ProfileWalletCard from "./profile-wallet-card";
 
 const ProfileShell = () => {
   return (
-    <main className="min-h-screen w-full overflow-hidden bg-[#040b2b] text-white">
-      {/* ────────── Background Layer ────────── */}
-      <div className="relative min-h-screen w-full bg-[radial-gradient(circle_at_top,#5c2278_0%,#12215a_24%,#07133b_58%,#040b2b_100%)] px-4 pb-32 pt-4 sm:px-5 md:px-6 lg:px-8 xl:px-10">
-        <div className="pointer-events-none absolute inset-0 opacity-70">
-          <div className="absolute left-[-40px] top-[100px] h-48 w-48 rounded-full bg-[#4d2f91]/25 blur-3xl" />
-          <div className="absolute right-[-30px] top-[280px] h-52 w-52 rounded-full bg-[#1f6fff]/20 blur-3xl" />
-          <div className="absolute bottom-[180px] left-[30px] h-44 w-44 rounded-full bg-[#ff8a00]/10 blur-3xl" />
+    <main
+      className="min-h-screen w-full overflow-hidden text-white ls-stars-bg"
+      style={{
+        background:
+          "radial-gradient(ellipse at top, #3d0a7a 0%, #1a0533 45%, #0d0221 100%)",
+      }}
+    >
+      <div className="relative min-h-screen w-full px-4 pb-32 pt-4">
+        {/* ── Glow Blobs ── */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[350px] h-[350px] rounded-full opacity-20"
+            style={{
+              background:
+                "radial-gradient(circle, #7c3aed 0%, transparent 70%)",
+            }}
+          />
+          <div
+            className="absolute top-[35%] right-[-60px] w-[200px] h-[200px] rounded-full opacity-15"
+            style={{
+              background:
+                "radial-gradient(circle, #ffd700 0%, transparent 70%)",
+            }}
+          />
+          <div
+            className="absolute bottom-[20%] left-[-40px] w-[180px] h-[180px] rounded-full opacity-10"
+            style={{
+              background:
+                "radial-gradient(circle, #00d4ff 0%, transparent 70%)",
+            }}
+          />
         </div>
 
         <div className="relative z-10 mx-auto w-full max-w-[1400px]">
-          {/* ────────── Topbar ────────── */}
           <ProfileTopbar />
-
-          {/* ────────── Hero Card ────────── */}
-          <div className="mt-6">
+          <div className="mt-5">
             <ProfileHeroCard />
           </div>
-
-          {/* ────────── Summary Strip ────────── */}
           <div className="mt-4">
             <ProfileSummaryStrip />
           </div>
-
-          {/* ────────── Content Grid ────────── */}
-          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <ProfileWalletCard />
             <ProfileAccountCard />
             <ProfileStatisticsCard />
             <ProfileHistoryCard />
           </div>
-
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex justify-center">
             <LogoutButton />
           </div>
         </div>
