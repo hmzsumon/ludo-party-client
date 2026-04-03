@@ -1,8 +1,6 @@
 import BottomNav from "../dashboard/bottom-nav";
+import TransactionHistoryShell from "../transaction-history/TransactionHistoryShell";
 import WalletBalanceCard from "./wallet-balance-card";
-import WalletPaymentCard from "./wallet-payment-card";
-import WalletReferralCard from "./wallet-referral-card";
-import WalletTransactionCard from "./wallet-transaction-card";
 
 const WalletShell = () => {
   return (
@@ -30,10 +28,14 @@ const WalletShell = () => {
           <div className="mt-2">
             <WalletBalanceCard />
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-4">
+          {/* <div className="mt-4 grid grid-cols-1 gap-4">
             <WalletTransactionCard />
             <WalletPaymentCard />
             <WalletReferralCard />
+          </div> */}
+
+          <div className="mt-6">
+            <TransactionHistoryShell />
           </div>
         </div>
 
