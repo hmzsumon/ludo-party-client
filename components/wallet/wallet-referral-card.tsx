@@ -80,7 +80,7 @@ const WalletReferralCard = () => {
 
       {/* Invite Button */}
       <button className="ls-btn ls-btn-gold ls-shine-effect w-full py-3 text-[14px] font-black">
-        🎉 Invite Friends & Earn ৳100
+        🎉 Invite Friends & Earn 💎100
       </button>
     </section>
   );

@@ -19,19 +19,19 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Capitalise - Trade",
-  description: "Trade on your favorite trading platforms with Capitalise",
+  title: "Ludo Party",
+  description: "Play Ludo Party on mobile with a fast, responsive experience",
   openGraph: {
-    title: "Capitalise - Trade",
-    description: "Trade on your favorite trading platforms with Capitalise",
+    title: "Ludo Party",
+    description: "Play Ludo Party on mobile with a fast, responsive experience",
     url: "https://sw999.bet",
-    siteName: "Capitalise",
+    siteName: "Ludo Party",
     images: [
       {
         url: "https://sw999.bet/og-image.png",
         width: 1200,
         height: 630,
-        alt: "SW999 - Bet",
+        alt: "Ludo Party",
       },
     ],
     type: "website",

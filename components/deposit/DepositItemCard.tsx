@@ -36,7 +36,7 @@ const DepositItemCard: React.FC<DepositItemCardProps> = ({
           <div>
             <p className="text-sm text-gray-100 font-semibold">{name}</p>
             <p className="text-xs text-gray-300">
-              Minimum: ৳ {minimum}, Fee: {fee}%
+              Minimum: 💎 {minimum}, Fee: {fee}%
             </p>
           </div>
         </Link>
@@ -52,7 +52,7 @@ const DepositItemCard: React.FC<DepositItemCardProps> = ({
           <div>
             <p className="text-sm font-semibold text-gray-400">{name}</p>
             <p className="text-xs text-gray-500">
-              Minimum: ৳ {minimum}, Fee: {fee}%
+              Minimum: 💎 {minimum}, Fee: {fee}%
             </p>
           </div>
         </div>

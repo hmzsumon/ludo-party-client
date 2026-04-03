@@ -257,7 +257,7 @@ export default function PaymentPage() {
                           : "border-red-500/40 bg-[#01241D] ring-2 ring-red-500/10",
                     ].join(" ")}
                   >
-                    <div className="font-bold text-gray-300">৳</div>
+                    <div className="font-bold text-gray-300">💎</div>
 
                     {/* ────────── keep UI same but show correct value ────────── */}
                     <input

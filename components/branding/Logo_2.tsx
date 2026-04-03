@@ -60,7 +60,7 @@ const cx = (...classes: Array<string | undefined | false>) =>
   classes.filter(Boolean).join(" ");
 
 const Logo: React.FC<LogoProps> = ({
-  src,
+  src = "/branding-logo_1.png",
   text = "",
   Icon,
   size = "md",

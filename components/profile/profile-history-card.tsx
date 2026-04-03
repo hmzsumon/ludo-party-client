@@ -1,7 +1,7 @@
 const historyRows = [
-  { name: "Rakib", result: "WON", amount: "৳500" },
-  { name: "Nayeem", result: "WON", amount: "৳250" },
-  { name: "Sohan", result: "LOSE", amount: "৳100" },
+  { name: "Rakib", result: "WON", amount: "💎500" },
+  { name: "Nayeem", result: "WON", amount: "💎250" },
+  { name: "Sohan", result: "LOSE", amount: "💎100" },
 ];
 
 const ProfileHistoryCard = () => {

@@ -23,7 +23,7 @@ function ActionButton({
 
 export default function PublicHomePage(): JSX.Element {
   return (
-    <main className="ludo-home relative min-h-screen overflow-hidden text-white mt-4">
+    <main className="ludo-home brand-bg-shell relative min-h-screen overflow-hidden text-white mt-4">
       {/* <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.12)_0%,rgba(2,6,23,0.4)_40%,rgba(2,6,23,0.72)_100%)]" />
       <div className="absolute left-0 right-0 top-0 h-[260px] rounded-b-[50%] bg-[rgba(125,105,255,0.12)] blur-[1px]" /> */}
 
@@ -32,7 +32,7 @@ export default function PublicHomePage(): JSX.Element {
         <div className="mt-14">
           <h1 className="text-xl font-black uppercase italic leading-[0.95] tracking-[-0.03em]">
             <span className="text-white">PLAY</span>{" "}
-            <span className="bg-[linear-gradient(180deg,#ffe768_0%,#ffb600_100%)] bg-clip-text text-transparent">
+            <span className="brand-highlight-text">
               LUDO WIN BIG
             </span>{" "}
             <span className="text-white">REWARDS!</span>
@@ -42,7 +42,7 @@ export default function PublicHomePage(): JSX.Element {
         <div className="mt-10 space-y-5">
           <Link
             href="/offline"
-            className="flex items-center gap-4 rounded-[20px] border border-red-300/20 bg-[linear-gradient(180deg,#ea244e_0%,#9b0028_100%)] px-4 py-2 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),0_10px_25px_rgba(0,0,0,0.35)]"
+            className="flex items-center gap-4 rounded-[20px] brand-panel px-4 py-2 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),0_10px_25px_rgba(0,0,0,0.35)]"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-yellow-300/10 text-yellow-300">
               <WifiOff size={30} />
@@ -58,14 +58,14 @@ export default function PublicHomePage(): JSX.Element {
 
           <ActionButton
             href="/login"
-            className="border-green-300/25 bg-[linear-gradient(180deg,#7dff12_0%,#23ad0f_55%,#048b12_100%)] text-white"
+            className="brand-panel text-white"
           >
             Sign In
           </ActionButton>
 
           <ActionButton
             href="/register"
-            className="border-blue-300/25 bg-[linear-gradient(180deg,#5877ff_0%,#2f53db_55%,#1d2d8e_100%)] text-white"
+            className="brand-panel text-white"
           >
             Create New Account
           </ActionButton>

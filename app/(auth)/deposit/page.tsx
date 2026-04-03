@@ -443,7 +443,7 @@ export default function DepositPage() {
                         : "border-red-300 ring-2 ring-red-100",
                   ].join(" ")}
                 >
-                  <div className="mt-1 font-bold text-neutral-600">৳</div>
+                  <div className="mt-1 font-bold text-neutral-600">💎</div>
                   <input
                     className="w-full text-sm font-extrabold outline-none text-neutral-600 placeholder:text-neutral-400"
                     placeholder={`${MIN_AMOUNT.toLocaleString()} - ${MAX_AMOUNT.toLocaleString()}`}

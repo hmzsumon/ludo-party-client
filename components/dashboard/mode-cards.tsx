@@ -87,7 +87,7 @@ const ModeCard = ({
 
 const ModeCards = () => {
   return (
-    <section className="w-full space-y-3">
+    <section className="w-full space-y-4">
       <h2
         className="text-center text-[13px] font-black uppercase tracking-widest"
         style={{ color: "rgba(255,215,0,0.7)" }}
@@ -143,7 +143,7 @@ const ModeCards = () => {
           <div>
             <p className="text-sm font-black text-yellow-400">Daily Bonus</p>
             <p className="text-[11px] text-white/60 font-semibold">
-              Login every day to earn ৳50!
+              Login every day to earn 💎50!
             </p>
           </div>
         </div>

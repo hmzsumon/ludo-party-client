@@ -161,7 +161,7 @@ export default function RegisterForm(): JSX.Element {
       </div>
 
       {/* ── Title ── */}
-      <div className="mt-4 text-center">
+      <div className=" text-center">
         <h1 className="text-[28px] font-black tracking-tight text-white">
           Join the Game!
         </h1>

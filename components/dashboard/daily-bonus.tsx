@@ -10,7 +10,7 @@ const DailyBonus = () => {
           Daily Bonus
         </h3>
         <p className="mt-1 text-[20px] font-extrabold leading-tight text-white">
-          Get ৳50 Free!
+          Get 💎50 Free!
         </p>
       </div>
 

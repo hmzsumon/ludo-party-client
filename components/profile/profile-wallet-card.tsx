@@ -42,7 +42,7 @@ const ProfileWalletCard = () => {
               Total Balance
             </p>
             <h4 className="text-[28px] font-black text-yellow-400 leading-tight">
-              ৳ {user?.m_balance?.toLocaleString?.() ?? "0"}
+              💎 {user?.m_balance?.toLocaleString?.() ?? "0"}
             </h4>
           </div>
         </div>

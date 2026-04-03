@@ -64,28 +64,6 @@ const DashboardHeader = () => {
               {user?.m_balance?.toLocaleString?.() ?? "0"}
             </span>
           </div>
-
-          {/* Notification Bell */}
-          <button
-            className="relative flex h-10 w-10 items-center justify-center rounded-full"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(74,26,138,0.95) 0%, rgba(29,5,70,0.95) 100%)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-            }}
-          >
-            <span className="text-lg">🔔</span>
-            <span
-              className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black text-white"
-              style={{
-                background: "linear-gradient(180deg, #ff6b6b 0%, #e53935 100%)",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-              }}
-            >
-              0
-            </span>
-          </button>
         </div>
       </div>
 

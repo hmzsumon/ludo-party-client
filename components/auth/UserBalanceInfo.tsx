@@ -18,15 +18,10 @@ const UserBalanceInfo = () => {
   return (
     <div className="text-white">
       <div className="space-y-3">
-        <div>
-          <p className="text-sm font-semibold text-white/70">Name</p>
-          <h3 className="text-[17px] font-bold text-white">{user?.name}</h3>
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold text-white/70">Email</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-white/70">Email :</p>
           <div className="flex items-center gap-2">
-            <span className="truncate text-[15px] font-medium text-white">
+            <span className="truncate text-sm font-medium text-white">
               {user?.email}
             </span>
             <button
@@ -40,10 +35,10 @@ const UserBalanceInfo = () => {
           </div>
         </div>
 
-        <div>
-          <p className="text-sm font-semibold text-white/70">UID</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-white/70">UID :</p>
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-medium text-white">
+            <span className="text-sm font-medium text-white">
               {user?.customerId}
             </span>
             <button
@@ -63,7 +58,7 @@ const UserBalanceInfo = () => {
           Balance
         </p>
         <h3 className="mt-1 text-base font-extrabold text-white">
-          ৳ {(user?.m_balance || 0.0).toFixed(2)}
+          💎 {(user?.m_balance || 0.0).toFixed(2)}
         </h3>
       </div>
 

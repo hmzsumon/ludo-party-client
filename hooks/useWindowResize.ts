@@ -1,7 +1,7 @@
 // hooks/useWindowResize.ts
 "use client";
 import { useEffect, type RefObject } from "react";
-import onWindowResize from "../utils/resize-screen";
+import onWindowResize, { resetScreenStyles } from "../utils/resize-screen";
 
 const useWindowResize = (rootRef?: RefObject<HTMLElement>) => {
   useEffect(() => {
@@ -11,6 +11,7 @@ const useWindowResize = (rootRef?: RefObject<HTMLElement>) => {
 
     return () => {
       window.removeEventListener("resize", handler);
+      resetScreenStyles(rootRef?.current);
     };
   }, [rootRef]);
 };

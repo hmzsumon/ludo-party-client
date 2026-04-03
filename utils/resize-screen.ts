@@ -13,6 +13,37 @@ const getViewport = () => {
     : { w: window.innerWidth, h: window.innerHeight };
 };
 
+export const resetScreenStyles = (el?: HTMLElement | null) => {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+
+  const root =
+    el ??
+    (document.querySelector(".screen") as HTMLElement | null) ??
+    (document.getElementById("root") as HTMLElement | null);
+
+  if (root) {
+    root.style.width = "";
+    root.style.height = "";
+    root.style.position = "";
+    root.style.left = "";
+    root.style.top = "";
+    root.style.transform = "";
+    root.style.transformOrigin = "";
+    root.style.willChange = "";
+    root.style.overflow = "";
+  }
+
+  document.documentElement.style.width = "";
+  document.documentElement.style.height = "";
+  document.body.style.width = "";
+  document.body.style.height = "";
+  document.body.style.margin = "";
+  document.body.style.padding = "";
+  document.body.style.overflowX = "hidden";
+  document.body.style.overflowY = "auto";
+  document.body.style.zoom = "";
+};
+
 const resizeScreen = debounce((el?: HTMLElement | null) => {
   if (typeof window === "undefined" || typeof document === "undefined") {
     return;

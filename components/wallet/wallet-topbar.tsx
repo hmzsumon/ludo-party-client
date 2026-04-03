@@ -1,7 +1,7 @@
 "use client";
 
 import { useSelector } from "react-redux";
-import LudoPartyLogo from "../branding/LudoPartyLogo";
+import Logo from "../branding/logo";
 
 const WalletTopbar = () => {
   const { user } = useSelector((s: any) => s.auth) as any;
@@ -10,7 +10,7 @@ const WalletTopbar = () => {
     <div className="  flex w-full items-center justify-between">
       {/* ────────── Logo Block ────────── */}
       <div>
-        <LudoPartyLogo />
+        <Logo sizeClass="w-[40px] sm:w-[140px] md:w-[180px]" />
       </div>
     </div>
   );

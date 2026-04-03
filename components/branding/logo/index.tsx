@@ -1,46 +1,40 @@
-import { EColors } from "@/utils/constants";
+import Image from "next/image";
 
-import type { TColors } from "@/interfaces";
+type LogoProps = {
+  src?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  sizeClass?: string;
+  priority?: boolean;
+  containerClassName?: string;
+  imageClassName?: string;
+};
 
-import Dice from "@/components/dice";
-import Piece from "@/components/token/components/piece";
-
-const DATA_LOGO: { letter: string; color: TColors }[] = [
-  {
-    letter: "L",
-    color: EColors.YELLOW,
-  },
-  {
-    letter: "U",
-    color: EColors.RED,
-  },
-  {
-    letter: "D",
-    color: EColors.GREEN,
-  },
-  {
-    letter: "O",
-    color: EColors.BLUE,
-  },
-];
-
-const Logo = () => (
-  <div className="game-logo">
-    <div className="game-logo-name">
-      <div className="game-logo-dice">
-        {new Array(2).fill(null).map((_, key) => (
-          <Dice key={key} value={6} size={40} />
-        ))}
-      </div>
-      {DATA_LOGO.map(({ letter, color }) => (
-        <div key={letter} className="game-logo-letters">
-          <div className="game-logo-letter">{letter}</div>
-          <Piece color={color} style={{ width: 30, height: 30 }} />
-        </div>
-      ))}
+const Logo = ({
+  src = "/branding-logo_1.png",
+  alt = "Ludo Party",
+  width = 280,
+  height = 120,
+  sizeClass = "w-[100px] sm:w-[220px] md:w-[260px]",
+  priority = true,
+  containerClassName = "",
+  imageClassName = "",
+}: LogoProps) => {
+  return (
+    <div
+      className={`mx-auto flex w-full items-center justify-center ${containerClassName}`}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        priority={priority}
+        className={`h-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.35)] ${sizeClass} ${imageClassName}`}
+      />
     </div>
-    <div className="game-logo-footer">Party</div>
-  </div>
-);
+  );
+};
 
 export default Logo;

@@ -296,7 +296,7 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                   minWidth: 20,
                 }}
               >
-                ৳
+                💎
               </span>
 
               <input

@@ -21,7 +21,7 @@ const WalletPromoCard = () => {
 
           <div className="ml-auto text-right">
             <p className="text-[40px] font-black tracking-tight text-[#ffcf45]">
-              ৳300
+              💎300
             </p>
             <p className="mt-1 text-sm font-medium text-white/65">
               Expires in 12h

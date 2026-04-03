@@ -6,13 +6,12 @@ import Logo from "../branding/Logo_2";
 import Button from "./Button";
 import Container from "./Container";
 
-import LogoImg from "@/public/logo/logo_01.png";
 
 const Navbar: React.FC = () => (
   <header className="sticky top-0 z-50 border-b border-neutral-900/60 bg-neutral-950/80 backdrop-blur">
     <Container className="flex h-16 items-center justify-between">
       <Link href="/" className="flex items-center gap-3">
-        <Logo src={LogoImg} size="xl" width={120} />
+        <Logo size="xl" width={140} />
       </Link>
 
       <div className="flex items-center gap-3">

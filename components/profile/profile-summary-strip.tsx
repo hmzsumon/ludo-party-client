@@ -15,7 +15,7 @@ const summaryItems = [
   },
   {
     label: "Earnings",
-    value: "৳1.1L",
+    value: "💎1.1L",
     icon: "🪙",
     color: "#4cde7e",
     glow: "rgba(76,222,126,0.3)",

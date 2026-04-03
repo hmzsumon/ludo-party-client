@@ -144,20 +144,20 @@ export default function PromotionConsent({
                 <div className="mt-3 rounded-lg border border-red-200 bg-white p-2 text-red-700">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">Deposit</span>
-                    <span className="font-extrabold">৳ {money(amount)}</span>
+                    <span className="font-extrabold">💎 {money(amount)}</span>
                   </div>
 
                   <div className="mt-1 flex items-center justify-between">
                     <span className="font-semibold">Bonus</span>
                     <span className="font-extrabold">
-                      ৳ {money(bonusAmount)}
+                      💎 {money(bonusAmount)}
                     </span>
                   </div>
 
                   <div className="mt-1 flex items-center justify-between">
                     <span className="font-semibold">Turnover Required</span>
                     <span className="font-extrabold">
-                      ৳ {money(turnoverRequired)}
+                      💎 {money(turnoverRequired)}
                     </span>
                   </div>
                 </div>

@@ -2,7 +2,7 @@
 "use client";
 
 const formatBDT = (n: number) =>
-  `৳ ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  `💎 ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));

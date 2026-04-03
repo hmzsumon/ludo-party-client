@@ -1,4 +1,3 @@
-// frontend/components/Header/NotificationDrawer.tsx  (with hooks and sectioned comments)
 "use client";
 
 import {
@@ -6,22 +5,21 @@ import {
   useGetMyUnreadNotificationsQuery,
   useUpdateNotificationMutation,
 } from "@/redux/features/notifications/notificationApi";
-import { X } from "lucide-react";
+import { Bell, ExternalLink, X } from "lucide-react";
 
-/* ──────────  Notification drawer panel  ────────── */
 export default function NotificationDrawer({
   open,
   onClose,
-  topOffset = 64,
+  topOffset = 50,
 }: {
   open: boolean;
   onClose: () => void;
   topOffset?: number;
 }) {
-  /* ──────────  data queries  ────────── */
   const { data, isFetching } = useGetMyUnreadNotificationsQuery(undefined, {
     skip: !open,
   });
+
   const { data: countData } = useGetMyUnreadNotificationsCountQuery();
   const [markRead] = useUpdateNotificationMutation();
 
@@ -30,76 +28,156 @@ export default function NotificationDrawer({
 
   return (
     <>
-      {/* ──────────  overlay  ────────── */}
+      {/* Overlay */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-[60] bg-black/40 transition-opacity ${
+        className={`fixed inset-0 z-[60] bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.14),transparent_35%),rgba(0,0,0,0.45)] backdrop-blur-[2px] transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         style={{ top: topOffset }}
       />
-      {/* ──────────  panel  ────────── */}
+
+      {/* Drawer */}
       <aside
-        className={`fixed right-0 z-[61] h-[calc(100dvh-4rem)] w-full max-w-[380px] translate-x-0 border-l border-neutral-900 bg-neutral-950 transition-transform md:max-w-[420px] ${
+        className={`fixed right-0 z-[61] w-full max-w-[390px] overflow-hidden border-l border-fuchsia-300/15 bg-[linear-gradient(180deg,rgba(58,6,92,0.97)_0%,rgba(38,4,68,0.98)_55%,rgba(24,3,49,0.99)_100%)] shadow-[-18px_0_50px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ top: topOffset }}
+        style={{
+          top: topOffset,
+          height: `calc(100dvh - ${topOffset}px)`,
+        }}
         aria-hidden={!open}
       >
-        {/* ──────────  header  ────────── */}
-        <div className="flex h-12 items-center justify-between border-b border-neutral-900 px-4">
-          <div className="text-sm font-semibold text-white">
-            Notifications
-            {unreadCount ? (
-              <span className="ml-2 rounded bg-neutral-800 px-2 py-0.5 text-xs text-neutral-200">
-                {unreadCount}
-              </span>
-            ) : null}
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-neutral-300 hover:bg-neutral-900 hover:text-white"
-          >
-            <X size={18} />
-          </button>
+        {/* animated glow */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-16 top-8 h-40 w-40 rounded-full bg-fuchsia-500/12 blur-3xl animate-pulse" />
+          <div className="absolute right-0 top-32 h-44 w-44 rounded-full bg-violet-400/10 blur-3xl animate-pulse [animation-delay:1200ms]" />
+          <div className="absolute bottom-20 left-6 h-32 w-32 rounded-full bg-yellow-300/10 blur-3xl animate-pulse [animation-delay:2200ms]" />
         </div>
 
-        {/* ──────────  list  ────────── */}
-        <div className="p-4 text-sm text-neutral-300">
+        {/* Header */}
+        <div className="relative border-b border-white/10 bg-white/[0.03] px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-fuchsia-300/20 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <Bell className="h-5 w-5 text-yellow-300" />
+              </div>
+
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-[0.28em] text-yellow-300/80">
+                  Alert Center
+                </div>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <h2 className="text-lg font-black text-white">
+                    Notifications
+                  </h2>
+                  {unreadCount ? (
+                    <span className="rounded-full border border-emerald-300/20 bg-emerald-400 px-2 py-0.5 text-[11px] font-black text-[#2b0943] shadow">
+                      {unreadCount}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-neutral-300 transition hover:bg-white/10 hover:text-white"
+              aria-label="Close notifications"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="mt-4 h-px w-full bg-[linear-gradient(90deg,transparent,rgba(255,215,0,0.45),transparent)]" />
+        </div>
+
+        {/* Body */}
+        <div className="relative h-[calc(100%-92px)] overflow-y-auto p-4 text-sm text-neutral-200">
           {isFetching ? (
-            "Loading..."
+            <div className="flex min-h-[220px] items-center justify-center">
+              <div className="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-center shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+                <div className="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-white/20 border-t-yellow-300 animate-spin" />
+                <p className="text-sm font-semibold text-white/90">
+                  Loading notifications...
+                </p>
+              </div>
+            </div>
           ) : notifications.length === 0 ? (
-            "You currently have no new notifications."
+            <div className="flex min-h-[260px] items-center justify-center">
+              <div className="w-full rounded-[28px] border border-white/10 bg-white/[0.04] px-6 py-10 text-center shadow-[0_16px_40px_rgba(0,0,0,0.25)]">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-fuchsia-300/20 bg-white/10">
+                  <Bell className="h-6 w-6 text-yellow-300" />
+                </div>
+                <h3 className="text-lg font-black text-white">
+                  No New Notifications
+                </h3>
+                <p className="mt-2 text-sm text-white/60">
+                  You currently have no new notifications.
+                </p>
+              </div>
+            </div>
           ) : (
-            <ul className="space-y-2">
-              {notifications.map((n: any) => (
+            <ul className="space-y-3">
+              {notifications.map((n: any, index: number) => (
                 <li
                   key={n._id}
-                  className="rounded-lg border border-neutral-900 p-3"
+                  className="group relative overflow-hidden rounded-[26px] border border-fuchsia-300/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_100%)] p-4 shadow-[0_12px_35px_rgba(0,0,0,0.25)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/20 hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.09)_0%,rgba(255,255,255,0.03)_100%)]"
+                  style={{
+                    animation: `fadeSlideUp 380ms ease-out ${index * 80}ms both`,
+                  }}
                 >
-                  <div className="mb-1 text-white">{n.title}</div>
-                  <div className="text-neutral-400">{n.message}</div>
-                  <div className="mt-2 flex items-center gap-2">
-                    {n.url ? (
-                      <a
-                        href={n.url}
-                        className="text-xs text-blue-400 hover:underline"
+                  <div className="absolute inset-y-0 left-0 w-[3px] bg-[linear-gradient(180deg,rgba(255,215,0,0.95),rgba(168,85,247,0.95))]" />
+                  <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-fuchsia-400/10 blur-2xl transition duration-500 group-hover:bg-fuchsia-300/15" />
+
+                  <div className="pl-2">
+                    <div className="mb-1 flex items-start justify-between gap-3">
+                      <h3 className="text-[15px] font-black leading-5 text-white">
+                        {n.title}
+                      </h3>
+                    </div>
+
+                    <p className="text-[13px] leading-6 text-white/70">
+                      {n.message}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {n.url ? (
+                        <a
+                          href={n.url}
+                          className="inline-flex items-center gap-1 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-[12px] font-bold text-cyan-200 transition hover:bg-cyan-400/20"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Open
+                        </a>
+                      ) : null}
+
+                      <button
+                        onClick={() => markRead(n._id)}
+                        className="inline-flex items-center rounded-full border border-yellow-300/20 bg-yellow-400/10 px-3 py-1.5 text-[12px] font-bold text-yellow-200 transition hover:bg-yellow-400/20"
                       >
-                        Open
-                      </a>
-                    ) : null}
-                    <button
-                      onClick={() => markRead(n._id)}
-                      className="text-xs text-neutral-300 hover:text-white"
-                    >
-                      Mark as read
-                    </button>
+                        Mark as read
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
             </ul>
           )}
         </div>
+
+        <style jsx>{`
+          @keyframes fadeSlideUp {
+            from {
+              opacity: 0;
+              transform: translateY(14px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </aside>
     </>
   );

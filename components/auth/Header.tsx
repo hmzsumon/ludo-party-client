@@ -1,7 +1,6 @@
 "use client";
 
 import { formatBalance } from "@/lib/functions";
-import LogoImg from "@/public/logo/logo_01.png";
 import {
   Bell,
   ChevronDown,
@@ -92,7 +91,7 @@ export default function Header({ open, onToggle }: Props) {
 
           {/* ── Brand / logo ── */}
           <div>
-            <Logo src={LogoImg} size="xl" width={120} />
+            <Logo size="xl" width={140} />
           </div>
         </div>
 

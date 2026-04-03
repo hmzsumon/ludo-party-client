@@ -89,7 +89,7 @@ export default function LoginForm(): JSX.Element {
       </div>
 
       {/* ── Title ── */}
-      <div className="mt-6 text-center">
+      <div className="text-center">
         <h1 className="text-[32px] font-black tracking-tight text-white">
           Welcome Back!
         </h1>
@@ -99,7 +99,7 @@ export default function LoginForm(): JSX.Element {
       </div>
 
       {/* ── Decorative Divider ── */}
-      <div className="mt-5 flex w-full items-center gap-3">
+      <div className="mt-6 flex w-full items-center gap-3">
         <div
           className="flex-1 h-px"
           style={{
