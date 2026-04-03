@@ -45,7 +45,7 @@ export default function FilterTabs({ active, onChange }: FilterTabsProps) {
           <button
             key={tab.key}
             onClick={() => onChange(tab.key)}
-            className="shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-all active:scale-95"
+            className="shrink-0 px-4 py-1.5 rounded-xl text-[12px] font-bold transition-all active:scale-95"
             style={{
               background: isActive ? tab.activeColor : "rgba(255,255,255,0.08)",
               color: isActive ? tab.activeText : "rgba(255,255,255,0.45)",

@@ -29,31 +29,8 @@ export default function TransactionHistoryShell() {
 
   return (
     <main className="min-h-screen w-full" style={{ background: "transparent" }}>
-      <div className="w-full max-w-[480px] mx-auto px-2 pb-24">
+      <div className="w-full max-w-[480px] mx-auto  pb-10">
         {/* ────────── Top Bar ────────── */}
-        <div
-          className="flex items-center gap-3 pt-5 pb-4 sticky top-0 z-10"
-          //   style={{ background: "#14041f" }}
-        >
-          {/* <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button> */}
-
-          {/* Icon */}
-          {/* <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(1,115,229,0.25)" }}
-          >
-            <ReceiptText className="w-4 h-4 text-[#0173e5]" />
-          </div> */}
-
-          {/* <span className="text-[15px] font-semibold text-white/80">
-            Payment queries
-          </span> */}
-        </div>
 
         {/* ────────── Title ────────── */}
         <h1 className="text-[22px] font-black text-white mb-4">

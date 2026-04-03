@@ -34,7 +34,7 @@ const WalletShell = () => {
             <WalletReferralCard />
           </div> */}
 
-          <div className="mt-6">
+          <div className="mt-4">
             <TransactionHistoryShell />
           </div>
         </div>
