@@ -141,7 +141,7 @@ export default function AuthTopBar() {
             <Logo
               width={220}
               height={95}
-              sizeClass="w-[60px] xs:w-[92px] sm:w-[120px]"
+              sizeClass="w-[60px] "
               containerClassName="justify-start"
             />
           </div>
