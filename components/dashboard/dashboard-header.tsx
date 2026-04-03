@@ -12,7 +12,7 @@ const DashboardHeader = () => {
       : user?.name || "User";
 
   return (
-    <div className="relative w-full mt-2">
+    <Link href="/personal-profile" className="relative w-full mt-2">
       {/* ── Top Row: Profile + Notification ── */}
       <div className="flex items-center justify-between gap-3">
         {/* ── Profile Pill ── */}
@@ -98,7 +98,7 @@ const DashboardHeader = () => {
           </button>
         </Link>
       </div>
-    </div>
+    </Link>
   );
 };
 
