@@ -87,7 +87,7 @@ function SoundSettingsPanel({
     >
       <div
         ref={panelRef}
-        className="overflow-hidden rounded-[28px] border border-fuchsia-300/20 bg-[linear-gradient(180deg,rgba(78,12,112,0.95)_0%,rgba(49,6,82,0.96)_55%,rgba(29,4,58,0.98)_100%)] shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+        className="overflow-hidden rounded-[28px] border border-fuchsia-300/20 bg-transparent backdrop-blur-xl"
       >
         <div className="border-b border-white/10 px-4 py-4">
           <p className="text-[11px] font-black uppercase tracking-[0.28em] text-yellow-300/80">
@@ -134,7 +134,7 @@ export default function AuthTopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-fuchsia-300/10 bg-[linear-gradient(180deg,rgba(56,6,88,0.92)_0%,rgba(43,6,72,0.86)_55%,rgba(30,4,55,0.82)_100%)] backdrop-blur-xl">
+      <header className="sticky top-0 z-50 w-full  bg-transparent backdrop-blur-xl">
         <div className="mx-auto flex h-[74px] w-full max-w-[430px] items-center justify-between px-3">
           {/* Left: logo */}
           <div className="flex items-center">
