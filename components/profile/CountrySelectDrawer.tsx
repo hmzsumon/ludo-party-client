@@ -1,74 +1,230 @@
 "use client";
 
 // ✅ CountrySelectDrawer.tsx
-// Screenshot এর মতো হুবহু country select bottom drawer
-// Features: search by name/code, recommended (BD first), flag emoji, radio select
+// Dark purple gaming theme | flagcdn.com real flags | 200+ countries | no undefined bug
 
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-/* ────────── Country Data ────────── */
-const COUNTRY_LIST = [
-  { code: "+880", name: "Bangladesh", flag: "🇧🇩", iso: "BD" },
-  { code: "+7", name: "Abkhazia", flag: "🏳️", iso: "AB" },
-  { code: "+93", name: "Afghanistan", flag: "🇦🇫", iso: "AF" },
-  { code: "+355", name: "Albania", flag: "🇦🇱", iso: "AL" },
-  { code: "+213", name: "Algeria", flag: "🇩🇿", iso: "DZ" },
-  { code: "+376", name: "Andorra", flag: "🇦🇩", iso: "AD" },
-  { code: "+244", name: "Angola", flag: "🇦🇴", iso: "AO" },
-  { code: "+54", name: "Argentina", flag: "🇦🇷", iso: "AR" },
-  { code: "+374", name: "Armenia", flag: "🇦🇲", iso: "AM" },
-  { code: "+61", name: "Australia", flag: "🇦🇺", iso: "AU" },
-  { code: "+43", name: "Austria", flag: "🇦🇹", iso: "AT" },
-  { code: "+994", name: "Azerbaijan", flag: "🇦🇿", iso: "AZ" },
-  { code: "+973", name: "Bahrain", flag: "🇧🇭", iso: "BH" },
-  { code: "+32", name: "Belgium", flag: "🇧🇪", iso: "BE" },
-  { code: "+55", name: "Brazil", flag: "🇧🇷", iso: "BR" },
-  { code: "+1", name: "Canada", flag: "🇨🇦", iso: "CA" },
-  { code: "+86", name: "China", flag: "🇨🇳", iso: "CN" },
-  { code: "+20", name: "Egypt", flag: "🇪🇬", iso: "EG" },
-  { code: "+33", name: "France", flag: "🇫🇷", iso: "FR" },
-  { code: "+49", name: "Germany", flag: "🇩🇪", iso: "DE" },
-  { code: "+91", name: "India", flag: "🇮🇳", iso: "IN" },
-  { code: "+62", name: "Indonesia", flag: "🇮🇩", iso: "ID" },
-  { code: "+98", name: "Iran", flag: "🇮🇷", iso: "IR" },
-  { code: "+964", name: "Iraq", flag: "🇮🇶", iso: "IQ" },
-  { code: "+39", name: "Italy", flag: "🇮🇹", iso: "IT" },
-  { code: "+81", name: "Japan", flag: "🇯🇵", iso: "JP" },
-  { code: "+962", name: "Jordan", flag: "🇯🇴", iso: "JO" },
-  { code: "+254", name: "Kenya", flag: "🇰🇪", iso: "KE" },
-  { code: "+82", name: "South Korea", flag: "🇰🇷", iso: "KR" },
-  { code: "+60", name: "Malaysia", flag: "🇲🇾", iso: "MY" },
-  { code: "+52", name: "Mexico", flag: "🇲🇽", iso: "MX" },
-  { code: "+31", name: "Netherlands", flag: "🇳🇱", iso: "NL" },
-  { code: "+234", name: "Nigeria", flag: "🇳🇬", iso: "NG" },
-  { code: "+92", name: "Pakistan", flag: "🇵🇰", iso: "PK" },
-  { code: "+63", name: "Philippines", flag: "🇵🇭", iso: "PH" },
-  { code: "+48", name: "Poland", flag: "🇵🇱", iso: "PL" },
-  { code: "+351", name: "Portugal", flag: "🇵🇹", iso: "PT" },
-  { code: "+966", name: "Saudi Arabia", flag: "🇸🇦", iso: "SA" },
-  { code: "+27", name: "South Africa", flag: "🇿🇦", iso: "ZA" },
-  { code: "+34", name: "Spain", flag: "🇪🇸", iso: "ES" },
-  { code: "+94", name: "Sri Lanka", flag: "🇱🇰", iso: "LK" },
-  { code: "+46", name: "Sweden", flag: "🇸🇪", iso: "SE" },
-  { code: "+41", name: "Switzerland", flag: "🇨🇭", iso: "CH" },
-  { code: "+886", name: "Taiwan", flag: "🇹🇼", iso: "TW" },
-  { code: "+66", name: "Thailand", flag: "🇹🇭", iso: "TH" },
-  { code: "+90", name: "Turkey", flag: "🇹🇷", iso: "TR" },
-  { code: "+380", name: "Ukraine", flag: "🇺🇦", iso: "UA" },
-  { code: "+971", name: "UAE", flag: "🇦🇪", iso: "AE" },
-  { code: "+44", name: "United Kingdom", flag: "🇬🇧", iso: "GB" },
-  { code: "+1", name: "United States", flag: "🇺🇸", iso: "US" },
-  { code: "+998", name: "Uzbekistan", flag: "🇺🇿", iso: "UZ" },
-  { code: "+84", name: "Vietnam", flag: "🇻🇳", iso: "VN" },
+/* ────────── Country Data (200+ countries) ────────── */
+// ⚠️ flag field সম্পূর্ণ বাদ — DB তে শুধু name, code, iso সেভ হবে
+export const COUNTRY_LIST: Country[] = [
+  { code: "+880", name: "Bangladesh", iso: "BD" },
+  { code: "+93", name: "Afghanistan", iso: "AF" },
+  { code: "+355", name: "Albania", iso: "AL" },
+  { code: "+213", name: "Algeria", iso: "DZ" },
+  { code: "+1684", name: "American Samoa", iso: "AS" },
+  { code: "+376", name: "Andorra", iso: "AD" },
+  { code: "+244", name: "Angola", iso: "AO" },
+  { code: "+1264", name: "Anguilla", iso: "AI" },
+  { code: "+1268", name: "Antigua and Barbuda", iso: "AG" },
+  { code: "+54", name: "Argentina", iso: "AR" },
+  { code: "+374", name: "Armenia", iso: "AM" },
+  { code: "+297", name: "Aruba", iso: "AW" },
+  { code: "+61", name: "Australia", iso: "AU" },
+  { code: "+43", name: "Austria", iso: "AT" },
+  { code: "+994", name: "Azerbaijan", iso: "AZ" },
+  { code: "+1242", name: "Bahamas", iso: "BS" },
+  { code: "+973", name: "Bahrain", iso: "BH" },
+  { code: "+375", name: "Belarus", iso: "BY" },
+  { code: "+32", name: "Belgium", iso: "BE" },
+  { code: "+501", name: "Belize", iso: "BZ" },
+  { code: "+229", name: "Benin", iso: "BJ" },
+  { code: "+1441", name: "Bermuda", iso: "BM" },
+  { code: "+975", name: "Bhutan", iso: "BT" },
+  { code: "+591", name: "Bolivia", iso: "BO" },
+  { code: "+387", name: "Bosnia and Herzegovina", iso: "BA" },
+  { code: "+267", name: "Botswana", iso: "BW" },
+  { code: "+55", name: "Brazil", iso: "BR" },
+  { code: "+673", name: "Brunei", iso: "BN" },
+  { code: "+359", name: "Bulgaria", iso: "BG" },
+  { code: "+226", name: "Burkina Faso", iso: "BF" },
+  { code: "+257", name: "Burundi", iso: "BI" },
+  { code: "+855", name: "Cambodia", iso: "KH" },
+  { code: "+237", name: "Cameroon", iso: "CM" },
+  { code: "+1", name: "Canada", iso: "CA" },
+  { code: "+238", name: "Cape Verde", iso: "CV" },
+  { code: "+1345", name: "Cayman Islands", iso: "KY" },
+  { code: "+236", name: "Central African Republic", iso: "CF" },
+  { code: "+235", name: "Chad", iso: "TD" },
+  { code: "+56", name: "Chile", iso: "CL" },
+  { code: "+86", name: "China", iso: "CN" },
+  { code: "+57", name: "Colombia", iso: "CO" },
+  { code: "+269", name: "Comoros", iso: "KM" },
+  { code: "+242", name: "Congo", iso: "CG" },
+  { code: "+243", name: "Congo (DRC)", iso: "CD" },
+  { code: "+682", name: "Cook Islands", iso: "CK" },
+  { code: "+506", name: "Costa Rica", iso: "CR" },
+  { code: "+385", name: "Croatia", iso: "HR" },
+  { code: "+53", name: "Cuba", iso: "CU" },
+  { code: "+357", name: "Cyprus", iso: "CY" },
+  { code: "+420", name: "Czech Republic", iso: "CZ" },
+  { code: "+45", name: "Denmark", iso: "DK" },
+  { code: "+253", name: "Djibouti", iso: "DJ" },
+  { code: "+1767", name: "Dominica", iso: "DM" },
+  { code: "+1809", name: "Dominican Republic", iso: "DO" },
+  { code: "+593", name: "Ecuador", iso: "EC" },
+  { code: "+20", name: "Egypt", iso: "EG" },
+  { code: "+503", name: "El Salvador", iso: "SV" },
+  { code: "+240", name: "Equatorial Guinea", iso: "GQ" },
+  { code: "+291", name: "Eritrea", iso: "ER" },
+  { code: "+372", name: "Estonia", iso: "EE" },
+  { code: "+251", name: "Ethiopia", iso: "ET" },
+  { code: "+679", name: "Fiji", iso: "FJ" },
+  { code: "+358", name: "Finland", iso: "FI" },
+  { code: "+33", name: "France", iso: "FR" },
+  { code: "+594", name: "French Guiana", iso: "GF" },
+  { code: "+689", name: "French Polynesia", iso: "PF" },
+  { code: "+241", name: "Gabon", iso: "GA" },
+  { code: "+220", name: "Gambia", iso: "GM" },
+  { code: "+995", name: "Georgia", iso: "GE" },
+  { code: "+49", name: "Germany", iso: "DE" },
+  { code: "+233", name: "Ghana", iso: "GH" },
+  { code: "+350", name: "Gibraltar", iso: "GI" },
+  { code: "+30", name: "Greece", iso: "GR" },
+  { code: "+299", name: "Greenland", iso: "GL" },
+  { code: "+1473", name: "Grenada", iso: "GD" },
+  { code: "+1671", name: "Guam", iso: "GU" },
+  { code: "+502", name: "Guatemala", iso: "GT" },
+  { code: "+224", name: "Guinea", iso: "GN" },
+  { code: "+245", name: "Guinea-Bissau", iso: "GW" },
+  { code: "+592", name: "Guyana", iso: "GY" },
+  { code: "+509", name: "Haiti", iso: "HT" },
+  { code: "+504", name: "Honduras", iso: "HN" },
+  { code: "+852", name: "Hong Kong", iso: "HK" },
+  { code: "+36", name: "Hungary", iso: "HU" },
+  { code: "+354", name: "Iceland", iso: "IS" },
+  { code: "+91", name: "India", iso: "IN" },
+  { code: "+62", name: "Indonesia", iso: "ID" },
+  { code: "+98", name: "Iran", iso: "IR" },
+  { code: "+964", name: "Iraq", iso: "IQ" },
+  { code: "+353", name: "Ireland", iso: "IE" },
+  { code: "+972", name: "Israel", iso: "IL" },
+  { code: "+39", name: "Italy", iso: "IT" },
+  { code: "+1876", name: "Jamaica", iso: "JM" },
+  { code: "+81", name: "Japan", iso: "JP" },
+  { code: "+962", name: "Jordan", iso: "JO" },
+  { code: "+7", name: "Kazakhstan", iso: "KZ" },
+  { code: "+254", name: "Kenya", iso: "KE" },
+  { code: "+686", name: "Kiribati", iso: "KI" },
+  { code: "+383", name: "Kosovo", iso: "XK" },
+  { code: "+965", name: "Kuwait", iso: "KW" },
+  { code: "+996", name: "Kyrgyzstan", iso: "KG" },
+  { code: "+856", name: "Laos", iso: "LA" },
+  { code: "+371", name: "Latvia", iso: "LV" },
+  { code: "+961", name: "Lebanon", iso: "LB" },
+  { code: "+266", name: "Lesotho", iso: "LS" },
+  { code: "+231", name: "Liberia", iso: "LR" },
+  { code: "+218", name: "Libya", iso: "LY" },
+  { code: "+423", name: "Liechtenstein", iso: "LI" },
+  { code: "+370", name: "Lithuania", iso: "LT" },
+  { code: "+352", name: "Luxembourg", iso: "LU" },
+  { code: "+853", name: "Macau", iso: "MO" },
+  { code: "+389", name: "Macedonia", iso: "MK" },
+  { code: "+261", name: "Madagascar", iso: "MG" },
+  { code: "+265", name: "Malawi", iso: "MW" },
+  { code: "+60", name: "Malaysia", iso: "MY" },
+  { code: "+960", name: "Maldives", iso: "MV" },
+  { code: "+223", name: "Mali", iso: "ML" },
+  { code: "+356", name: "Malta", iso: "MT" },
+  { code: "+692", name: "Marshall Islands", iso: "MH" },
+  { code: "+222", name: "Mauritania", iso: "MR" },
+  { code: "+230", name: "Mauritius", iso: "MU" },
+  { code: "+52", name: "Mexico", iso: "MX" },
+  { code: "+691", name: "Micronesia", iso: "FM" },
+  { code: "+373", name: "Moldova", iso: "MD" },
+  { code: "+377", name: "Monaco", iso: "MC" },
+  { code: "+976", name: "Mongolia", iso: "MN" },
+  { code: "+382", name: "Montenegro", iso: "ME" },
+  { code: "+212", name: "Morocco", iso: "MA" },
+  { code: "+258", name: "Mozambique", iso: "MZ" },
+  { code: "+95", name: "Myanmar", iso: "MM" },
+  { code: "+264", name: "Namibia", iso: "NA" },
+  { code: "+674", name: "Nauru", iso: "NR" },
+  { code: "+977", name: "Nepal", iso: "NP" },
+  { code: "+31", name: "Netherlands", iso: "NL" },
+  { code: "+687", name: "New Caledonia", iso: "NC" },
+  { code: "+64", name: "New Zealand", iso: "NZ" },
+  { code: "+505", name: "Nicaragua", iso: "NI" },
+  { code: "+227", name: "Niger", iso: "NE" },
+  { code: "+234", name: "Nigeria", iso: "NG" },
+  { code: "+850", name: "North Korea", iso: "KP" },
+  { code: "+47", name: "Norway", iso: "NO" },
+  { code: "+968", name: "Oman", iso: "OM" },
+  { code: "+92", name: "Pakistan", iso: "PK" },
+  { code: "+680", name: "Palau", iso: "PW" },
+  { code: "+970", name: "Palestine", iso: "PS" },
+  { code: "+507", name: "Panama", iso: "PA" },
+  { code: "+675", name: "Papua New Guinea", iso: "PG" },
+  { code: "+595", name: "Paraguay", iso: "PY" },
+  { code: "+51", name: "Peru", iso: "PE" },
+  { code: "+63", name: "Philippines", iso: "PH" },
+  { code: "+48", name: "Poland", iso: "PL" },
+  { code: "+351", name: "Portugal", iso: "PT" },
+  { code: "+1787", name: "Puerto Rico", iso: "PR" },
+  { code: "+974", name: "Qatar", iso: "QA" },
+  { code: "+40", name: "Romania", iso: "RO" },
+  { code: "+7", name: "Russia", iso: "RU" },
+  { code: "+250", name: "Rwanda", iso: "RW" },
+  { code: "+1869", name: "Saint Kitts and Nevis", iso: "KN" },
+  { code: "+1758", name: "Saint Lucia", iso: "LC" },
+  { code: "+1784", name: "Saint Vincent", iso: "VC" },
+  { code: "+685", name: "Samoa", iso: "WS" },
+  { code: "+378", name: "San Marino", iso: "SM" },
+  { code: "+966", name: "Saudi Arabia", iso: "SA" },
+  { code: "+221", name: "Senegal", iso: "SN" },
+  { code: "+381", name: "Serbia", iso: "RS" },
+  { code: "+248", name: "Seychelles", iso: "SC" },
+  { code: "+232", name: "Sierra Leone", iso: "SL" },
+  { code: "+65", name: "Singapore", iso: "SG" },
+  { code: "+421", name: "Slovakia", iso: "SK" },
+  { code: "+386", name: "Slovenia", iso: "SI" },
+  { code: "+677", name: "Solomon Islands", iso: "SB" },
+  { code: "+252", name: "Somalia", iso: "SO" },
+  { code: "+27", name: "South Africa", iso: "ZA" },
+  { code: "+82", name: "South Korea", iso: "KR" },
+  { code: "+211", name: "South Sudan", iso: "SS" },
+  { code: "+34", name: "Spain", iso: "ES" },
+  { code: "+94", name: "Sri Lanka", iso: "LK" },
+  { code: "+249", name: "Sudan", iso: "SD" },
+  { code: "+597", name: "Suriname", iso: "SR" },
+  { code: "+268", name: "Swaziland", iso: "SZ" },
+  { code: "+46", name: "Sweden", iso: "SE" },
+  { code: "+41", name: "Switzerland", iso: "CH" },
+  { code: "+963", name: "Syria", iso: "SY" },
+  { code: "+886", name: "Taiwan", iso: "TW" },
+  { code: "+992", name: "Tajikistan", iso: "TJ" },
+  { code: "+255", name: "Tanzania", iso: "TZ" },
+  { code: "+66", name: "Thailand", iso: "TH" },
+  { code: "+670", name: "Timor-Leste", iso: "TL" },
+  { code: "+228", name: "Togo", iso: "TG" },
+  { code: "+676", name: "Tonga", iso: "TO" },
+  { code: "+1868", name: "Trinidad and Tobago", iso: "TT" },
+  { code: "+216", name: "Tunisia", iso: "TN" },
+  { code: "+90", name: "Turkey", iso: "TR" },
+  { code: "+993", name: "Turkmenistan", iso: "TM" },
+  { code: "+688", name: "Tuvalu", iso: "TV" },
+  { code: "+256", name: "Uganda", iso: "UG" },
+  { code: "+380", name: "Ukraine", iso: "UA" },
+  { code: "+971", name: "UAE", iso: "AE" },
+  { code: "+44", name: "United Kingdom", iso: "GB" },
+  { code: "+1", name: "United States", iso: "US" },
+  { code: "+598", name: "Uruguay", iso: "UY" },
+  { code: "+998", name: "Uzbekistan", iso: "UZ" },
+  { code: "+678", name: "Vanuatu", iso: "VU" },
+  { code: "+58", name: "Venezuela", iso: "VE" },
+  { code: "+84", name: "Vietnam", iso: "VN" },
+  { code: "+967", name: "Yemen", iso: "YE" },
+  { code: "+260", name: "Zambia", iso: "ZM" },
+  { code: "+263", name: "Zimbabwe", iso: "ZW" },
 ];
 
 /* ────────── Types ────────── */
-interface Country {
+export interface Country {
   code: string;
   name: string;
-  flag: string;
   iso: string;
+  // ⚠️ flag field নেই — DB তে শুধু name, code, iso সেভ হবে
 }
 
 interface CountrySelectDrawerProps {
@@ -78,7 +234,65 @@ interface CountrySelectDrawerProps {
   onClose: () => void;
 }
 
-/* ────────── Component ────────── */
+/* ── Theme ── */
+const T = {
+  drawerBg: "#150d2e",
+  border: "rgba(139,92,246,0.18)",
+  accent: "#00e5cc",
+  accentDim: "rgba(0,229,204,0.1)",
+  textPrimary: "#f0eeff",
+  textSecondary: "#a78bfa",
+  textMuted: "#5b4d7e",
+  inputBg: "rgba(255,255,255,0.05)",
+  rowHover: "rgba(139,92,246,0.09)",
+  handle: "rgba(139,92,246,0.35)",
+};
+
+/* ────────── Flag Image ────────── */
+function FlagImage({ iso, name }: { iso: string; name: string }) {
+  const [err, setErr] = useState(false);
+  if (!iso || err) {
+    return (
+      <div
+        style={{
+          width: 32,
+          height: 22,
+          borderRadius: 4,
+          background: "rgba(139,92,246,0.15)",
+          border: `1px solid ${T.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 9,
+          color: T.textSecondary,
+          flexShrink: 0,
+        }}
+      >
+        {iso || "?"}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${iso.toLowerCase()}.png`}
+      srcSet={`https://flagcdn.com/w80/${iso.toLowerCase()}.png 2x`}
+      alt={name}
+      onError={() => setErr(true)}
+      loading="lazy"
+      style={{
+        width: 32,
+        height: 22,
+        objectFit: "cover",
+        borderRadius: 4,
+        flexShrink: 0,
+        boxShadow: "0 1px 6px rgba(0,0,0,0.5)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    />
+  );
+}
+
+/* ────────── Main Component ────────── */
 export default function CountrySelectDrawer({
   open,
   selected,
@@ -88,7 +302,6 @@ export default function CountrySelectDrawer({
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ Drawer open হলে search clear + focus
   useEffect(() => {
     if (open) {
       setSearch("");
@@ -96,7 +309,6 @@ export default function CountrySelectDrawer({
     }
   }, [open]);
 
-  // ✅ search filter করো – name অথবা code দিয়ে
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     if (!q) return COUNTRY_LIST;
@@ -108,87 +320,194 @@ export default function CountrySelectDrawer({
     );
   }, [search]);
 
-  // ✅ Recommended = Bangladesh (বা user এর location অনুযায়ী)
   const recommended = COUNTRY_LIST.find((c) => c.iso === "BD")!;
   const others = filtered.filter((c) => c.iso !== "BD");
   const showRecommended =
-    !search || recommended.name.toLowerCase().includes(search.toLowerCase());
+    !search ||
+    recommended.name.toLowerCase().includes(search.toLowerCase()) ||
+    recommended.code.includes(search);
 
   return (
     <>
-      {/* ── Backdrop ── */}
+      {/* Backdrop */}
       <div
         onClick={onClose}
-        className={[
-          "fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity",
-          open
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none",
-        ].join(" ")}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 40,
+          background: "rgba(5,2,18,0.88)",
+          backdropFilter: "blur(8px)",
+          transition: "opacity 0.3s",
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+        }}
       />
 
-      {/* ── Drawer ── */}
+      {/* Drawer */}
       <div
-        className={[
-          "fixed inset-x-0 bottom-0 z-50 rounded-t-3xl",
-          "transition-transform duration-300 ease-out",
-          open ? "translate-y-0" : "translate-y-full",
-        ].join(" ")}
         style={{
-          background: "#ffffff",
-          maxHeight: "85vh",
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 50,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          background: T.drawerBg,
+          maxHeight: "88vh",
           display: "flex",
           flexDirection: "column",
+          transform: open ? "translateY(0)" : "translateY(100%)",
+          transition: "transform 0.32s cubic-bezier(0.32,0.72,0,1)",
+          boxShadow:
+            "0 -8px 48px rgba(0,0,0,0.7), 0 -1px 0 rgba(139,92,246,0.25)",
         }}
       >
-        {/* ── Drag Handle ── */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-gray-300" />
+        {/* Handle */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "12px 0 4px",
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 4,
+              borderRadius: 99,
+              background: T.handle,
+            }}
+          />
         </div>
 
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-3">
-          <h2 className="text-[18px] font-bold text-gray-900">
-            Select country code
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "10px 20px 14px",
+            borderBottom: `1px solid ${T.border}`,
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 17,
+              fontWeight: 700,
+              color: T.textPrimary,
+            }}
+          >
+            Select Country Code
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            style={{
+              padding: 8,
+              borderRadius: "50%",
+              background: "rgba(139,92,246,0.12)",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              color: T.textSecondary,
+            }}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X size={17} />
           </button>
         </div>
 
-        {/* ── Search Input ── */}
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2.5">
-            <Search className="w-4 h-4 text-gray-400 shrink-0" />
+        {/* Search */}
+        <div style={{ padding: "12px 16px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: T.inputBg,
+              border: `1px solid ${T.border}`,
+              borderRadius: 12,
+              padding: "10px 14px",
+            }}
+          >
+            <Search size={15} style={{ color: T.textMuted, flexShrink: 0 }} />
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search by code or country"
+              placeholder="Search country, code..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] text-gray-700 placeholder:text-gray-400 outline-none"
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 14,
+                color: T.textPrimary,
+                caretColor: T.accent,
+              }}
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: T.textMuted,
+                  display: "flex",
+                }}
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ── List ── */}
-        <div className="flex-1 overflow-y-auto px-4 pb-8">
-          {/* Enter code manually */}
+        {/* List */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px" }}>
+          {/* Manual entry */}
           {!search && (
             <button
               onClick={() => {
-                onSelect({ code: "", name: "Manual", flag: "⌨️", iso: "" });
+                onSelect({ code: "", name: "Manual Entry", iso: "" });
                 onClose();
               }}
-              className="flex items-center gap-3 w-full py-3 border-b border-gray-100"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                width: "100%",
+                padding: "12px 4px",
+                background: "none",
+                border: "none",
+                borderBottom: `1px solid ${T.border}`,
+                cursor: "pointer",
+              }}
             >
-              <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
-                <span className="text-lg">⌨️</span>
+              <div
+                style={{
+                  width: 32,
+                  height: 22,
+                  borderRadius: 4,
+                  background: T.inputBg,
+                  border: `1px solid ${T.border}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 13,
+                }}
+              >
+                ⌨️
               </div>
-              <span className="text-[15px] text-gray-700 font-medium">
+              <span
+                style={{
+                  fontSize: 14,
+                  color: T.textSecondary,
+                  fontWeight: 500,
+                }}
+              >
                 Enter code manually
               </span>
             </button>
@@ -197,9 +516,7 @@ export default function CountrySelectDrawer({
           {/* Recommended */}
           {showRecommended && !search && (
             <>
-              <p className="text-[12px] font-semibold text-[#0173e5] mt-4 mb-2 uppercase tracking-wider">
-                Recommended
-              </p>
+              <SectionLabel text="Recommended" />
               <CountryRow
                 country={recommended}
                 selected={selected}
@@ -211,14 +528,10 @@ export default function CountrySelectDrawer({
             </>
           )}
 
-          {/* Other countries */}
+          {/* Countries */}
           {others.length > 0 && (
             <>
-              {!search && (
-                <p className="text-[12px] font-semibold text-[#0173e5] mt-4 mb-2 uppercase tracking-wider">
-                  Other
-                </p>
-              )}
+              {!search && <SectionLabel text="All Countries" />}
               {others.map((country) => (
                 <CountryRow
                   key={`${country.iso}-${country.code}`}
@@ -233,10 +546,16 @@ export default function CountrySelectDrawer({
             </>
           )}
 
-          {/* No results */}
           {filtered.length === 0 && (
-            <div className="py-12 text-center text-gray-400 text-[14px]">
-              No country found
+            <div
+              style={{
+                padding: "48px 0",
+                textAlign: "center",
+                color: T.textMuted,
+                fontSize: 14,
+              }}
+            >
+              No country found for "{search}"
             </div>
           )}
         </div>
@@ -245,7 +564,25 @@ export default function CountrySelectDrawer({
   );
 }
 
-/* ── Single Country Row ── */
+/* ── Section Label ── */
+function SectionLabel({ text }: { text: string }) {
+  return (
+    <p
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        color: T.accent,
+        margin: "14px 0 6px",
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+      }}
+    >
+      {text}
+    </p>
+  );
+}
+
+/* ── Country Row ── */
 function CountryRow({
   country,
   selected,
@@ -255,40 +592,75 @@ function CountryRow({
   selected: Country | null;
   onSelect: (c: Country) => void;
 }) {
-  const isSelected = selected?.iso === country.iso;
+  const isSelected =
+    selected?.iso === country.iso && selected?.code === country.code;
+  const [hovered, setHovered] = useState(false);
 
   return (
     <button
       onClick={() => onSelect(country)}
-      className="flex items-center gap-3 w-full py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        width: "100%",
+        padding: "11px 6px",
+        background: isSelected
+          ? T.accentDim
+          : hovered
+            ? T.rowHover
+            : "transparent",
+        border: "none",
+        borderBottom: `1px solid ${T.border}`,
+        cursor: "pointer",
+        textAlign: "left",
+        transition: "background 0.15s",
+        borderRadius: 6,
+      }}
     >
-      {/* Flag */}
-      <span className="text-2xl w-8 text-center shrink-0">{country.flag}</span>
+      <FlagImage iso={country.iso} name={country.name} />
 
-      {/* Name */}
       <span
-        className={[
-          "flex-1 text-left text-[15px]",
-          isSelected
-            ? "text-[#0173e5] font-semibold"
-            : "text-gray-800 font-medium",
-        ].join(" ")}
+        style={{
+          flex: 1,
+          fontSize: 14,
+          fontWeight: isSelected ? 600 : 400,
+          color: isSelected ? T.accent : T.textPrimary,
+        }}
       >
-        {country.code} {country.name}
+        {/* ✅ undefined fix: code আর name আলাদাভাবে রেন্ডার, flag নেই */}
+        <span style={{ color: T.textSecondary, marginRight: 6 }}>
+          {country.code}
+        </span>
+        {country.name}
       </span>
 
-      {/* Radio */}
       <div
-        className={[
-          "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
-          isSelected ? "border-[#0173e5]" : "border-gray-300",
-        ].join(" ")}
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: "50%",
+          border: `2px solid ${isSelected ? T.accent : T.textMuted}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "border-color 0.2s",
+        }}
       >
-        {isSelected && <div className="w-3 h-3 rounded-full bg-[#0173e5]" />}
+        {isSelected && (
+          <div
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: T.accent,
+            }}
+          />
+        )}
       </div>
     </button>
   );
 }
-
-export { COUNTRY_LIST };
-export type { Country };

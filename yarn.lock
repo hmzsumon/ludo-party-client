@@ -1357,6 +1357,11 @@ cosmiconfig@^7.0.0:
     path-type "^4.0.0"
     yaml "^1.10.0"
 
+country-list-with-dial-code-and-flag@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/country-list-with-dial-code-and-flag/-/country-list-with-dial-code-and-flag-5.1.1.tgz#6232f14ad73c4c790a94829814c105dfc2916ec9"
+  integrity sha512-dj93ztplLEV2svD4+oOKTnR+8+cQSNf8kB051w+kYIoxcW6K0BPLgWYqwJjEpvoee60FTBufmi7jvcLPEgfpjg==
+
 createjs-module@^0.8.3:
   version "0.8.3"
   resolved "https://registry.yarnpkg.com/createjs-module/-/createjs-module-0.8.3.tgz#328ffa2e14741d7303d3d08bd97ce1823365741f"
