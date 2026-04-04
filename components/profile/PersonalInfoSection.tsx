@@ -95,7 +95,7 @@ export default function PersonalInfoSection({
       >
         {/* Name */}
         <ProfileInfoRow
-          label="Name"
+          label="Full Name"
           value={profile.firstName || undefined}
           actionType={profile.firstName ? "change" : "add"}
           onActionClick={() => setShowNameModal(true)}
@@ -103,13 +103,13 @@ export default function PersonalInfoSection({
         />
 
         {/* Surname */}
-        <ProfileInfoRow
+        {/* <ProfileInfoRow
           label="Surname"
           value={profile.surname || undefined}
           actionType={profile.surname ? "change" : "add"}
           onActionClick={() => setShowSurnameModal(true)}
           showDivider
-        />
+        /> */}
 
         {/* Country */}
         <ProfileInfoRow

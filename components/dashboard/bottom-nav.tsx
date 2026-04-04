@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: "Home", icon: "🏠", activeIcon: "🏠", href: "/dashboard" },
-  { label: "Games", icon: "🎮", activeIcon: "🎮", href: "/games" },
-  { label: "Wallet", icon: "👛", activeIcon: "👛", href: "/wallet" },
-  { label: "Profile", icon: "👤", activeIcon: "👤", href: "/profile" },
+  { label: "Home", icon: "🏠", href: "/dashboard" },
+  { label: "Invite", icon: "🎁", href: "/invite" },
+  { label: "Wallet", icon: "👛", href: "/wallet" },
+  { label: "Profile", icon: "👤", href: "/profile" },
 ];
 
 const BottomNav = () => {
@@ -61,7 +61,7 @@ const BottomNav = () => {
                 />
               )}
 
-              {/* Icon circle when active */}
+              {/* Icon box */}
               <div
                 className="relative flex h-8 w-8 items-center justify-center rounded-xl"
                 style={

@@ -67,7 +67,7 @@ export default function AccountSection({
         />
 
         {/* Username – Add button (user model এ username field নেই তাই placeholder) */}
-        <ProfileInfoRow
+        {/* <ProfileInfoRow
           label="Username"
           isEmpty
           actionType="add"
@@ -75,7 +75,7 @@ export default function AccountSection({
             toast("Username feature coming soon!", { icon: "🔧" })
           }
           showDivider
-        />
+        /> */}
 
         {/* Email – Change click এ attention modal */}
         <ProfileInfoRow
