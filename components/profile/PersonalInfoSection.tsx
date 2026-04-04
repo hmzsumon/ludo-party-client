@@ -27,18 +27,16 @@ export default function PersonalInfoSection({
   onUpdateProfile,
   isUpdating,
 }: PersonalInfoSectionProps) {
-  // ✅ কোন modal/drawer open
   const [showNameModal, setShowNameModal] = useState(false);
   const [showSurnameModal, setShowSurnameModal] = useState(false);
   const [showCountryDrawer, setShowCountryDrawer] = useState(false);
 
-  // ✅ Selected country (existing অথবা null)
+  // ✅ Fix 1: flag field বাদ — শুধু code, name, iso
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(
     profile.countryName
       ? {
           code: profile.countryCode || "",
           name: profile.countryName,
-          flag: "",
           iso: profile.countryCode || "",
         }
       : null,
@@ -80,9 +78,9 @@ export default function PersonalInfoSection({
     }
   };
 
-  // ✅ Country এর display value (flag + name)
+  // ✅ Fix 2: flag বাদ — শুধু code + name দেখাবে
   const countryDisplay = selectedCountry
-    ? `${selectedCountry.flag} ${selectedCountry.name}`.trim()
+    ? `${selectedCountry.code} ${selectedCountry.name}`.trim()
     : profile.countryName || "";
 
   return (
@@ -113,7 +111,7 @@ export default function PersonalInfoSection({
           showDivider
         />
 
-        {/* Country – Add click এ drawer open হবে */}
+        {/* Country */}
         <ProfileInfoRow
           label="Country"
           value={countryDisplay || undefined}
@@ -122,7 +120,7 @@ export default function PersonalInfoSection({
           showDivider
         />
 
-        {/* City – static (backend এ নেই, future এর জন্য placeholder) */}
+        {/* City */}
         <ProfileInfoRow
           label="City"
           value={profile.city || undefined}
