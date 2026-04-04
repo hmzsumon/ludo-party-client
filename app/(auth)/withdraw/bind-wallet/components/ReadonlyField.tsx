@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 
 type Props = {
@@ -8,15 +9,20 @@ type Props = {
 
 const ReadonlyField: React.FC<Props> = ({ label, value }) => {
   return (
-    <div className="mt-4">
-      <label className="mb-1 block text-sm font-medium text-slate-700">
+    <div className="mt-3">
+      <label className="mb-2 block text-[12px] font-medium text-white/70">
         {label}
       </label>
-      <input
-        value={value}
-        readOnly
-        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none"
-      />
+
+      <div
+        className="w-full rounded-xl px-4 py-3 text-sm text-white/90"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 };

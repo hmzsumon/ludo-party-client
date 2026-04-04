@@ -48,7 +48,7 @@ const ProfileHeroCard = () => {
       {/* Top shine */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
 
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-5 ">
         {/* ── Left: Avatar + Name ── */}
         <div className="flex items-center gap-4">
           {/* Avatar */}

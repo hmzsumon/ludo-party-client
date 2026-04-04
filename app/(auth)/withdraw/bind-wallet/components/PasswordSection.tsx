@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import PasswordField from "./PasswordField";
 
@@ -13,7 +14,6 @@ type Props = {
   onToggle2: () => void;
   passErr: string;
   matchErr: string;
-
   hasTnxPassword: boolean;
 };
 
@@ -32,9 +32,17 @@ const PasswordSection: React.FC<Props> = ({
 }) => {
   return (
     <>
-      <p className="mt-4 text-[13px] font-medium text-red-600">
-        Please set up your transaction password.
-      </p>
+      <div
+        className="mt-4 rounded-xl p-3 text-[11px] leading-5"
+        style={{
+          background: "rgba(255,160,80,0.07)",
+          border: "1px solid rgba(255,160,80,0.2)",
+          color: "rgba(255,200,120,0.8)",
+        }}
+      >
+        ⚠️ Please set up your transaction password. This is a 6-digit PIN used
+        to confirm withdrawals.
+      </div>
 
       <PasswordField
         label="* Set transaction password"
@@ -46,16 +54,14 @@ const PasswordSection: React.FC<Props> = ({
       />
 
       {!hasTnxPassword && (
-        <div className="mt-3">
-          <PasswordField
-            label="* Confirm password"
-            value={txPass2}
-            onChange={onChangeTxPass2}
-            show={show2}
-            onToggle={onToggle2}
-            error={matchErr}
-          />
-        </div>
+        <PasswordField
+          label="* Confirm password"
+          value={txPass2}
+          onChange={onChangeTxPass2}
+          show={show2}
+          onToggle={onToggle2}
+          error={matchErr}
+        />
       )}
     </>
   );

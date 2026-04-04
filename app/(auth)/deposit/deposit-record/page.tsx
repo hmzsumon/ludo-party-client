@@ -8,54 +8,43 @@ import { FaAngleLeft } from "react-icons/fa";
 
 /* ────────── Utils ────────── */
 const pad2 = (n: number) => String(n).padStart(2, "0");
-
 const toYMD = (d: Date) => {
   const y = d.getUTCFullYear();
   const m = pad2(d.getUTCMonth() + 1);
   const day = pad2(d.getUTCDate());
   return `${y}-${m}-${day}`;
 };
-
 const toMMDD = (d: Date) =>
   `${pad2(d.getUTCMonth() + 1)}/${pad2(d.getUTCDate())}`;
-
 const addDaysUTC = (d: Date, n: number) => {
   const x = new Date(d);
   x.setUTCDate(x.getUTCDate() + n);
   return x;
 };
-
 const formatDT = (iso?: string) => {
   if (!iso) return "-";
   const d = new Date(iso);
-  // 2026-02-06 12:57:09 format
-  const yyyy = d.getFullYear();
-  const mm = pad2(d.getMonth() + 1);
-  const dd = pad2(d.getDate());
-  const hh = pad2(d.getHours());
-  const mi = pad2(d.getMinutes());
-  const ss = pad2(d.getSeconds());
-  return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 };
 
 const statusLabel = (s?: string) => {
   switch (s) {
     case "approved":
-      return { t: "Approved", c: "text-green-600" };
+      return { t: "Approved", color: "#4ade80", bg: "rgba(74,222,128,0.1)" };
     case "pending":
-      return { t: "Pending", c: "text-orange-500" };
+      return { t: "Pending", color: "#fb923c", bg: "rgba(251,146,60,0.1)" };
     case "failed":
-      return { t: "Reject", c: "text-red-600" };
+      return { t: "Rejected", color: "#f87171", bg: "rgba(248,113,113,0.1)" };
     case "expired":
-      return { t: "Cancelled", c: "text-gray-500" };
+      return { t: "Cancelled", color: "#94a3b8", bg: "rgba(148,163,184,0.1)" };
     case "confirmed":
-      return { t: "New", c: "text-blue-600" };
+      return { t: "New", color: "#60a5fa", bg: "rgba(96,165,250,0.1)" };
     default:
-      return { t: "All", c: "text-gray-700" };
+      return { t: "All", color: "#a78bfa", bg: "rgba(167,139,250,0.1)" };
   }
 };
 
-/* ────────── Component: Tabs ────────── */
+/* ── Tabs ── */
 function Tabs({
   active,
   onChange,
@@ -63,30 +52,38 @@ function Tabs({
   active: "today" | "yesterday" | "7days";
   onChange: (v: "today" | "yesterday" | "7days") => void;
 }) {
-  const tabBtn = (key: "today" | "yesterday" | "7days", label: string) => {
-    const is = active === key;
-    return (
-      <button
-        onClick={() => onChange(key)}
-        className={`flex-1 py-3 text-center text-sm ${
-          is ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-900"
-        }`}
-      >
-        {label}
-      </button>
-    );
-  };
-
+  const tabs = [
+    ["today", "Today"],
+    ["yesterday", "Yesterday"],
+    ["7days", "7-Days"],
+  ] as const;
   return (
-    <div className="flex bg-white border-b">
-      {tabBtn("today", "Today")}
-      {tabBtn("yesterday", "Yesterday")}
-      {tabBtn("7days", "7-days")}
+    <div
+      className="flex"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+    >
+      {tabs.map(([k, label]) => {
+        const is = active === k;
+        return (
+          <button
+            key={k}
+            onClick={() => onChange(k)}
+            className="flex-1 py-3 text-center text-sm font-semibold transition-all"
+            style={{
+              color: is ? "#c084fc" : "rgba(255,255,255,0.4)",
+              borderBottom: is ? "2px solid #c084fc" : "2px solid transparent",
+              background: "transparent",
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-/* ────────── Component: Types Modal ────────── */
+/* ── Types Modal ── */
 function TypesModal({
   open,
   onClose,
@@ -97,48 +94,69 @@ function TypesModal({
   onPick: (v: string) => void;
 }) {
   if (!open) return null;
-
   const items = [
     { label: "Approved", value: "approved" },
     { label: "Cancelled", value: "expired" },
     { label: "Pending", value: "pending" },
     { label: "New", value: "confirmed" },
-    { label: "Reject", value: "failed" },
+    { label: "Rejected", value: "failed" },
   ];
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-end">
-      <div className="w-full bg-white rounded-t-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <div className="text-sm text-gray-500">Types</div>
-          <button onClick={onClose} className="text-gray-500 text-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end"
+      style={{ background: "rgba(0,0,0,0.7)" }}
+    >
+      <div
+        className="w-full rounded-t-3xl overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(55,8,80,0.99) 0%, rgba(20,4,31,1) 100%)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div className="text-sm font-bold text-white/60 uppercase tracking-widest">
+            Filter Types
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/40 text-2xl hover:text-white"
+          >
             ×
           </button>
         </div>
-
-        <div className="px-4 py-3">
-          <div className="text-sm font-semibold mb-2">Types</div>
-          <div className="divide-y">
-            {items.map((it) => (
+        <div className="px-5 py-3">
+          {items.map((it) => {
+            const st = statusLabel(it.value);
+            return (
               <button
                 key={it.value}
                 onClick={() => {
                   onPick(it.value);
                   onClose();
                 }}
-                className="w-full text-left py-4 text-base"
+                className="w-full text-left py-3.5 text-sm flex items-center gap-3"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
               >
-                {it.label}
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ background: st.color }}
+                />
+                <span style={{ color: st.color }}>{it.label}</span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
+        <div className="pb-8" />
       </div>
     </div>
   );
 }
 
-/* ────────── Component: Date Modal ────────── */
+/* ── Date Modal ── */
 function DateRangeModal({
   open,
   from,
@@ -150,59 +168,84 @@ function DateRangeModal({
   from: string;
   to: string;
   onClose: () => void;
-  onApply: (from: string, to: string) => void;
+  onApply: (f: string, t: string) => void;
 }) {
   const [f, setF] = useState(from);
   const [t, setT] = useState(to);
-
   if (!open) return null;
-
+  const inputStyle = {
+    background: "rgba(0,0,0,0.4)",
+    border: "1.5px solid rgba(255,255,255,0.1)",
+    borderRadius: "10px",
+    color: "#fff",
+    padding: "10px 14px",
+    width: "100%",
+    outline: "none",
+  };
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-end pb-14">
-      <div className="w-full bg-white rounded-t-lg overflow-hidden">
-        <div className="px-4 py-3 border-b flex items-center justify-between">
-          <div className="font-semibold">Select Date Range</div>
-          <button onClick={onClose} className="text-gray-500 text-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end"
+      style={{ background: "rgba(0,0,0,0.7)" }}
+    >
+      <div
+        className="w-full rounded-t-3xl overflow-hidden pb-8"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(55,8,80,0.99) 0%, rgba(20,4,31,1) 100%)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div className="text-sm font-bold text-white/60 uppercase tracking-widest">
+            Date Range
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/40 text-2xl hover:text-white"
+          >
             ×
           </button>
         </div>
-
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs text-gray-500">From</label>
+              <label className="text-[10px] uppercase tracking-widest text-white/35 mb-1.5 block">
+                From
+              </label>
               <input
                 type="date"
                 value={f}
                 onChange={(e) => setF(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                style={inputStyle}
               />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-gray-500">To</label>
+              <label className="text-[10px] uppercase tracking-widest text-white/35 mb-1.5 block">
+                To
+              </label>
               <input
                 type="date"
                 value={t}
                 onChange={(e) => setT(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                style={inputStyle}
               />
             </div>
           </div>
-
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex gap-3 pt-1">
             <button
               onClick={() => {
-                // Clear = today default
-                const today = new Date();
-                const ymd = toYMD(today);
+                const ymd = toYMD(new Date());
                 setF(ymd);
                 setT(ymd);
               }}
-              className="flex-1 border rounded py-3"
+              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white/50"
+              style={{ border: "1px solid rgba(255,255,255,0.12)" }}
             >
               Clear
             </button>
-
             <button
               onClick={() => {
                 if (!f || !t) {
@@ -212,9 +255,10 @@ function DateRangeModal({
                 onApply(f, t);
                 onClose();
               }}
-              className="flex-1 bg-blue-500 text-white rounded py-3"
+              className="flex-1 rounded-xl py-3 text-sm font-bold text-white"
+              style={{ background: "linear-gradient(135deg,#9333ea,#7c3aed)" }}
             >
-              OK
+              Apply
             </button>
           </div>
         </div>
@@ -223,17 +267,15 @@ function DateRangeModal({
   );
 }
 
-/* ────────── Component: Deposit Card ────────── */
+/* ── Deposit Card ── */
 function DepositCard({ d }: { d: any }) {
   const title = String(
     d?.walletTitle || d?.walletType || "DEPOSIT",
   ).toUpperCase();
   const createdAt = formatDT(d?.createdAt);
   const receivedAt = formatDT(d?.approvedAt || d?.processedAt || d?.updatedAt);
-
   const requestAmount = Number(d?.requestAmount || 0).toFixed(2);
   const receivedAmount = Number(d?.receivedAmount || 0).toFixed(2);
-
   const ref = String(d?.orderId || d?._id || "-");
   const st = statusLabel(d?.status);
 
@@ -247,69 +289,98 @@ function DepositCard({ d }: { d: any }) {
   };
 
   return (
-    <div className="px-4 py-4 border-b bg-white">
-      <div className="text-sm font-semibold leading-tight">{title}</div>
-      <div className="text-xs text-gray-700">{createdAt}</div>
-
-      <div className="mt-3 bg-gray-100 rounded-lg p-4">
-        <div className="flex items-center gap-2 text-xl">
-          <div className="font-semibold text-sm">Deposit ref# :</div>
-          <div className="font-semibold text-xs">{ref}</div>
-          <button
-            onClick={copyRef}
-            className="ml-auto text-gray-500 hover:text-gray-800"
-            title="Copy"
-          >
-            ⧉
-          </button>
+    <div
+      className="mx-3 mb-3 rounded-2xl overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(55,8,75,0.5) 0%, rgba(20,4,31,0.7) 100%)",
+        border: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      {/* Card Top */}
+      <div
+        className="px-4 py-3 flex items-center justify-between"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div>
+          <div className="text-xs font-bold text-white">{title}</div>
+          <div className="text-[10px] text-white/35 mt-0.5">{createdAt}</div>
         </div>
-
-        <div className="mt-5 space-y-4 text-sm">
-          <div className="flex gap-3">
-            <div className="min-w-[170px] text-gray-700">Postscript :</div>
-            <div className="text-gray-900 text-xs">{d?.note || ""}</div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="min-w-[170px] text-gray-700">Received time :</div>
-            <div className="text-gray-900 text-xs">{receivedAt}</div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="min-w-[170px] text-gray-700">Handling fee :</div>
-            <div className="text-gray-900 text-xs">0.00</div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="min-w-[170px] text-gray-700">Promotions :</div>
-            <div className="text-gray-900 text-xs">-</div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="min-w-[170px] text-gray-700">Remarks :</div>
-            <div className="text-gray-900 text-xs">
-              {d?.rejectedReason ? d.rejectedReason : "-"}
-            </div>
-          </div>
-        </div>
+        <span
+          className="rounded-full px-2.5 py-1 text-[10px] font-bold"
+          style={{
+            color: st.color,
+            background: st.bg,
+            border: `1px solid ${st.color}30`,
+          }}
+        >
+          {st.t}
+        </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-1 px-2 ">
+      {/* Ref row */}
+      <div
+        className="px-4 py-3 flex items-center gap-2"
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          background: "rgba(0,0,0,0.15)",
+        }}
+      >
+        <div className="text-[10px] text-white/40 uppercase tracking-widest">
+          Ref#
+        </div>
+        <div className="text-xs font-mono text-white/70 flex-1 truncate">
+          {ref}
+        </div>
+        <button
+          onClick={copyRef}
+          className="text-white/40 hover:text-purple-300 transition text-sm"
+        >
+          ⧉
+        </button>
+      </div>
+
+      {/* Details */}
+      <div className="px-4 py-3 space-y-2">
+        {[
+          { label: "Postscript", val: d?.note || "-" },
+          { label: "Received time", val: receivedAt },
+          { label: "Handling fee", val: "0.00" },
+          { label: "Promotions", val: "-" },
+          { label: "Remarks", val: d?.rejectedReason || "-" },
+        ].map(({ label, val }) => (
+          <div key={label} className="flex items-start gap-2">
+            <div className="text-[10px] text-white/35 min-w-[110px]">
+              {label}
+            </div>
+            <div className="text-[11px] text-white/60 flex-1">{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Amounts footer */}
+      <div
+        className="grid grid-cols-3 gap-2 px-4 py-3"
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.1)",
+        }}
+      >
         <div>
-          <div className="text-xs text-gray-700">Request</div>
-          <div className="text-sm text-red-600 font-semibold">
-            {requestAmount}
+          <div className="text-[10px] text-white/35">Request</div>
+          <div className="text-sm font-bold" style={{ color: "#f87171" }}>
+            BDT {requestAmount}
           </div>
         </div>
-        <div className="">
-          <div className="text-xs text-gray-700">Received amount</div>
-          <div className="text-sm text-gray-900 font-semibold">
-            {receivedAmount}
+        <div>
+          <div className="text-[10px] text-white/35">Received</div>
+          <div className="text-sm font-bold text-white/80">
+            BDT {receivedAmount}
           </div>
         </div>
-        <div>
-          <div className="text-xs text-gray-700 text-right">Status</div>
-          <div className={`text-sm text-right font-semibold ${st.c}`}>
+        <div className="text-right">
+          <div className="text-[10px] text-white/35">Status</div>
+          <div className="text-sm font-bold" style={{ color: st.color }}>
             {st.t}
           </div>
         </div>
@@ -318,17 +389,14 @@ function DepositCard({ d }: { d: any }) {
   );
 }
 
+/* ── Page ── */
 export default function DepositRecordPage() {
   const router = useRouter();
-
   const [tab, setTab] = useState<"today" | "yesterday" | "7days">("today");
   const [typesOpen, setTypesOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
-
-  // ✅ status: "all" default
   const [status, setStatus] = useState<string>("all");
 
-  /* ────────── Date Range From Tab ────────── */
   const { from, to, label } = useMemo(() => {
     const today = new Date();
     const todayUTC = new Date(
@@ -347,7 +415,6 @@ export default function DepositRecordPage() {
       const ymd = toYMD(y);
       return { from: ymd, to: ymd, label: `${toMMDD(y)}-${toMMDD(y)}` };
     }
-    // 7-days: today সহ last 7 days => start = today-6
     const start = addDaysUTC(todayUTC, -6);
     const end = todayUTC;
     return {
@@ -357,82 +424,145 @@ export default function DepositRecordPage() {
     };
   }, [tab]);
 
-  /* ────────── Query Deposits ────────── */
   const { data, isLoading, isError } = useGetMyDepositsBDTQuery({
     from,
     to,
     status,
   });
-
   const deposits = data?.deposits || [];
   const totalAmount = Number(data?.totalAmount || 0).toFixed(2);
+  const st = statusLabel(status);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-10" style={{ background: "#14041f" }}>
       {/* Header */}
-      <div className="bg-[#0d5b57] text-white px-4 py-4 flex items-center justify-between">
+      <div
+        className="sticky top-0 z-20 flex items-center justify-between px-4 py-3"
+        style={{
+          background:
+            "linear-gradient(180deg,rgba(30,5,50,0.98),rgba(20,4,31,0.95))",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
         <button
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-white/70 transition hover:text-white"
+          style={{ background: "rgba(255,255,255,0.07)" }}
           onClick={() => router.back()}
-          className="text-white/90 flex items-center gap-2"
+          type="button"
         >
-          <FaAngleLeft />
+          <FaAngleLeft className="text-xs" /> Back
         </button>
-        <div className="text-xl font-bold tracking-wide text-[#f4b400]">
-          Deposit Record
-        </div>
-        <div className="w-6" />
+        <h1 className="text-base font-extrabold tracking-widest text-white uppercase">
+          📋 Deposit Record
+        </h1>
+        <div className="w-16" />
       </div>
 
       {/* Tabs */}
       <Tabs active={tab} onChange={setTab} />
 
       {/* Filters */}
-      <div className="bg-gray-100 px-4 text-sm py-3 flex items-center gap-3">
+      <div
+        className="px-3 py-3 flex items-center gap-2"
+        style={{
+          background: "rgba(0,0,0,0.2)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
         <button
           onClick={() => setStatus("all")}
-          className="border border-blue-400 text-blue-600 bg-white rounded px-5 py-2"
+          className="rounded-full px-4 py-1.5 text-xs font-semibold transition"
+          style={{
+            background:
+              status === "all"
+                ? "linear-gradient(135deg,#9333ea,#7c3aed)"
+                : "rgba(255,255,255,0.07)",
+            color: status === "all" ? "#fff" : "rgba(255,255,255,0.5)",
+            border:
+              status === "all" ? "none" : "1px solid rgba(255,255,255,0.1)",
+          }}
         >
           All
         </button>
 
         <button
           onClick={() => setTypesOpen(true)}
-          className="border border-blue-400 text-blue-600 bg-white rounded px-6 py-2"
+          className="rounded-full px-4 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition"
+          style={{
+            background: status !== "all" ? st.bg : "rgba(255,255,255,0.07)",
+            color: status !== "all" ? st.color : "rgba(255,255,255,0.5)",
+            border:
+              status !== "all"
+                ? `1px solid ${st.color}40`
+                : "1px solid rgba(255,255,255,0.1)",
+          }}
         >
-          Types
+          {status !== "all" && (
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: st.color }}
+            />
+          )}
+          {status !== "all" ? st.t : "Types"}
         </button>
 
         <button
           onClick={() => setDateOpen(true)}
-          className="ml-auto border border-blue-400 text-blue-600 bg-white rounded px-4 py-2 flex items-center gap-2"
+          className="ml-auto rounded-full px-4 py-1.5 text-xs font-semibold flex items-center gap-1.5"
+          style={{
+            background: "rgba(255,255,255,0.07)",
+            color: "rgba(255,255,255,0.5)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
         >
-          <span>📅</span>
-          <span>{label}</span>
+          📅 {label}
         </button>
       </div>
 
       {/* Body */}
-      <div className="bg-white min-h-[60vh]">
+      <div className="pt-3">
         {isLoading ? (
-          <div className="p-10 text-center text-gray-500">Loading...</div>
+          <div className="p-10 text-center text-white/30">
+            <div
+              className="inline-block h-6 w-6 animate-spin rounded-full"
+              style={{
+                border: "2px solid #9333ea",
+                borderTopColor: "transparent",
+              }}
+            />
+            <div className="mt-2 text-sm">Loading...</div>
+          </div>
         ) : isError ? (
-          <div className="p-10 text-center text-red-500">
+          <div className="p-10 text-center text-red-400 text-sm">
             Failed to load deposit records
           </div>
         ) : deposits.length === 0 ? (
-          <div className="p-10 text-center text-gray-500">
-            <div className="text-3xl mb-2">📦</div>
-            <div className="text-xl">No data</div>
+          <div className="p-10 text-center">
+            <div className="text-4xl mb-3 opacity-30">📦</div>
+            <div className="text-white/30 text-sm">No records found</div>
           </div>
         ) : (
           <>
             {deposits.map((d: any) => (
               <DepositCard key={String(d?._id)} d={d} />
             ))}
-
-            {/* Total */}
-            <div className="px-4 py-4 text-base font-semibold">
-              Total amount: {totalAmount}
+            <div
+              className="mx-3 rounded-2xl px-4 py-3 flex items-center justify-between"
+              style={{
+                background: "rgba(147,51,234,0.1)",
+                border: "1px solid rgba(147,51,234,0.2)",
+              }}
+            >
+              <span className="text-xs text-white/50 uppercase tracking-widest">
+                Total Amount
+              </span>
+              <span
+                className="text-sm font-extrabold"
+                style={{ color: "#c084fc" }}
+              >
+                BDT {totalAmount}
+              </span>
             </div>
           </>
         )}
@@ -444,18 +574,12 @@ export default function DepositRecordPage() {
         onClose={() => setTypesOpen(false)}
         onPick={(v) => setStatus(v)}
       />
-
       <DateRangeModal
         open={dateOpen}
         from={from}
         to={to}
         onClose={() => setDateOpen(false)}
-        onApply={(f, t) => {
-          // ✅ custom date set হলে tab current রেখে query change হবে
-          // এখানে সহজভাবে: tab পরিবর্তন না করে manual range set না রেখেই চলবে,
-          // তোমার চাইলে future এ custom state add করে রাখতে পারো
-          toast.success(`Date set: ${f} → ${t}`);
-        }}
+        onApply={(f, t) => toast.success(`Date set: ${f} → ${t}`)}
       />
     </div>
   );
