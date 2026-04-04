@@ -1,89 +1,158 @@
 /* ── Component: WithdrawForm ────────────────────────────────────────────── */
 "use client";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-const FieldLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <label className="mb-1 block text-sm text-white/80">{children}</label>
-);
-const SectionTitle: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => <h3 className="text-sm font-semibold text-white/90">{children}</h3>;
+const PROVIDER_LABELS: Record<string, string> = {
+  bkash: "bKash",
+  nagad: "Nagad",
+  rocket: "Rocket",
+};
 
 export default function WithdrawForm({
-  min = 100,
+  min = 500,
   max = 25000,
   available,
   disabled,
+  provider,
   onSubmit,
 }: {
   min?: number;
   max?: number;
   available: number;
   disabled?: boolean;
-  onSubmit: (amount: number, txPass: string) => void;
+  provider?: string;
+  onSubmit: (amount: number, txPass: string, accountNumber: string) => void;
 }) {
   const [amount, setAmount] = useState<string>("");
   const [pass, setPass] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
   const [show, setShow] = useState(false);
+
+  const providerLabel = provider
+    ? (PROVIDER_LABELS[provider.toLowerCase()] ?? provider)
+    : "E-Wallet";
 
   const n = Number(amount || 0);
   const amountErr = !amount
-    ? "Enter amount"
-    : n < min || n > max
-    ? `Amount must be ${min} ~ ${max}`
-    : n > available
-    ? "Insufficient balance"
-    : "";
+    ? "Please enter an amount"
+    : n < min
+      ? `Minimum withdrawal amount is 💎${min.toLocaleString()}`
+      : n > max
+        ? `Maximum withdrawal amount is 💎${max.toLocaleString()}`
+        : n > available
+          ? "Insufficient balance"
+          : "";
+
+  const accountErr = !accountNumber
+    ? "Please enter account number"
+    : !/^01[3-9]\d{8}$/.test(accountNumber)
+      ? "Enter a valid 11-digit mobile number"
+      : "";
 
   const isValid = useMemo(
-    () => !amountErr && pass.length >= 6,
-    [amountErr, pass]
+    () => !amountErr && !accountErr && pass.length >= 6,
+    [amountErr, accountErr, pass],
   );
 
-  return (
-    <div className="mt-6 rounded-xl border border-[#00493B] bg-[#031A15] p-4">
-      <SectionTitle>Withdrawal Amount:</SectionTitle>
+  const inputClass =
+    "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none transition focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20";
 
-      <div className="mt-3">
-        <FieldLabel>
-          Amount{" "}
-          <span className="opacity-70">
-            {min} ~ {max.toLocaleString()}
+  const labelClass =
+    "mb-1.5 block text-xs font-semibold uppercase tracking-widest text-white/40";
+
+  return (
+    <div className="p-4 space-y-4">
+      {/* ── Notice ── */}
+      <div
+        className="flex items-start gap-2.5 rounded-xl px-3.5 py-3"
+        style={{
+          background: "rgba(234,179,8,0.08)",
+          border: "1px solid rgba(234,179,8,0.2)",
+        }}
+      >
+        <span className="mt-0.5 text-base">⚠️</span>
+        <p className="text-xs leading-relaxed text-yellow-300/80">
+          Funds are transferred to{" "}
+          <span className="font-semibold text-yellow-300">
+            personal accounts only
           </span>
-        </FieldLabel>
-        <input
-          value={amount}
-          onChange={(e) =>
-            setAmount(e.target.value.replace(/[^\d]/g, "").slice(0, 7))
-          }
-          inputMode="numeric"
-          placeholder="0"
-          className="w-full rounded-lg border border-[#00493B] bg-[#01241D] px-3 py-2 outline-none focus:ring-2 focus:ring-[#1c6b5a]"
-        />
-        {amountErr && <p className="mt-1 text-xs text-red-400">{amountErr}</p>}
+          . Agent or merchant accounts are not supported. Please double-check
+          your number before submitting.
+        </p>
       </div>
 
-      <div className="mt-3">
-        <FieldLabel>Transaction Password</FieldLabel>
+      {/* ── Account Number ── */}
+      <div>
+        <label className={labelClass}>
+          {providerLabel} Personal Account Number
+        </label>
+        <input
+          value={accountNumber}
+          onChange={(e) =>
+            setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 11))
+          }
+          inputMode="numeric"
+          placeholder={`Enter your ${providerLabel} number`}
+          className={inputClass}
+        />
+        {accountNumber && accountErr && (
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-red-400">
+            <span>⚠</span> {accountErr}
+          </p>
+        )}
+      </div>
+
+      {/* ── Amount ── */}
+      <div>
+        <label className={labelClass}>Withdrawal Amount</label>
+        <div className="relative">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-white/30">
+            💎
+          </span>
+          <input
+            value={amount}
+            onChange={(e) =>
+              setAmount(e.target.value.replace(/[^\d]/g, "").slice(0, 7))
+            }
+            inputMode="numeric"
+            placeholder={`${min.toLocaleString()} – ${max.toLocaleString()}`}
+            className={`${inputClass} pl-8`}
+          />
+        </div>
+        {amount && amountErr && (
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-red-400">
+            <span>⚠</span> {amountErr}
+          </p>
+        )}
+        {!amountErr && amount && (
+          <p className="mt-1.5 text-xs text-emerald-400/70">
+            ✓ Amount looks good
+          </p>
+        )}
+      </div>
+
+      {/* ── Transaction Password ── */}
+      <div>
+        <label className={labelClass}>Your Password</label>
         <div className="relative">
           <input
             type={show ? "text" : "password"}
             value={pass}
             onChange={(e) => setPass(e.target.value)}
-            placeholder="Transaction Password"
-            className="w-full rounded-lg border border-[#00493B] bg-[#01241D] px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#1c6b5a]"
+            placeholder="Enter your password"
+            className={`${inputClass} pr-10`}
           />
           <button
             type="button"
             onClick={() => setShow((v) => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 hover:bg-white/10"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-white/40 hover:text-white/70 transition"
             aria-label="Toggle password"
           >
             <svg
-              width="18"
-              height="18"
+              width="17"
+              height="17"
               viewBox="0 0 24 24"
-              className="fill-white/80"
+              className="fill-current"
             >
               {show ? (
                 <path d="M12 4.5C4.73 4.5 1 12 1 12s3.73 7.5 11 7.5S23 12 23 12 19.27 4.5 12 4.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
@@ -95,14 +164,27 @@ export default function WithdrawForm({
         </div>
       </div>
 
+      {/* ── Submit ── */}
       <button
         type="button"
         disabled={!isValid || disabled}
-        onClick={() => onSubmit(Number(amount), pass)}
-        className="mt-4 w-full rounded-lg bg-white/20 py-3 font-medium text-white transition
-                   enabled:bg-emerald-600 enabled:hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => onSubmit(Number(amount), pass, accountNumber)}
+        className="w-full rounded-xl py-3 text-sm font-bold tracking-widest uppercase transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
+        style={
+          isValid && !disabled
+            ? {
+                background:
+                  "linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)",
+                boxShadow: "0 0 20px rgba(168,85,247,0.4)",
+                color: "#fff",
+              }
+            : {
+                background: "rgba(255,255,255,0.07)",
+                color: "rgba(255,255,255,0.3)",
+              }
+        }
       >
-        Submit
+        Submit Withdrawal
       </button>
     </div>
   );

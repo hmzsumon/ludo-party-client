@@ -1,4 +1,3 @@
-/* ── Page: Withdraw ─────────────────────────────────────────────────────── */
 "use client";
 import TurnoverNotice from "@/components/withdraw/TurnoverNotice";
 import WithdrawForm from "@/components/withdraw/WithdrawForm";
@@ -12,19 +11,22 @@ import RecIcon from "@/public/icons/record_icon.png";
 
 import RecallBalanceBtn from "@/components/withdraw/RecallBalanceBtn";
 import { BoundWallet } from "@/components/withdraw/WalletCard";
-import WalletCarousel from "@/components/withdraw/WalletCarousel";
-import WalletTabs, { WalletProvider } from "@/components/withdraw/WalletTabs";
+import WalletTabs, {
+  WalletProvider,
+  WalletProviderConfig,
+} from "@/components/withdraw/WalletTabs";
 import { useGetUserPaymentMethodsQuery } from "@/redux/features/auth/authApi";
 import { useCreateWithdrawRequestMutation } from "@/redux/features/withdraw/withdrawApi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
 
+import BkashLogo from "@/public/images/deposit/bkash-logo.png";
+import NagadLogo from "@/public/images/deposit/nagad-logo.png";
+import RocketLogo from "@/public/images/deposit/roket.png";
+
 const formatBDT = (n: number) =>
   `💎 ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-
-const clamp = (n: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, n));
 
 const PANEL = {
   background:
@@ -32,11 +34,36 @@ const PANEL = {
   border: "1px solid rgba(255,255,255,0.08)",
 };
 
+const walletProviders: WalletProviderConfig[] = [
+  {
+    id: "bkash",
+    title: "bKash",
+    logoSrc: BkashLogo,
+    bgClassName: "bg-[#DA126B]",
+    active: true,
+  },
+  {
+    id: "nagad",
+    title: "Nagad",
+    logoSrc: NagadLogo,
+    bgClassName: "bg-[#E51B23]",
+    active: true,
+  },
+  {
+    id: "rocket",
+    title: "Rocket",
+    logoSrc: RocketLogo,
+    bgClassName: "bg-[#8E2BAF]",
+    active: true,
+  },
+];
+
 export default function WithdrawPage() {
   const router = useRouter();
   const { user } = useSelector((s: any) => s.auth) || { user: null };
 
-  const { data, isLoading } = useGetUserPaymentMethodsQuery(undefined);
+  const { data } = useGetUserPaymentMethodsQuery(undefined);
+
   const apiList: Array<{
     _id: string;
     method: WalletProvider;
@@ -61,7 +88,10 @@ export default function WithdrawPage() {
     isDefault: pm.isDefault,
   }));
 
-  const [provider, setProvider] = useState<WalletProvider>("bkash");
+  const defaultProvider =
+    walletProviders.find((item) => item.active !== false)?.id || "bkash";
+
+  const [provider, setProvider] = useState<WalletProvider>(defaultProvider);
 
   const providerWallets = useMemo(
     () => wallets.filter((w) => w.provider === provider),
@@ -69,9 +99,22 @@ export default function WithdrawPage() {
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
   useEffect(() => {
-    if (providerWallets.length === 1) setSelectedId(providerWallets[0].id);
-    else if (
+    const currentProvider = walletProviders.find(
+      (item) => item.id === provider,
+    );
+
+    if (!currentProvider || currentProvider.active === false) {
+      const nextActiveProvider =
+        walletProviders.find((item) => item.active !== false)?.id || "bkash";
+      setProvider(nextActiveProvider);
+      return;
+    }
+
+    if (providerWallets.length === 1) {
+      setSelectedId(providerWallets[0].id);
+    } else if (
       providerWallets.length > 1 &&
       !providerWallets.some((w) => w.id === selectedId)
     ) {
@@ -79,23 +122,22 @@ export default function WithdrawPage() {
     } else if (providerWallets.length === 0) {
       setSelectedId(null);
     }
-  }, [providerWallets, selectedId]);
+  }, [provider, providerWallets, selectedId]);
 
-  const counts = useMemo(
-    () =>
-      ({
-        bkash: wallets.filter((w) => w.provider === "bkash").length,
-        nagad: wallets.filter((w) => w.provider === "nagad").length,
-      }) as Partial<Record<WalletProvider, number>>,
-    [wallets],
-  );
+  const counts = useMemo(() => {
+    return walletProviders.reduce(
+      (acc, item) => {
+        acc[item.id] = wallets.filter((w) => w.provider === item.id).length;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+  }, [wallets]);
 
   const mainBalance = Number(user?.m_balance ?? 0);
   const available = Number(user?.available_amount ?? mainBalance);
   const wagerRemaining = Number(user?.bet_volume ?? 0);
   const wagerRequired = Number(user?.wager_required ?? 0);
-  const turnoverToday = Number(user?.turnover_today ?? 0);
-  const turnoverTotal = Number(user?.turnover_total ?? 0);
 
   const [
     createWithdrawRequest,
@@ -109,16 +151,22 @@ export default function WithdrawPage() {
   const selectedWallet =
     providerWallets.find((w) => w.id === selectedId) || null;
 
-  const handleSubmit = async (amt: number, pass: string) => {
-    if (!selectedWallet) {
-      toast.error("Select an E-wallet");
+  // handleSubmit আপডেট
+  const handleSubmit = async (
+    amt: number,
+    pass: string,
+    accountNumber: string,
+  ) => {
+    if (!selectedWallet && !accountNumber) {
+      toast.error("Select an E-wallet and enter account number");
       return;
     }
+
     await createWithdrawRequest({
       amount: amt,
       method: {
-        name: selectedWallet.provider,
-        accountNumber: selectedWallet.accountNumber,
+        name: provider, // selected provider id
+        accountNumber: accountNumber, // form থেকে আসা নম্বর
       },
       pass,
     }).unwrap();
@@ -126,6 +174,7 @@ export default function WithdrawPage() {
 
   useEffect(() => {
     if (isError) toast.error((createError as fetchBaseQueryError).data?.error);
+
     if (isSuccess) {
       toast.success("Withdraw request created successfully!");
       router.push("/dashboard");
@@ -136,7 +185,6 @@ export default function WithdrawPage() {
 
   return (
     <div className="min-h-screen pb-10" style={{ background: "#14041f" }}>
-      {/* Header */}
       <div
         className="sticky top-0 z-20 flex items-center justify-between px-4 py-3"
         style={{
@@ -154,9 +202,11 @@ export default function WithdrawPage() {
         >
           <FaAngleLeft className="text-xs" /> Back
         </button>
+
         <h1 className="text-base font-extrabold tracking-widest text-white uppercase">
           🏧 Withdraw
         </h1>
+
         <Link href="/withdraw/withdraw-record">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-full"
@@ -168,7 +218,6 @@ export default function WithdrawPage() {
       </div>
 
       <div className="mx-auto w-full max-w-md px-3 py-4 space-y-3">
-        {/* Balance Card */}
         <div
           className="rounded-2xl p-4"
           style={{
@@ -186,6 +235,7 @@ export default function WithdrawPage() {
                 {formatBDT(mainBalance)}
               </div>
             </div>
+
             <div className="text-right">
               <div className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">
                 Available
@@ -201,15 +251,15 @@ export default function WithdrawPage() {
             style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
           >
             <div>
-              <div className="text-[10px] text-white/35">Today Turnover</div>
+              <div className="text-[10px] text-white/35">Min Withdraw</div>
               <div className="text-xs font-semibold text-white/70 mt-0.5">
-                {formatBDT(turnoverToday)}
+                {formatBDT(500)}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] text-white/35">Total Turnover</div>
+              <div className="text-[10px] text-white/35">Max Withdraw</div>
               <div className="text-xs font-semibold text-white/70 mt-0.5">
-                {formatBDT(turnoverTotal)}
+                {formatBDT(25000)}
               </div>
             </div>
           </div>
@@ -219,7 +269,7 @@ export default function WithdrawPage() {
               Withdrawal time: <span className="text-white/60">24 hours</span>
             </div>
             <div className="text-right">
-              Daily limit: <span className="text-white/60">99 times</span>
+              Daily limit: <span className="text-white/60">Unlimited</span>
             </div>
           </div>
 
@@ -228,100 +278,29 @@ export default function WithdrawPage() {
           </div>
         </div>
 
-        {/* Wallet Tabs */}
         <div className="rounded-2xl p-4" style={PANEL}>
-          <WalletTabs value={provider} onChange={setProvider} counts={counts} />
-
-          {/* Wallet header */}
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-xs text-white/50">
-              {providerWallets.length > 0
-                ? `Registered E-wallet (${providerWallets.length}/5)`
-                : "Registered E-wallet (0/5)"}
-            </p>
-            <Link
-              href="/withdraw/bind-wallet"
-              className="flex h-8 w-8 items-center justify-center rounded-full transition hover:scale-105"
-              style={{
-                background: "linear-gradient(135deg, #dc2626, #b91c1c)",
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                className="fill-white"
-              >
-                <path d="M19 11H13V5h-2v6H5v2h6v6h2v-6h6z" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* Wallet Cards */}
-          <div className="mt-3">
-            {isLoading ? (
-              <div
-                className="h-28 animate-pulse rounded-xl"
-                style={{ background: "rgba(255,255,255,0.06)" }}
-              />
-            ) : providerWallets.length ? (
-              <WalletCarousel
-                items={providerWallets}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-              />
-            ) : (
-              <div
-                className="flex flex-col items-center justify-center rounded-xl p-8 text-center"
-                style={{
-                  border: "1.5px dashed rgba(255,255,255,0.1)",
-                  background: "rgba(255,255,255,0.02)",
-                }}
-              >
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  className="mb-3 fill-white opacity-30"
-                >
-                  <path d="M21 7H7V5c0-1.1.9-2 2-2h12v4zM3 7h2v12h14c1.1 0 2-.9 2-2v-7H7c-1.1 0-2 .9-2 2v5H3V7z" />
-                </svg>
-                <p className="text-white/40 text-sm">No E-Wallet bound</p>
-                <Link
-                  href="/withdraw/bind-wallet"
-                  className="mt-3 rounded-xl px-5 py-2 text-sm font-semibold text-white transition"
-                  style={{
-                    background: "linear-gradient(135deg, #9333ea, #7c3aed)",
-                  }}
-                >
-                  Bind E-wallet
-                </Link>
-              </div>
-            )}
-          </div>
+          <WalletTabs
+            value={provider}
+            onChange={setProvider}
+            providers={walletProviders}
+            counts={counts}
+          />
         </div>
 
-        {/* Turnover Notice */}
         <TurnoverNotice
           remaining={wagerRemaining}
           required={wagerRequired}
           onOk={() => console.log("ok")}
         />
 
-        {/* Withdraw Form */}
-        {canWithdraw ? (
-          <div className="rounded-2xl overflow-hidden" style={PANEL}>
-            <WithdrawForm
-              available={available}
-              disabled={!selectedWallet || isSubmitting}
-              onSubmit={handleSubmit}
-            />
-          </div>
-        ) : (
-          <div className="rounded-2xl p-4 text-sm text-white/40" style={PANEL}>
-            🔒 Withdraw is locked until rollover is completed.
-          </div>
-        )}
+        <div className="rounded-2xl overflow-hidden" style={PANEL}>
+          <WithdrawForm
+            available={available}
+            provider={provider} // ← এটা যোগ করো
+            disabled={isSubmitting}
+            onSubmit={handleSubmit}
+          />
+        </div>
       </div>
     </div>
   );

@@ -3,53 +3,29 @@ import React from "react";
 import { WalletGroup } from "../page";
 
 type Props = {
-  group: WalletGroup;
-  onChange: (g: WalletGroup) => void;
-  bkashIcon: React.ReactNode;
-  nagadIcon: React.ReactNode;
+  group: WalletGroup; onChange: (g: WalletGroup) => void;
+  bkashIcon: React.ReactNode; nagadIcon: React.ReactNode;
 };
 
-const WalletGroupSelector: React.FC<Props> = ({
-  group,
-  onChange,
-  bkashIcon,
-  nagadIcon,
-}) => {
-  return (
-    <div>
-      <p className="mb-2 text-sm font-medium text-slate-700">
-        Select E-wallet group
-      </p>
-
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => onChange("bkash")}
-          className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition
-            ${
-              group === "bkash"
-                ? "border-pink-500 bg-pink-50 ring-2 ring-pink-300"
-                : "border-slate-200 hover:bg-slate-50"
-            }`}
-        >
-          {bkashIcon}
+const WalletGroupSelector: React.FC<Props> = ({ group, onChange, bkashIcon, nagadIcon }) => (
+  <div>
+    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+      Select E-wallet
+    </p>
+    <div className="flex gap-3">
+      {([["bkash", bkashIcon, "#E2136E", "rgba(226,19,110,0.2)"], ["nagad", nagadIcon, "#F7941D", "rgba(247,148,29,0.2)"]] as const).map(([key, icon, color, glow]) => (
+        <button key={key} type="button" onClick={() => onChange(key as WalletGroup)}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all duration-150"
+          style={{
+            background: group === key ? `linear-gradient(135deg,rgba(67,11,88,0.9),rgba(34,7,54,0.95))` : "rgba(255,255,255,0.04)",
+            border: group === key ? `1.5px solid ${color}` : "1.5px solid rgba(255,255,255,0.08)",
+            boxShadow: group === key ? `0 0 14px ${glow}` : "none",
+          }}>
+          {icon}
         </button>
-
-        <button
-          type="button"
-          onClick={() => onChange("nagad")}
-          className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition
-            ${
-              group === "nagad"
-                ? "border-amber-500 bg-amber-50 ring-2 ring-amber-300"
-                : "border-slate-200 hover:bg-slate-50"
-            }`}
-        >
-          {nagadIcon}
-        </button>
-      </div>
+      ))}
     </div>
-  );
-};
+  </div>
+);
 
 export default WalletGroupSelector;
