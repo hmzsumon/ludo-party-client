@@ -22,7 +22,7 @@ export default function PaymentBrandIcon({
 }: PaymentBrandIconProps) {
   return (
     <div
-      className={`flex items-center gap-2 rounded-[4px] px-4 py-3 text-white ${bgClassName} ${className}`}
+      className={`flex flex-col mmd:flex-row items-center gap-1 rounded-[4px] px-2 py-1 text-white ${bgClassName} ${className}`}
     >
       <Image src={logoSrc} alt={alt} width={imageSize} height={imageSize} />
       <h1 className="text-center text-base font-semibold">{title}</h1>

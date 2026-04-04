@@ -1,5 +1,4 @@
 "use client";
-import TurnoverNotice from "@/components/withdraw/TurnoverNotice";
 import WithdrawForm from "@/components/withdraw/WithdrawForm";
 import { fetchBaseQueryError } from "@/redux/services/helpers";
 import Link from "next/link";
@@ -287,11 +286,11 @@ export default function WithdrawPage() {
           />
         </div>
 
-        <TurnoverNotice
+        {/* <TurnoverNotice
           remaining={wagerRemaining}
           required={wagerRequired}
           onOk={() => console.log("ok")}
-        />
+        /> */}
 
         <div className="rounded-2xl overflow-hidden" style={PANEL}>
           <WithdrawForm
