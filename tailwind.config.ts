@@ -9,8 +9,6 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-
-    // Adding support for `src` directory if used
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -80,46 +78,72 @@ const config: Config = {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
         "caret-blink": {
-          "0%,70%,100%": {
-            opacity: "1",
-          },
-          "20%,50%": {
-            opacity: "0",
-          },
+          "0%,70%,100%": { opacity: "1" },
+          "20%,50%": { opacity: "0" },
+        },
+
+        /* ── Matchmaking animations ── */
+        "avatar-in": {
+          "0%": { transform: "scale(0.5)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "ring-appear": {
+          "0%": { opacity: "0", transform: "scale(1.3)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "vs-pop": {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "search-bob": {
+          "0%,100%": { transform: "translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateY(-3px) rotate(-8deg)" },
+          "75%": { transform: "translateY(3px) rotate(8deg)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+        "dot-pulse": {
+          "0%,80%,100%": { transform: "scale(0.6)", opacity: "0.3" },
+          "40%": { transform: "scale(1)", opacity: "1" },
+        },
+        "dot-fade": {
+          "0%,60%,100%": { opacity: "0" },
+          "30%": { opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "caret-blink": "caret-blink 1.25s ease-out infinite",
+
+        /* ── Matchmaking ── */
+        "avatar-in": "avatar-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both",
+        "ring-appear": "ring-appear 0.5s ease both",
+        "vs-pop": "vs-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.2s both",
+        "search-bob": "search-bob 2s ease-in-out infinite",
+        shimmer: "shimmer 1.8s linear infinite",
+        "dot-pulse": "dot-pulse 1.2s ease-in-out infinite",
+        "dot-fade": "dot-fade 1.4s ease-in-out infinite",
       },
     },
   },
   plugins: [
     require("tailwindcss-animate"),
     flowbite.plugin(),
-
-    // ✅ Plugin to add CSS variables for Tailwind colors
     plugin(function ({ addBase, theme }) {
       const allColors = flattenColorPalette(theme("colors"));
       const newVars = Object.fromEntries(
-        Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+        Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
       );
       addBase({ ":root": newVars });
     }),

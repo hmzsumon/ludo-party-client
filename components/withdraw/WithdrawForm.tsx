@@ -106,7 +106,7 @@ export default function WithdrawForm({
       <div>
         <label className={labelClass}>Withdrawal Amount</label>
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-white/30">
+          <span className="absolute  left-2 top-1/2 -translate-y-1/2 text-base font-bold ">
             💎
           </span>
           <input

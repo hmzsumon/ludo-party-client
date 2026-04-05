@@ -93,9 +93,13 @@ body {
 }
 
 .brand-panel {
-  background: linear-gradient(180deg, rgba(67, 11, 88, 0.84) 0%, rgba(34, 7, 54, 0.92) 100%);
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+  background: linear-gradient(
+    180deg,
+    rgba(67, 11, 88, 0.84) 0%,
+    rgba(34, 7, 54, 0.92) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(10px);
 }
 
@@ -2599,7 +2603,9 @@ input[type="radio"]:focus {
   background-color: #f44336;
 }
 
-/* ────────── Ludo: matching avatar styles ────────── */
+/* ────────── Ludo: matching avatar styles (Tailwind companion) ────────── */
+/* Avatar classes are now handled by Tailwind in playerProfile/index.tsx    */
+/* These legacy classes kept only for backward-compat if needed elsewhere   */
 .page-matchmaking-avatar {
   display: flex;
   justify-content: center;
@@ -2608,61 +2614,17 @@ input[type="radio"]:focus {
   min-width: 0;
   flex: 1 1 0;
 }
-
 .page-matchmaking-image-wrapper {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-  position: relative;
+  display: none;
 }
-
 .page-matchmaking-image-loading {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-color: rgb(0 0 0 / 60%);
-  left: 0;
-  top: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: none;
 }
-
-.page-matchmaking-image-loading .lds-ring {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 80%;
-  height: 80%;
-}
-
-.page-matchmaking-image-loading .lds-ring div {
-  height: 100%;
-  width: 100%;
-}
-
 .page-matchmaking-image {
-  background-color: #e4e4e4;
-  border-radius: 5px;
-  box-shadow:
-    rgba(0, 0, 0, 0.16) 0px 1px 4px,
-    rgb(51, 51, 51) 0px 0px 0px 3px;
-  height: 50px;
-  width: 50px;
+  display: none;
 }
-
 .page-matchmaking-avatar-name {
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-  max-width: 95px;
-  display: block;
+  display: none;
 }
 
 /* ────────── Ludo: page-matchmaking-room-info styles ────────── */
@@ -2874,35 +2836,213 @@ input[type="radio"]:focus {
 }
 
 /* ────────── Ludo: page-matchmaking-players-info styles ────────── */
+/* Layout now handled by Tailwind in playerInfo/index.tsx                   */
+/* glass-effect class retained from globals for backdrop-filter support     */
 .page-matchmaking-players-info {
   animation: bounceIn 0.5s both;
-  border-radius: 15px;
-  margin: 20px 0;
-  padding: 20px;
-  width: 100%;
+  border-radius: 20px;
+  margin: 20px auto;
+  padding: 24px 20px;
+  width: 88%;
+  max-width: 340px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .page-matchmaking-two-players {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
 }
 
 .page-matchmaking-vs {
   flex: 0 0 auto;
-  font-size: 40px;
+  font-size: 38px;
   font-style: italic;
-  color: #fdf182;
-  font-weight: bold;
-  background: #e6b31e;
-  background: linear-gradient(to top, #e6b31e 34%, #fdf182 57%);
+  font-weight: 900;
+  letter-spacing: -1px;
+  background: linear-gradient(to bottom, #fdf182 40%, #e6b31e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #7f580d;
+  filter: drop-shadow(0 2px 6px rgba(230, 179, 30, 0.45));
+  animation: vsPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+
+@keyframes vsPop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── Matchmaking avatar animations ── */
+@keyframes avatarIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes ringAppear {
+  from {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes searchBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(-8deg);
+  }
+  75% {
+    transform: translateY(3px) rotate(8deg);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes dotPulse {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes dotFade {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* ── Matchmaking avatar Tailwind companion classes ── */
+.mm-avatar-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  display: block;
+  box-shadow:
+    0 0 0 3px rgba(100, 220, 120, 0.75),
+    0 4px 20px rgba(0, 0, 0, 0.45);
+  animation: avatarIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.mm-found-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  border: 2px solid rgba(100, 220, 120, 0.75);
+  box-shadow: 0 0 14px rgba(80, 200, 100, 0.5);
+  animation: ringAppear 0.5s ease both;
+  pointer-events: none;
+}
+.mm-search-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 2px dashed rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.mm-search-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.11) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+.mm-search-icon {
+  position: relative;
+  z-index: 1;
+  animation: searchBob 2s ease-in-out infinite;
+}
+.mm-pulse-dots {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+.mm-pulse-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 215, 60, 0.9);
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+.mm-pulse-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+.mm-pulse-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.mm-pulse-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.mm-dot-fade {
+  animation: dotFade 1.4s ease-in-out infinite;
+  opacity: 0;
+}
+.mm-dot-fade:nth-child(1) {
+  animation-delay: 0s;
+}
+.mm-dot-fade:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.mm-dot-fade:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 .page-matchmaking-four-players {
@@ -2910,12 +3050,14 @@ input[type="radio"]:focus {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  gap: 4px;
 }
 
 .page-matchmaking-four-players-section {
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
+  align-items: center;
+  padding: 8px 0;
   width: 100%;
 }
 
