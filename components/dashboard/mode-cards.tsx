@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import DailyBonus from "./daily-bonus";
 
 type ModeCardProps = {
   title: string;
@@ -127,30 +128,8 @@ const ModeCards = () => {
         href="/online"
       />
 
-      {/* ── Earn Section ── */}
-      <div
-        className="relative mt-4 flex items-center justify-between rounded-2xl overflow-hidden px-4 py-3.5"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(53,10,110,0.85) 0%, rgba(29,5,70,0.85) 100%)",
-          border: "1px solid rgba(255,215,0,0.25)",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
-        }}
-      >
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
-        <div className="flex items-center gap-3">
-          <span className="text-3xl ls-pulse">🎁</span>
-          <div>
-            <p className="text-sm font-black text-yellow-400">Daily Bonus</p>
-            <p className="text-[11px] text-white/60 font-semibold">
-              Login every day to earn 💎50!
-            </p>
-          </div>
-        </div>
-        <button className="ls-btn ls-btn-gold px-4 py-2 text-[12px] font-black">
-          Claim
-        </button>
-      </div>
+      {/* ── Daily deposit bonus claim section ── */}
+      <DailyBonus />
     </section>
   );
 };

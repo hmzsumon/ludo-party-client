@@ -1,8 +1,8 @@
 "use client";
 
-// ─────────────────────────────────────────────
-// 📦 IMPORTS — প্রয়োজনীয় লাইব্রেরি ও হুক
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Imports
+───────────────────────────────────────────── */
 import {
   useGetInviteDataQuery,
   useGetMyTeamMembersQuery,
@@ -13,9 +13,9 @@ import { useCallback, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RWebShare } from "react-web-share";
 
-// ─────────────────────────────────────────────
-// 🗺️ NAVIGATION ITEMS — বটম নেভবারের মেনু লিস্ট
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Bottom Navigation Items
+───────────────────────────────────────────── */
 const navItems = [
   { label: "Home", icon: "🏠", href: "/dashboard" },
   { label: "Invite", icon: "🎁", href: "/invite" },
@@ -23,10 +23,9 @@ const navItems = [
   { label: "Profile", icon: "👤", href: "/profile" },
 ];
 
-// ─────────────────────────────────────────────
-// ✨ SHIMMER COMPONENT — লোডিং স্কেলিটন অ্যানিমেশন
-// ডেটা লোড হওয়ার সময় placeholder হিসেবে দেখায়
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Reusable Shimmer Loader
+───────────────────────────────────────────── */
 const Shimmer = ({
   w = "100%",
   h = 20,
@@ -49,109 +48,86 @@ const Shimmer = ({
   />
 );
 
-// ─────────────────────────────────────────────
-// 🍞 TOAST HOOK — অস্থায়ী নোটিফিকেশন মেসেজ
-// কোড কপি বা শেয়ারের পর ২.২ সেকেন্ড দেখায়
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Lightweight Toast Hook
+───────────────────────────────────────────── */
 const useToast = () => {
   const [msg, setMsg] = useState<string | null>(null);
+
   const show = useCallback((text: string) => {
     setMsg(text);
     setTimeout(() => setMsg(null), 2200);
   }, []);
+
   return { msg, show };
 };
 
-// ─────────────────────────────────────────────
-// 🏠 MAIN COMPONENT — InvitePage
-// ─────────────────────────────────────────────
 export default function InvitePage() {
-  // ── Auth স্টেট থেকে লগড-ইন ইউজারের তথ্য ──
+  /* ───────────────────────────────────────────
+     User / Auth Data
+  ─────────────────────────────────────────── */
   const { user } = useSelector((s: any) => s.auth) as any;
   const referralCode: string = user?.customerId || "LUDO0000";
 
-  // ── API থেকে ডেটা ফেচ ──
+  /* ───────────────────────────────────────────
+     API Queries
+  ─────────────────────────────────────────── */
   const { data: inviteRes, isLoading: loadingInvite } = useGetInviteDataQuery();
   const { data: summaryRes, isLoading: loadingSummary } =
     useGetMyTeamSummaryQuery();
   const { data: membersRes, isLoading: loadingMembers } =
     useGetMyTeamMembersQuery();
 
-  // ── ফেচ করা ডেটা থেকে প্রয়োজনীয় অংশ বের করা ──
+  /* ───────────────────────────────────────────
+     Normalized Data
+  ─────────────────────────────────────────── */
   const inviteData = inviteRes?.inviteData;
   const team = summaryRes?.team;
   const members = membersRes?.members ?? [];
 
-  // ── Toast ও Tab স্টেট ──
+  /* ───────────────────────────────────────────
+     UI State
+  ─────────────────────────────────────────── */
   const { msg: toastMsg, show: showToast } = useToast();
   const [activeTab, setActiveTab] = useState<"all" | "l1" | "l2" | "l3">("all");
 
-  // ── কমিশন রেট — লেভেল অনুযায়ী ──
-  const RATES = ["12%", "8%", "4%"];
+  /* ───────────────────────────────────────────
+     Copy Referral Code
+  ─────────────────────────────────────────── */
+  const copyCode = () => {
+    navigator.clipboard.writeText(referralCode);
+    showToast("Referral code copied!");
+  };
 
-  // ─────────────────────────────────────────────
-  // 🔗 REFERRAL LINK — একটাই লিংক, সব জায়গায় ব্যবহার
-  // ─────────────────────────────────────────────
-  // ফরম্যাট: https://yourdomain.com/register?referral_code=LUDO1234
-  //
-  // RegisterForm এই URL-এর ?referral_code= প্যারামিটার পড়ে:
-  //   → কোড অটোমেটিক ফিল করে দেয়
-  //   → ফিল্ডটি readonly করে দেয় (ইডিট করা যায় না)
-  //   → "🔒 Auto Applied" ব্যাজ দেখায়
-  // ─────────────────────────────────────────────
+  /* ───────────────────────────────────────────
+     Shared Referral Link
+     Single source of truth for registration URL
+  ─────────────────────────────────────────── */
   const referralLink = useMemo(() => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}/register?referral_code=${referralCode}`;
   }, [referralCode]);
 
-  // ─────────────────────────────────────────────
-  // 📋 COPY & SHARE HANDLERS
-  // সব ফাংশনে একই referralLink ব্যবহার হচ্ছে
-  // ─────────────────────────────────────────────
-
-  // শুধু কোড কপি করে (লিংক ছাড়া)
-  const copyCode = () => {
-    navigator.clipboard.writeText(referralCode);
-    showToast("✅ Referral code copied!");
-  };
-
-  // সম্পূর্ণ লিংক কপি করে (?referral_code= সহ)
-  const copyLink = () => {
-    navigator.clipboard.writeText(referralLink);
-    showToast("✅ Invite link copied!");
-  };
-
-  // WhatsApp — মেসেজ টেক্সটে referralLink পাঠায়
-  const shareWhatsApp = () => {
-    const text = encodeURIComponent(
-      `🎲 Join Ludo Party! Register with my referral code and get a 💎50 bonus!\n\n👉 ${referralLink}`,
-    );
-    window.open(`https://wa.me/?text=${text}`, "_blank");
-  };
-
-  // Telegram — url প্যারামে referralLink পাঠায়
-  const shareTelegram = () => {
-    const text = encodeURIComponent(
-      `🎲 Ludo Party — Play & Win! Code: ${referralCode}`,
-    );
-    window.open(
-      `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${text}`,
-      "_blank",
-    );
-  };
-
-  // ── Tab অনুযায়ী মেম্বার ফিল্টার ──
+  /* ───────────────────────────────────────────
+     Filter Members By Active Tab
+  ─────────────────────────────────────────── */
   const filteredMembers =
     activeTab === "all"
       ? members
       : members.filter((m) => m.level === Number(activeTab.replace("l", "")));
 
-  // ── Current Pathname (Active Nav হাইলাইটের জন্য) ──
+  /* ───────────────────────────────────────────
+     Static Page Helpers
+  ─────────────────────────────────────────── */
   const pathname = "/invite";
 
-  // ─────────────────────────────────────────────
-  // 🖼️ RENDER
-  // ─────────────────────────────────────────────
+  const SPONSOR_RATES = [
+    { label: "1-50", value: "10%" },
+    { label: "51-150", value: "5%" },
+    { label: "151-300", value: "2%" },
+    { label: "301-500", value: "1%" },
+  ];
+
   return (
     <div
       style={{
@@ -164,19 +140,20 @@ export default function InvitePage() {
         paddingBottom: 80,
       }}
     >
-      {/* ─────── GLOBAL KEYFRAME ANIMATIONS ─────── */}
-      {/* shimmer: লোডিং স্কেলিটনের চলমান আলো        */}
-      {/* floatY:  হিরো ব্যানারের ইমোজি ভাসার ইফেক্ট  */}
-      {/* fadeUp:  কার্ড লোডের সময় নিচ থেকে ফেড ইন   */}
+      {/* ─────────────────────────────────────────
+         Page Animations
+      ───────────────────────────────────────── */}
       <style>{`
-        @keyframes shimmer  { 0%   { background-position: 200% 0  } 100% { background-position: -200% 0 } }
-        @keyframes floatY   { 0%, 100% { transform: translateY(0) } 50%  { transform: translateY(-6px)  } }
-        @keyframes fadeUp   { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
-        .ls-float  { animation: floatY 3s ease-in-out infinite; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .ls-float { animation: floatY 3s ease-in-out infinite; }
         .ls-fadein { animation: fadeUp 0.45s ease both; }
       `}</style>
 
-      {/* ─────── TOP BAR — শীর্ষ নেভিগেশন বার ─────── */}
+      {/* ─────────────────────────────────────────
+         Top Bar
+      ───────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
@@ -186,7 +163,6 @@ export default function InvitePage() {
           borderBottom: "1px solid rgba(255,215,0,0.12)",
         }}
       >
-        {/* Back বাটন */}
         <Link
           href="/dashboard"
           style={{
@@ -206,6 +182,7 @@ export default function InvitePage() {
         >
           ←
         </Link>
+
         <h1
           style={{
             flex: 1,
@@ -217,11 +194,13 @@ export default function InvitePage() {
         >
           Refer &amp; Earn
         </h1>
+
         <div style={{ fontSize: 22 }}>🎁</div>
       </div>
 
-      {/* ─────── HERO BANNER — প্রধান ব্যানার ─────── */}
-      {/* অফার টেক্সট + কমিশন লেভেল ব্যাজ + ফ্লোটিং ইমোজি */}
+      {/* ─────────────────────────────────────────
+         Hero Banner
+      ───────────────────────────────────────── */}
       <div
         className="ls-fadein"
         style={{
@@ -260,8 +239,9 @@ export default function InvitePage() {
               marginBottom: 4,
             }}
           >
-            🎉 Special Offer
+            Special Offer
           </p>
+
           <h2
             style={{
               fontSize: 22,
@@ -275,6 +255,7 @@ export default function InvitePage() {
             <br />
             <span style={{ color: "#ffd700" }}>Win Together!</span>
           </h2>
+
           <p
             style={{
               fontSize: 11,
@@ -283,15 +264,15 @@ export default function InvitePage() {
               marginTop: 6,
             }}
           >
-            Earn {RATES[0]} commission on every friend's deposit
+            Earn sponsor bonus on direct referral deposits
           </p>
-          {/* কমিশন লেভেল ব্যাজ */}
+
           <div
             style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}
           >
-            {RATES.map((r, i) => (
+            {SPONSOR_RATES.map((r) => (
               <span
-                key={i}
+                key={r.label}
                 style={{
                   fontSize: 10,
                   fontWeight: 800,
@@ -302,13 +283,12 @@ export default function InvitePage() {
                   color: "#ffd700",
                 }}
               >
-                Level {i + 1}: {r}
+                Deposit {r.label}: {r.value}
               </span>
             ))}
           </div>
         </div>
 
-        {/* ফ্লোটিং ফ্যামিলি ইমোজি */}
         <div
           className="ls-float"
           style={{
@@ -328,8 +308,9 @@ export default function InvitePage() {
         </div>
       </div>
 
-      {/* ─────── STATS ROW — ৩টি পরিসংখ্যান কার্ড ─────── */}
-      {/* Total Earned | Total Members | Today's Commission  */}
+      {/* ─────────────────────────────────────────
+         Stats Row
+      ───────────────────────────────────────── */}
       <div
         style={{
           display: "grid",
@@ -352,10 +333,10 @@ export default function InvitePage() {
               : String(inviteData?.totalTeamMember ?? 0),
           },
           {
-            label: "Today's Commission",
-            val: loadingSummary
+            label: "Today's Bonus",
+            val: loadingInvite
               ? null
-              : `💎 ${(team?.todayTeamCommission ?? 0).toFixed(2)}`,
+              : `💎 ${(inviteData?.todayBonus ?? 0).toFixed(2)}`,
           },
         ].map((s, i) => (
           <div
@@ -411,9 +392,9 @@ export default function InvitePage() {
         ))}
       </div>
 
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* ─────── REFERRAL CODE CARD — মূল শেয়ার সেকশন ─────── */}
-      {/* ═══════════════════════════════════════════════════ */}
+      {/* ─────────────────────────────────────────
+         Referral Code Card
+      ───────────────────────────────────────── */}
       <div
         style={{
           margin: "12px 14px 0",
@@ -438,6 +419,7 @@ export default function InvitePage() {
           }}
         />
 
+        {/* Code Label */}
         <p
           style={{
             fontSize: 10,
@@ -448,10 +430,10 @@ export default function InvitePage() {
             marginBottom: 8,
           }}
         >
-          ✨ Your Referral Code
+          Your Referral Code
         </p>
 
-        {/* ── ১. কোড বক্স + Copy বাটন ── */}
+        {/* Code Box + Copy Action */}
         <div
           style={{
             display: "flex",
@@ -474,6 +456,7 @@ export default function InvitePage() {
           >
             {referralCode}
           </div>
+
           <button
             onClick={copyCode}
             style={{
@@ -488,67 +471,54 @@ export default function InvitePage() {
               whiteSpace: "nowrap",
             }}
           >
-            📋 Copy
+            Copy
           </button>
         </div>
 
-        {/* ── ২. লিংক প্রিভিউ বক্স ── */}
-        {/* ইউজার দেখতে পাবে ঠিক কোন লিংকটা শেয়ার হবে */}
-        {/* এই লিংকে ?referral_code= আছে — RegisterForm সেটা পড়ে অটো-ফিল করে */}
+        {/* Shared Referral URL Preview */}
         <div
           style={{
             marginTop: 10,
-            background: "rgba(0,0,0,0.2)",
-            borderRadius: 10,
-            border: "1px dashed rgba(255,215,0,0.2)",
-            padding: "8px 12px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(0,0,0,0.22)",
+            padding: "10px 12px",
           }}
         >
-          {/* লিংক SVG আইকন */}
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="rgba(255,215,0,0.5)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ flexShrink: 0 }}
-          >
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-          </svg>
-          {/* লিংক টেক্সট — দীর্ঘ হলে ... দিয়ে কেটে দেয় */}
-          <span
+          <div
             style={{
-              flex: 1,
               fontSize: 10,
+              fontWeight: 700,
+              color: "rgba(255,215,0,0.65)",
+              textTransform: "uppercase",
+              letterSpacing: "0.8px",
+              marginBottom: 5,
+            }}
+          >
+            Referral Link
+          </div>
+
+          <div
+            style={{
+              fontSize: 11,
               fontWeight: 600,
-              color: "rgba(255,255,255,0.35)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              color: "rgba(255,255,255,0.72)",
+              wordBreak: "break-all",
+              lineHeight: 1.45,
             }}
           >
             {referralLink}
-          </span>
+          </div>
         </div>
 
-        {/* ── ৩. Native Share বাটন (react-web-share) ── */}
-        {/* ডিভাইসের নেটিভ শেয়ার শিট খোলে               */}
-        {/* Android/iOS — WhatsApp, SMS, Gmail, যেকোনো অ্যাপ */}
-        {/* url-এ referralLink পাঠানো হচ্ছে (?referral_code= সহ) */}
+        {/* Native Share Button Under Referral Code */}
         <RWebShare
           data={{
-            title: "🎲 Join Ludo Party & Win!",
-            text: `🎉 আমার রেফারেল কোড দিয়ে রেজিস্ট্রেশন করো এবং 💎50 বোনাস পাও!\n\n🔑 কোড: ${referralCode}`,
+            title: "Join Ludo Party & Win!",
+            text: `Join Ludo Party using my referral code and get a 50 diamond bonus.\n\nCode: ${referralCode}`,
             url: referralLink,
           }}
-          onClick={() => showToast("🚀 Share sheet opened!")}
+          onClick={() => showToast("Share sheet opened!")}
         >
           <button
             style={{
@@ -589,56 +559,11 @@ export default function InvitePage() {
             Invite Now — Share Link
           </button>
         </RWebShare>
-
-        {/* ── ৪. Social Share বাটন — WhatsApp | Telegram | Link ── */}
-        {/* তিনটিতেই একই referralLink ব্যবহার হচ্ছে              */}
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-          {[
-            {
-              label: "💬 WhatsApp",
-              color: "#25d366",
-              bg: "rgba(37,211,102,0.12)",
-              border: "rgba(37,211,102,0.35)",
-              fn: shareWhatsApp,
-            },
-            {
-              label: "✈️ Telegram",
-              color: "#0088cc",
-              bg: "rgba(0,136,204,0.12)",
-              border: "rgba(0,136,204,0.35)",
-              fn: shareTelegram,
-            },
-            {
-              label: "🔗 Link",
-              color: "#ffd700",
-              bg: "rgba(255,215,0,0.1)",
-              border: "rgba(255,215,0,0.3)",
-              fn: copyLink,
-            },
-          ].map((btn) => (
-            <button
-              key={btn.label}
-              onClick={btn.fn}
-              style={{
-                flex: 1,
-                borderRadius: 10,
-                padding: "9px 4px",
-                fontSize: 11,
-                fontWeight: 800,
-                background: btn.bg,
-                border: `1px solid ${btn.border}`,
-                color: btn.color,
-                cursor: "pointer",
-              }}
-            >
-              {btn.label}
-            </button>
-          ))}
-        </div>
       </div>
-      {/* ─────── REFERRAL CODE CARD END ─────── */}
 
-      {/* ─────── HOW IT WORKS — কীভাবে কাজ করে ─────── */}
+      {/* ─────────────────────────────────────────
+         How It Works
+      ───────────────────────────────────────── */}
       <p
         style={{
           fontSize: 11,
@@ -650,7 +575,7 @@ export default function InvitePage() {
           margin: "18px 14px 10px",
         }}
       >
-        ✦ How It Works ✦
+        How It Works
       </p>
 
       <div
@@ -664,24 +589,10 @@ export default function InvitePage() {
         {[
           {
             num: 1,
-            icon: "🔗",
-            title: "Share your link",
-            desc: "লিংক শেয়ার করো — রেফারেল কোড অটো-ফিল হয়ে যাবে",
-            reward: "Free",
-          },
-          {
-            num: 2,
-            icon: "👤",
-            title: "Friend registers",
-            desc: "বন্ধু সাইন আপ করে — কোড লক হয়ে থাকে",
-            reward: "💎 Bonus",
-          },
-          {
-            num: 3,
             icon: "🎲",
             title: "Friend makes a deposit",
-            desc: "প্রতিটি ডিপোজিটে তুমি কমিশন পাবে",
-            reward: `${RATES[0]} Commission`,
+            desc: "You earn sponsor bonus on every approved direct deposit",
+            reward: "Up to 10%",
           },
         ].map((step) => (
           <div
@@ -713,7 +624,9 @@ export default function InvitePage() {
             >
               {step.num}
             </div>
+
             <div style={{ fontSize: 20, flexShrink: 0 }}>{step.icon}</div>
+
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>
                 {step.title}
@@ -729,6 +642,7 @@ export default function InvitePage() {
                 {step.desc}
               </div>
             </div>
+
             <div
               style={{
                 background: "rgba(255,215,0,0.15)",
@@ -747,8 +661,10 @@ export default function InvitePage() {
         ))}
       </div>
 
-      {/* ─────── TEAM OVERVIEW — দলের সারসংক্ষেপ ─────── */}
-      <p
+      {/* ─────────────────────────────────────────
+         Team Summary Cards
+      ───────────────────────────────────────── */}
+      {/* <p
         style={{
           fontSize: 11,
           fontWeight: 800,
@@ -759,7 +675,7 @@ export default function InvitePage() {
           margin: "18px 14px 10px",
         }}
       >
-        ✦ Team Overview ✦
+        Team Overview
       </p>
 
       <div
@@ -834,10 +750,11 @@ export default function InvitePage() {
             )}
           </div>
         ))}
-      </div>
+      </div> */}
 
-      {/* ─────── TEAM MEMBERS LIST — দলের সদস্য তালিকা ─────── */}
-      {/* Loading → Shimmer | Empty → Empty State | Data → Cards */}
+      {/* ─────────────────────────────────────────
+         Team Members Section
+      ───────────────────────────────────────── */}
       <div style={{ margin: "18px 14px 0" }}>
         <div
           style={{
@@ -850,8 +767,9 @@ export default function InvitePage() {
           <h3
             style={{ fontSize: 14, fontWeight: 800, color: "#fff", margin: 0 }}
           >
-            👥 Team Members
+            Team Members
           </h3>
+
           <span
             style={{
               fontSize: 12,
@@ -863,6 +781,37 @@ export default function InvitePage() {
           </span>
         </div>
 
+        {/* Member Filter Tabs */}
+        {/* <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+          {(["all", "l1", "l2", "l3"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1,
+                borderRadius: 10,
+                padding: "6px 4px",
+                fontSize: 11,
+                fontWeight: 800,
+                border: "1px solid",
+                cursor: "pointer",
+                background:
+                  activeTab === tab
+                    ? "rgba(255,215,0,0.18)"
+                    : "rgba(255,255,255,0.04)",
+                borderColor:
+                  activeTab === tab
+                    ? "rgba(255,215,0,0.4)"
+                    : "rgba(255,255,255,0.1)",
+                color: activeTab === tab ? "#ffd700" : "rgba(255,255,255,0.45)",
+              }}
+            >
+              {tab === "all" ? "All" : `Level ${tab.replace("l", "")}`}
+            </button>
+          ))}
+        </div> */}
+
+        {/* Member Loading State */}
         {loadingMembers ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             {[1, 2, 3].map((i) => (
@@ -903,6 +852,7 @@ export default function InvitePage() {
             ))}
           </div>
         ) : filteredMembers.length === 0 ? (
+          /* Empty Members State */
           <div
             style={{
               textAlign: "center",
@@ -929,10 +879,11 @@ export default function InvitePage() {
                 marginTop: 4,
               }}
             >
-              Invite friends and start earning commission!
+              Invite friends and start earning commission.
             </p>
           </div>
         ) : (
+          /* Members List */
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             {filteredMembers.map((member) => (
               <div
@@ -947,7 +898,6 @@ export default function InvitePage() {
                   padding: "10px 12px",
                 }}
               >
-                {/* লেভেল অনুযায়ী আইকন */}
                 <div
                   style={{
                     width: 36,
@@ -964,6 +914,7 @@ export default function InvitePage() {
                 >
                   {member.level === 1 ? "⭐" : member.level === 2 ? "🌟" : "✨"}
                 </div>
+
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
@@ -985,11 +936,11 @@ export default function InvitePage() {
                       marginTop: 1,
                     }}
                   >
-                    ID: {member.customerId} · Lv.{member.level}
+                    ID: {member.customerId}
                   </div>
                 </div>
-                {/* স্ট্যাটাস + কমিশন */}
-                <div
+
+                {/* <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -1007,12 +958,17 @@ export default function InvitePage() {
                         member.status === "active"
                           ? "rgba(46,204,113,0.15)"
                           : "rgba(255,215,0,0.12)",
-                      border: `1px solid ${member.status === "active" ? "rgba(46,204,113,0.3)" : "rgba(255,215,0,0.25)"}`,
+                      border: `1px solid ${
+                        member.status === "active"
+                          ? "rgba(46,204,113,0.3)"
+                          : "rgba(255,215,0,0.25)"
+                      }`,
                       color: member.status === "active" ? "#2ecc71" : "#ffd700",
                     }}
                   >
                     {member.status === "active" ? "Active" : "Inactive"}
                   </div>
+
                   {member.commission > 0 && (
                     <div
                       style={{
@@ -1024,15 +980,16 @@ export default function InvitePage() {
                       +💎{member.commission.toFixed(2)}
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             ))}
           </div>
         )}
       </div>
-      {/* ─────── TEAM MEMBERS LIST END ─────── */}
 
-      {/* ─────── BOTTOM NAVIGATION — স্থায়ী নিচের নেভবার ─────── */}
+      {/* ─────────────────────────────────────────
+         Bottom Navigation
+      ───────────────────────────────────────── */}
       <nav
         style={{
           position: "fixed",
@@ -1060,9 +1017,11 @@ export default function InvitePage() {
               "linear-gradient(90deg, transparent, rgba(255,215,0,0.5), transparent)",
           }}
         />
+
         {navItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
+
           return (
             <Link
               key={item.label}
@@ -1088,6 +1047,7 @@ export default function InvitePage() {
                   }}
                 />
               )}
+
               {isActive && (
                 <div
                   style={{
@@ -1102,6 +1062,7 @@ export default function InvitePage() {
                   }}
                 />
               )}
+
               <div
                 style={{
                   width: 32,
@@ -1122,6 +1083,7 @@ export default function InvitePage() {
               >
                 {item.icon}
               </div>
+
               <span
                 style={{
                   fontSize: 10,
@@ -1137,7 +1099,9 @@ export default function InvitePage() {
         })}
       </nav>
 
-      {/* ─────── TOAST NOTIFICATION — সাময়িক নোটিফিকেশন ─────── */}
+      {/* ─────────────────────────────────────────
+         Toast Message
+      ───────────────────────────────────────── */}
       {toastMsg && (
         <div
           style={{

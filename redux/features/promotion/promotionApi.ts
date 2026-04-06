@@ -1,15 +1,40 @@
 import { apiSlice } from "../api/apiSlice";
 
-/* ────────── Promo info response ────────── */
+export type PromotionTier = {
+  from: number;
+  to: number;
+  percent: number;
+};
+
+/* ────────── Deposit bonus info response ────────── */
 export type DepositPromoInfoRes = {
   success: boolean;
   data: {
-    firstBonusPercent: number; // 50
-    secondBonusPercent: number; // 25
-    turnoverMultiplier: number; // 7
-    eligibleDepositIndex: 0 | 1 | 2; // 1 => eligible first, 2 => eligible second, 0 => no bonus
-    approvedDepositsCount: number;
+    tiers: PromotionTier[];
+    sponsorTiers: PromotionTier[];
+    turnoverMultiplier: number;
+    bonusTakenCount: number;
+    nextBonusDepositNumber: number;
+    nextBonusPercent: number;
     showPromo: boolean;
+  };
+};
+
+export type DailyBonusStatusRes = {
+  success: boolean;
+  data: {
+    todayKey: string;
+    todayDepositsCount: number;
+    highestApprovedDeposit: number;
+    claimableAmount: number;
+    alreadyClaimed: boolean;
+    claimedAmount: number;
+    canClaim: boolean;
+    claimedAt: string | null;
+    turnoverMultiplier: number;
+    lowDepositThreshold: number;
+    lowReward: number;
+    highReward: number;
   };
 };
 
@@ -21,8 +46,34 @@ export const promotionApi = apiSlice.injectEndpoints({
         url: "/promotion/deposit-bonus",
         method: "GET",
       }),
+      providesTags: ["User"],
+    }),
+
+    /* ────────── Get daily bonus status ────────── */
+    getDailyBonusStatus: builder.query<DailyBonusStatusRes, void>({
+      query: () => ({
+        url: "/promotion/daily-bonus",
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
+
+    /* ────────── Claim daily bonus ────────── */
+    claimDailyBonus: builder.mutation<
+      { success: boolean; message: string; data: { claimedAmount: number } },
+      void
+    >({
+      query: () => ({
+        url: "/promotion/daily-bonus/claim",
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
     }),
   }),
 });
 
-export const { useGetDepositPromoInfoQuery } = promotionApi;
+export const {
+  useGetDepositPromoInfoQuery,
+  useGetDailyBonusStatusQuery,
+  useClaimDailyBonusMutation,
+} = promotionApi;

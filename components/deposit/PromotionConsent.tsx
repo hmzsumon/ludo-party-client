@@ -5,67 +5,59 @@ import { useMemo, useState } from "react";
 /* ────────── types ────────── */
 export type PromoChoice = "opt_in" | "opt_out";
 
+type Tier = {
+  from: number;
+  to: number;
+  percent: number;
+};
+
 type Props = {
   value: PromoChoice | null;
   onChange: (v: PromoChoice) => void;
-
-  /* ────────── promo info from backend ────────── */
-  firstBonusPercent?: number; // 50
-  secondBonusPercent?: number; // 25
-  eligibleDepositIndex?: 1 | 2 | 0; // 1 => first deposit eligible, 2 => second eligible, 0 => no bonus
-  turnoverMultiplier?: number; // 7
-
-  /* ────────── optional: show user amount preview ────────── */
+  tiers?: Tier[];
+  nextBonusDepositNumber?: number;
+  nextBonusPercent?: number;
+  turnoverMultiplier?: number;
   amount?: number;
 };
 
-const pct = (n?: number) => (n ? `${n}%` : "0%");
 const money = (n?: number) =>
   Number(n ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 });
 
 export default function PromotionConsent({
   value,
   onChange,
-  firstBonusPercent = 50,
-  secondBonusPercent = 25,
-  eligibleDepositIndex = 0,
-  turnoverMultiplier = 7,
+  tiers = [],
+  nextBonusDepositNumber = 1,
+  nextBonusPercent = 0,
+  turnoverMultiplier = 1,
   amount,
 }: Props) {
   const [openInfo, setOpenInfo] = useState(false);
 
-  const eligiblePercent = useMemo(() => {
-    if (eligibleDepositIndex === 1) return firstBonusPercent;
-    if (eligibleDepositIndex === 2) return secondBonusPercent;
-    return 0;
-  }, [eligibleDepositIndex, firstBonusPercent, secondBonusPercent]);
-
+  /* ────────── current bonus preview ────────── */
   const bonusAmount = useMemo(() => {
-    if (!amount || !eligiblePercent) return 0;
-    return (amount * eligiblePercent) / 100;
-  }, [amount, eligiblePercent]);
+    if (!amount || !nextBonusPercent) return 0;
+    return (amount * nextBonusPercent) / 100;
+  }, [amount, nextBonusPercent]);
 
+  /* ────────── deposit + bonus both 1x ────────── */
   const turnoverRequired = useMemo(() => {
-    if (!amount) return 0;
-
-    /* ────────── if opt-in, turnover = (deposit+bonus) * 7 ────────── */
-    if (value === "opt_in") return (amount + bonusAmount) * turnoverMultiplier;
-
-    /* ────────── if opt-out, turnover rule not applied (keep 0 or amount) ────────── */
-    return 0;
+    if (!amount || value !== "opt_in") return 0;
+    return (amount + bonusAmount) * turnoverMultiplier;
   }, [value, amount, bonusAmount, turnoverMultiplier]);
 
-  const showEligibility = eligibleDepositIndex !== 0;
+  const showEligibility = nextBonusPercent > 0;
 
   return (
     <div className="mt-6">
-      {/* ────────── title ────────── */}
+      {/* ────────── section title ────────── */}
       <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-neutral-800">
         <span className="h-2 w-2 rounded-full bg-pink-500" />
-        Promotions
+        Participant in promotion
       </div>
 
-      {/* ────────── option: opt in ────────── */}
+      {/* ────────── opt in card ────────── */}
       <label
         className={[
           "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition",
@@ -83,6 +75,7 @@ export default function PromotionConsent({
         />
 
         <div className="flex-1">
+          {/* ────────── top row ────────── */}
           <div className="flex items-center justify-between gap-3">
             <div className="text-sm font-semibold text-neutral-900">
               Participate in promotions
@@ -90,29 +83,29 @@ export default function PromotionConsent({
 
             {showEligibility ? (
               <div className="text-sm font-extrabold text-red-600">
-                +{pct(eligiblePercent)}
+                +{nextBonusPercent}%
               </div>
             ) : (
               <div className="text-xs font-semibold text-neutral-500">
-                No bonus available
+                Bonus limit reached
               </div>
             )}
           </div>
 
-          {/* ────────── inline hint ────────── */}
+          {/* ────────── summary line ────────── */}
           <div className="mt-1 text-[12px] leading-5 text-neutral-600">
             {showEligibility ? (
               <>
-                First deposit: +{firstBonusPercent}% &nbsp;|&nbsp; Second
-                deposit: +{secondBonusPercent}% &nbsp;|&nbsp; Turnover:{" "}
-                {turnoverMultiplier}x
+                Deposit bonus no. <b>{nextBonusDepositNumber}</b> eligible for{" "}
+                <b>{nextBonusPercent}%</b>. Turnover = <b>1x</b> of{" "}
+                <b>(deposit + bonus)</b>.
               </>
             ) : (
-              <>No promotional bonus available for your account right now.</>
+              <>All 25 promotional deposit bonuses are already used.</>
             )}
           </div>
 
-          {/* ────────── info toggle ────────── */}
+          {/* ────────── details toggle ────────── */}
           <button
             type="button"
             onClick={() => setOpenInfo((s) => !s)}
@@ -121,25 +114,34 @@ export default function PromotionConsent({
             {openInfo ? "Hide details" : "How it works"}
           </button>
 
-          {/* ────────── info box ────────── */}
+          {/* ────────── rules box ────────── */}
           {openInfo && (
             <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-[12px] leading-5 text-red-700">
               <div className="font-extrabold">Promotion Rules</div>
 
               <ul className="mt-1 list-disc space-y-1 pl-4">
+                {tiers.map((tier) => (
+                  <li key={`${tier.from}-${tier.to}`}>
+                    Deposit <b>{tier.from}</b>
+                    {tier.from !== tier.to ? (
+                      <>
+                        -<b>{tier.to}</b>
+                      </>
+                    ) : null}
+                    : <b>{tier.percent}%</b> bonus
+                  </li>
+                ))}
                 <li>
-                  First deposit bonus: <b>{firstBonusPercent}%</b>
+                  Every bonus deposit requires <b>1x turnover</b> on{" "}
+                  <b>deposit + bonus</b>.
                 </li>
                 <li>
-                  Second deposit bonus: <b>{secondBonusPercent}%</b>
-                </li>
-                <li>
-                  If you take a bonus, your turnover requirement becomes{" "}
-                  <b>{turnoverMultiplier}x</b> of <b>(deposit + bonus)</b>.
+                  Bonus applies only when you choose <b>Participate in
+                  promotions</b>.
                 </li>
               </ul>
 
-              {/* ────────── preview with selected amount ────────── */}
+              {/* ────────── live amount preview ────────── */}
               {amount ? (
                 <div className="mt-3 rounded-lg border border-red-200 bg-white p-2 text-red-700">
                   <div className="flex items-center justify-between">
@@ -167,7 +169,7 @@ export default function PromotionConsent({
         </div>
       </label>
 
-      {/* ────────── option: opt out ────────── */}
+      {/* ────────── opt out card ────────── */}
       <label
         className={[
           "mt-3 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition",
@@ -189,7 +191,7 @@ export default function PromotionConsent({
             Do not participate in any promotions
           </div>
           <div className="mt-1 text-[12px] leading-5 text-neutral-600">
-            No bonus will be added, and promotion turnover rules will not apply.
+            No bonus will be added. Only normal deposit turnover will apply.
           </div>
         </div>
       </label>

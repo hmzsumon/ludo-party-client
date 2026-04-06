@@ -4,6 +4,7 @@ import { apiSlice } from "@/redux/features/api/apiSlice";
 export interface InviteData {
   totalEarning: number;
   totalTeamMember: number;
+  todayBonus: number;
 }
 
 export interface TeamMember {

@@ -527,9 +527,9 @@ export default function DepositPage() {
                 <PromotionConsent
                   value={promoChoice}
                   onChange={setPromoChoice}
-                  firstBonusPercent={promo?.firstBonusPercent}
-                  secondBonusPercent={promo?.secondBonusPercent}
-                  eligibleDepositIndex={promo?.eligibleDepositIndex}
+                  tiers={promo?.tiers}
+                  nextBonusDepositNumber={promo?.nextBonusDepositNumber}
+                  nextBonusPercent={promo?.nextBonusPercent}
                   turnoverMultiplier={promo?.turnoverMultiplier}
                   amount={isValidAmount ? Number(amountInput) : undefined}
                 />
