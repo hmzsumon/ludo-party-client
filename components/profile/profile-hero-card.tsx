@@ -1,38 +1,54 @@
+/* ────────────────────────────────────────────────────────────────
+   profile-hero-card.tsx  (UPDATED)
+   
+   ✅ Current VIP cashback rank দেখাবে (API থেকে real data)
+   ✅ Progress bar দেখাবে (turnover progress)
+   ✅ VIP cashback page এ navigate করার link আছে
+   ✅ Loading skeleton আছে
+   ────────────────────────────────────────────────────────────── */
+
 "use client";
 
+import { useGetMyVipCashbackInfoQuery } from "@/redux/features/vipCashback/vipCashbackApi";
+import Link from "next/link";
 import { useSelector } from "react-redux";
+import { getRankConfig } from "../vip/VipRankBadge";
 
-const rankBadges: Record<
-  string,
-  { label: string; color: string; glow: string }
-> = {
-  bronze: {
-    label: "🥉 Bronze",
-    color: "#cd7f32",
-    glow: "rgba(205,127,50,0.5)",
-  },
-  silver: {
-    label: "🥈 Silver",
-    color: "#c0c0c0",
-    glow: "rgba(192,192,192,0.5)",
-  },
-  gold: { label: "🥇 Gold", color: "#ffd700", glow: "rgba(255,215,0,0.6)" },
-  diamond: {
-    label: "💎 Diamond",
-    color: "#00d4ff",
-    glow: "rgba(0,212,255,0.5)",
-  },
-};
-
+/* ────────────────────────────────────────────────────────────────
+   ProfileHeroCard
+   ────────────────────────────────────────────────────────────── */
 const ProfileHeroCard = () => {
   const { user } = useSelector((s: any) => s.auth) as any;
 
+  /* ── VIP Cashback info API ── */
+  const { data: vipData, isLoading: vipLoading } =
+    useGetMyVipCashbackInfoQuery();
+
+  const vipInfo = vipData?.data;
+  const currentRank = vipInfo?.currentRank;
+  const nextRank = vipInfo?.nextRank;
+  const userProgress = vipInfo?.userProgress;
+
+  /* ── Rank config (color, glow etc.) ── */
+  const rankCfg = getRankConfig(currentRank?.rank);
+
+  /* ── Progress percent (turnover toward next rank) ── */
+  const progressPercent = nextRank
+    ? Math.min(
+        100,
+        ((userProgress?.turnoverTotal ?? 0) / nextRank.minTurnover) * 100,
+      )
+    : currentRank
+      ? 100
+      : 0;
+
+  /* ── Name ── */
   const shortName =
     user?.name?.length > 18
       ? user?.name.slice(0, 18) + "..."
       : user?.name || "Player Name";
+
   const username = user?.username || "@player1234";
-  const rank = rankBadges.gold;
 
   return (
     <section
@@ -40,16 +56,15 @@ const ProfileHeroCard = () => {
       style={{
         background:
           "linear-gradient(145deg, rgba(74,26,138,0.85) 0%, rgba(29,5,70,0.9) 100%)",
-        border: "1px solid rgba(255,215,0,0.2)",
-        boxShadow:
-          "0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+        border: `1px solid ${currentRank ? rankCfg.border : "rgba(255,215,0,0.2)"}`,
+        boxShadow: `0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)`,
       }}
     >
       {/* Top shine */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
 
-      <div className="flex flex-col gap-5 ">
-        {/* ── Left: Avatar + Name ── */}
+      <div className="flex flex-col gap-5">
+        {/* ── Avatar + Name section ── */}
         <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="relative shrink-0">
@@ -88,53 +103,95 @@ const ProfileHeroCard = () => {
             <p className="mt-0.5 text-[13px] font-semibold text-white/50">
               {username}
             </p>
-
             <button className="ls-btn ls-btn-purple mt-3 px-4 py-2 text-[12px] font-black">
               ✏️ Edit Profile
             </button>
           </div>
         </div>
 
-        {/* ── Right: Rank Badge ── */}
-        <div
-          className="flex flex-col items-center justify-center rounded-2xl px-6 py-4 text-center"
-          style={{
-            background: "rgba(0,0,0,0.3)",
-            border: `1px solid ${rank.color}40`,
-            boxShadow: `0 0 20px ${rank.glow}`,
-          }}
-        >
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">
-            Current Rank
-          </p>
-          <h3
-            className="text-[28px] font-black"
-            style={{ color: rank.color, textShadow: `0 0 12px ${rank.glow}` }}
-          >
-            {rank.label}
-          </h3>
-          <p className="mt-1 text-[11px] font-semibold text-white/50">
-            Level 18 Champion
-          </p>
-
-          {/* Mini rank bar */}
+        {/* ── VIP Rank Card (clickable → VIP cashback page) ── */}
+        <Link href="/vip-cashback" className="block">
           <div
-            className="mt-3 w-full rounded-full overflow-hidden h-1.5"
-            style={{ background: "rgba(255,255,255,0.1)" }}
+            className="relative flex flex-col items-center justify-center rounded-2xl px-6 py-4 text-center cursor-pointer transition-transform active:scale-[0.98]"
+            style={{
+              background: currentRank
+                ? `linear-gradient(135deg, ${rankCfg.bg} 0%, rgba(29,5,70,0.6) 100%)`
+                : "rgba(0,0,0,0.3)",
+              border: `1px solid ${currentRank ? rankCfg.border : "rgba(255,215,0,0.2)"}`,
+              boxShadow: currentRank
+                ? `0 0 20px ${rankCfg.glow}30`
+                : "0 0 20px rgba(255,215,0,0.1)",
+            }}
           >
+            {/* ── Label ── */}
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">
+              Current Rank
+            </p>
+
+            {/* ── Rank name ── */}
+            {vipLoading ? (
+              <div className="h-8 w-24 rounded-lg bg-white/10 animate-pulse my-1" />
+            ) : (
+              <h3
+                className="text-[28px] font-black"
+                style={{
+                  color: currentRank ? rankCfg.color : "#666",
+                  textShadow: currentRank ? `0 0 12px ${rankCfg.glow}` : "none",
+                }}
+              >
+                {currentRank ? `${currentRank.rank}` : "No Rank Yet"}
+              </h3>
+            )}
+
+            {/* ── Cashback % badge ── */}
+            {currentRank && !vipLoading && (
+              <div className="mt-2 flex items-center gap-2">
+                <span
+                  className="rounded-full px-3 py-1 text-[11px] font-black text-black"
+                  style={{ background: rankCfg.color }}
+                >
+                  {currentRank.cashback}% cashback
+                </span>
+                <span className="text-[10px] text-white/40 font-semibold">
+                  {userProgress?.totalMatches ?? 0} matches
+                </span>
+              </div>
+            )}
+
+            {/* ── Progress bar (turnover toward next rank) ── */}
             <div
-              className="h-full rounded-full"
-              style={{
-                width: "68%",
-                background: `linear-gradient(90deg, ${rank.color}, ${rank.color}aa)`,
-                boxShadow: `0 0 6px ${rank.glow}`,
-              }}
-            />
+              className="mt-3 w-full rounded-full overflow-hidden h-1.5"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: currentRank
+                    ? `linear-gradient(90deg, ${rankCfg.color}, ${rankCfg.color}aa)`
+                    : "linear-gradient(90deg, #ffd700, #ffd700aa)",
+                  boxShadow: currentRank ? `0 0 6px ${rankCfg.glow}` : "none",
+                }}
+              />
+            </div>
+
+            {/* ── Progress label ── */}
+            <p className="mt-1 text-[10px] text-white/30 font-semibold">
+              {vipLoading
+                ? "Loading..."
+                : nextRank
+                  ? `${(userProgress?.turnoverTotal ?? 0).toLocaleString()} / ${nextRank.minTurnover.toLocaleString()} XP → ${nextRank.rank}`
+                  : currentRank
+                    ? "Max Rank Reached 🎉"
+                    : "Play games to earn XP"}
+            </p>
+
+            {/* Navigate arrow */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-lg">
+              →
+            </div>
           </div>
-          <p className="mt-1 text-[10px] text-white/30 font-semibold">
-            6,800 / 10,000 XP
-          </p>
-        </div>
+        </Link>
       </div>
     </section>
   );
