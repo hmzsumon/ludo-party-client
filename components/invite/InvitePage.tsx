@@ -125,7 +125,7 @@ export default function InvitePage() {
     { label: "1-50", value: "10%" },
     { label: "51-150", value: "5%" },
     { label: "151-300", value: "2%" },
-    { label: "301-500", value: "1%" },
+    { label: "301-UL", value: "1%" },
   ];
 
   return (

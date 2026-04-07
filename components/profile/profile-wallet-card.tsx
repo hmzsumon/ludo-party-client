@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useSelector } from "react-redux";
 
-const ProfileWalletCard = () => {
-  const { user } = useSelector((s: any) => s.auth) as any;
+type Props = {
+  dashboard?: any;
+  isLoading?: boolean;
+};
+
+const ProfileWalletCard = ({ dashboard, isLoading }: Props) => {
+  const balance = Number(dashboard?.wallet?.balance ?? 0);
 
   return (
     <section
@@ -17,16 +21,13 @@ const ProfileWalletCard = () => {
           "0 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
       }}
     >
-      {/* Shine line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
 
-      {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xl">💰</span>
         <h3 className="text-[17px] font-black text-white">Wallet</h3>
       </div>
 
-      {/* Balance Display */}
       <div
         className="rounded-xl p-4 flex items-center justify-between"
         style={{
@@ -42,13 +43,12 @@ const ProfileWalletCard = () => {
               Total Balance
             </p>
             <h4 className="text-[28px] font-black text-yellow-400 leading-tight">
-              💎 {user?.m_balance?.toLocaleString?.() ?? "0"}
+              {isLoading ? "Loading..." : `💎 ${balance.toLocaleString()}`}
             </h4>
           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Link href="/deposit" className="block">
           <button className="ls-btn ls-btn-green ls-shine-effect w-full py-2.5 text-[13px] font-black">

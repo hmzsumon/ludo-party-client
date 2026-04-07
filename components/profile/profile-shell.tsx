@@ -1,5 +1,12 @@
 "use client";
 
+/* ─────────────────────────────────────────────
+   📁 profile-shell.tsx
+   Profile page main shell
+   একবার API hit করে সব child component-এ data pass করবে
+───────────────────────────────────────────── */
+
+import { useGetProfileDashboardQuery } from "@/redux/features/profile/profileDashboardApi";
 import LogoutButton from "../auth/LogoutButton";
 import BottomNav from "../dashboard/bottom-nav";
 import ProfileAccountCard from "./profile-account-card";
@@ -10,6 +17,13 @@ import ProfileSummaryStrip from "./profile-summary-strip";
 import ProfileWalletCard from "./profile-wallet-card";
 
 const ProfileShell = () => {
+  /* ───────────────────────────────────────────
+     📡 Load dashboard live data
+  ─────────────────────────────────────────── */
+  const { data, isLoading } = useGetProfileDashboardQuery();
+
+  const dashboard = data?.data;
+
   return (
     <main className="min-h-screen w-full overflow-hidden text-white ls-stars-bg">
       <div className="relative min-h-screen w-full px-4 pb-32">
@@ -42,15 +56,21 @@ const ProfileShell = () => {
           <div className="mt-5">
             <ProfileHeroCard />
           </div>
+
           <div className="mt-4">
-            <ProfileSummaryStrip />
+            <ProfileSummaryStrip dashboard={dashboard} isLoading={isLoading} />
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-4 ">
-            <ProfileWalletCard />
-            <ProfileAccountCard />
-            <ProfileStatisticsCard />
-            <ProfileHistoryCard />
+
+          <div className="mt-4 grid grid-cols-1 gap-4">
+            <ProfileWalletCard dashboard={dashboard} isLoading={isLoading} />
+            <ProfileAccountCard dashboard={dashboard} isLoading={isLoading} />
+            <ProfileStatisticsCard
+              dashboard={dashboard}
+              isLoading={isLoading}
+            />
+            <ProfileHistoryCard dashboard={dashboard} isLoading={isLoading} />
           </div>
+
           <div className="mt-6 flex justify-center">
             <LogoutButton />
           </div>

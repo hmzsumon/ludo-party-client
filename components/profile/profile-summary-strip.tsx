@@ -1,28 +1,40 @@
-const summaryItems = [
-  {
-    label: "Matches",
-    value: "215",
-    icon: "🏆",
-    color: "#ffd700",
-    glow: "rgba(255,215,0,0.3)",
-  },
-  {
-    label: "Win Rate",
-    value: "62%",
-    icon: "🔥",
-    color: "#ff6b35",
-    glow: "rgba(255,107,53,0.3)",
-  },
-  {
-    label: "Earnings",
-    value: "💎1.1L",
-    icon: "🪙",
-    color: "#4cde7e",
-    glow: "rgba(76,222,126,0.3)",
-  },
-];
+/* ─────────────────────────────────────────────
+   📁 profile-summary-strip.tsx
+   Live overview strip
+───────────────────────────────────────────── */
 
-const ProfileSummaryStrip = () => {
+type Props = {
+  dashboard?: any;
+  isLoading?: boolean;
+};
+
+const ProfileSummaryStrip = ({ dashboard, isLoading }: Props) => {
+  const summaryItems = [
+    {
+      label: "Matches",
+      value: isLoading ? "..." : String(dashboard?.overview?.matches ?? 0),
+      icon: "🏆",
+      color: "#ffd700",
+      glow: "rgba(255,215,0,0.3)",
+    },
+    {
+      label: "Win Rate",
+      value: isLoading ? "..." : `${dashboard?.overview?.winRate ?? 0}%`,
+      icon: "🔥",
+      color: "#ff6b35",
+      glow: "rgba(255,107,53,0.3)",
+    },
+    {
+      label: "Earnings",
+      value: isLoading
+        ? "..."
+        : `💎${Number(dashboard?.overview?.earnings ?? 0).toLocaleString()}`,
+      icon: "🪙",
+      color: "#4cde7e",
+      glow: "rgba(76,222,126,0.3)",
+    },
+  ];
+
   return (
     <section className="grid grid-cols-3 gap-2">
       {summaryItems.map((item) => (
@@ -36,7 +48,6 @@ const ProfileSummaryStrip = () => {
             boxShadow: `0 6px 20px rgba(0,0,0,0.4), 0 0 0 1px ${item.color}10`,
           }}
         >
-          {/* Glow bg */}
           <div
             className="absolute inset-0 opacity-10 rounded-2xl"
             style={{

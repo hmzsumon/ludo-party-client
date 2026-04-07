@@ -1,11 +1,38 @@
-const stats = [
-  { label: "Total Matches", value: "215", icon: "🎮", color: "#ffffff" },
-  { label: "Wins", value: "134", icon: "🏆", color: "#4cde7e" },
-  { label: "Losses", value: "58", icon: "💔", color: "#ff6b6b" },
-  { label: "Win Streak", value: "12", icon: "🔥", color: "#55c7ff" },
-];
+type Props = {
+  dashboard?: any;
+  isLoading?: boolean;
+};
 
-const ProfileStatisticsCard = () => {
+const ProfileStatisticsCard = ({ dashboard, isLoading }: Props) => {
+  const stats = [
+    {
+      label: "Total Matches",
+      value: String(dashboard?.statistics?.totalMatches ?? 0),
+      icon: "🎮",
+      color: "#ffffff",
+    },
+    {
+      label: "Wins",
+      value: String(dashboard?.statistics?.wins ?? 0),
+      icon: "🏆",
+      color: "#4cde7e",
+    },
+    {
+      label: "Losses",
+      value: String(dashboard?.statistics?.losses ?? 0),
+      icon: "💔",
+      color: "#ff6b6b",
+    },
+    {
+      label: "Win Streak",
+      value: String(dashboard?.statistics?.winStreak ?? 0),
+      icon: "🔥",
+      color: "#55c7ff",
+    },
+  ];
+
+  const winRate = Number(dashboard?.statistics?.winRate ?? 0);
+
   return (
     <section
       className="relative rounded-[20px] overflow-hidden p-4"
@@ -17,16 +44,13 @@ const ProfileStatisticsCard = () => {
           "0 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
       }}
     >
-      {/* Shine line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent" />
 
-      {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xl">📊</span>
         <h3 className="text-[17px] font-black text-white">Statistics</h3>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-2">
         {stats.map((item) => (
           <div
@@ -42,7 +66,7 @@ const ProfileStatisticsCard = () => {
               className="text-[22px] font-black leading-none"
               style={{ color: item.color }}
             >
-              {item.value}
+              {isLoading ? "..." : item.value}
             </h4>
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-0.5">
               {item.label}
@@ -51,14 +75,16 @@ const ProfileStatisticsCard = () => {
         ))}
       </div>
 
-      {/* Win Rate Bar */}
       <div className="mt-4">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] font-black uppercase tracking-widest text-yellow-400/70">
             Win Rate
           </span>
-          <span className="text-[11px] font-black text-green-400">62%</span>
+          <span className="text-[11px] font-black text-green-400">
+            {isLoading ? "..." : `${winRate}%`}
+          </span>
         </div>
+
         <div
           className="h-2 w-full rounded-full overflow-hidden"
           style={{ background: "rgba(255,255,255,0.08)" }}
@@ -66,7 +92,7 @@ const ProfileStatisticsCard = () => {
           <div
             className="h-full rounded-full"
             style={{
-              width: "62%",
+              width: `${Math.max(0, Math.min(100, winRate))}%`,
               background: "linear-gradient(90deg, #4cde7e, #1db954)",
               boxShadow: "0 0 8px rgba(76,222,126,0.5)",
             }}
