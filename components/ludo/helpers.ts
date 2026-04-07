@@ -43,17 +43,22 @@ import {
 } from "../../utils/positions-board";
 import { getDiceIndexSelected } from "./token/helpers";
 
-/* ────────── fixed color position map ────────── */
-const COLOR_POSITION_MAP: Record<TColors, TPositionGame> = {
-  GREEN: EPositionGame.BOTTOM_LEFT,
-  YELLOW: EPositionGame.TOP_LEFT,
-  BLUE: EPositionGame.TOP_RIGHT,
-  RED: EPositionGame.BOTTOM_RIGHT,
-};
-
 /* ────────── helpers color resolve ────────── */
 const getUserColor = (user?: Partial<IUser> & { color?: TColors }) =>
   user?.color as TColors | undefined;
+
+/* ────────── board slot colors by current board preset ────────── */
+const getBoardColorSlots = (boardColor: TBoardColors) => {
+  const splitColor = boardColor.split("");
+  const colors = splitColor.map((value) => ESufixColors[value as TSufixColors]);
+
+  return {
+    bottomLeft: colors[0] as TColors,
+    topLeft: colors[1] as TColors,
+    topRight: colors[2] as TColors,
+    bottomRight: colors[3] as TColors,
+  };
+};
 
 /**
  * Dependiendo del total de jugadores se duvuelen los colores que corresponde a las
@@ -97,9 +102,18 @@ const getPlayersColorsResolved = (
 /* ────────── fixed board position by color ────────── */
 const getPositionGameByColor = (
   color: TColors,
+  boardColor: TBoardColors,
   fallbackPosition: TPositionGame,
 ): TPositionGame => {
-  return COLOR_POSITION_MAP[color] || fallbackPosition;
+  const { bottomLeft, topLeft, topRight, bottomRight } =
+    getBoardColorSlots(boardColor);
+
+  if (color === bottomLeft) return EPositionGame.BOTTOM_LEFT;
+  if (color === topLeft) return EPositionGame.TOP_LEFT;
+  if (color === topRight) return EPositionGame.TOP_RIGHT;
+  if (color === bottomRight) return EPositionGame.BOTTOM_RIGHT;
+
+  return fallbackPosition;
 };
 
 /**
@@ -793,6 +807,7 @@ export const getInitialDataPlayers = (
   users: IUser[],
   boardColor: TBoardColors,
   totalPlayers: TTotalPlayers,
+  forcePlayerColors?: (TColors | undefined)[],
 ) => {
   const players: IPlayer[] = [];
   const playersColors = getPlayersColorsResolved(
@@ -805,7 +820,7 @@ export const getInitialDataPlayers = (
     players.push({
       ...(users[i] || {}),
       index: i,
-      color: playersColors[i],
+      color: (forcePlayerColors?.[i] || playersColors[i]) as TColors,
       finished: false,
       isOffline: false,
       isMuted: false,
@@ -1370,7 +1385,11 @@ export const getInitialPositionTokens = (
     const canSelectToken = isOnline ? isCurrentOnlineUser : !isBot;
 
     const color = (players[i].color || fallbackColors[i]) as TColors;
-    const positionGame = getPositionGameByColor(color, fallbackPositions[i]);
+    const positionGame = getPositionGameByColor(
+      color,
+      boardColor,
+      fallbackPositions[i],
+    );
 
     const tokens: IToken[] = getTokensInJail(
       positionGame,
