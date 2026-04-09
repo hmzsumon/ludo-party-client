@@ -10,6 +10,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import AddFieldModal from "./AddFieldModal";
 import EmailChangeModal from "./EmailChangeModal";
+import PhoneChangeModal from "./PhoneChangeModal";
 import ProfileInfoRow from "./ProfileInfoRow";
 
 interface AccountSectionProps {
@@ -28,6 +29,7 @@ export default function AccountSection({
   // ✅ কোন modal open আছে সেটা track করি
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showPhoneModal2, setShowPhoneModal2] = useState(false);
 
   // ✅ Registration date format করি
   const formattedDate = profile.registrationDate
@@ -91,7 +93,7 @@ export default function AccountSection({
           label="Phone number"
           value={profile.phone || undefined}
           actionType={profile.phone ? "change" : "link"}
-          onActionClick={() => setShowPhoneModal(true)}
+          onActionClick={() => setShowPhoneModal2(true)}
           showDivider
         />
 
@@ -117,6 +119,13 @@ export default function AccountSection({
       <EmailChangeModal
         open={showEmailModal}
         onClose={() => setShowEmailModal(false)}
+        onContactSupport={() => router.push("/support")}
+      />
+
+      {/* ── Phone Attention Modal ── */}
+      <PhoneChangeModal
+        open={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
         onContactSupport={() => router.push("/support")}
       />
 

@@ -38,19 +38,11 @@ const WalletBalanceCard = () => {
         <span className="mt-2 text-5xl ls-float">🪙</span>
 
         {/* Amount */}
-        <h2
-          className="mt-2 text-xl font-black tracking-tight leading-none"
-          style={{
-            background:
-              "linear-gradient(180deg, #ffe566 0%, #ffd700 40%, #c8960a 100%)",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
-          }}
-        >
+        <h2 className="mt-2 text-xl font-black tracking-tight leading-none">
           <span className="text-xl ">💎</span>{" "}
-          {user?.m_balance?.toLocaleString?.() ?? "0"}
+          <span className="text-yellow-300">
+            {user?.m_balance?.toLocaleString?.() ?? "0"}
+          </span>
         </h2>
 
         <p className="mt-1 text-[12px] font-semibold text-white/40">
