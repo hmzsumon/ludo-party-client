@@ -17,26 +17,26 @@ const ProfileSummaryStrip = ({ dashboard, isLoading }: Props) => {
       color: "#ffd700",
       glow: "rgba(255,215,0,0.3)",
     },
-    {
-      label: "Win Rate",
-      value: isLoading ? "..." : `${dashboard?.overview?.winRate ?? 0}%`,
-      icon: "🔥",
-      color: "#ff6b35",
-      glow: "rgba(255,107,53,0.3)",
-    },
-    {
-      label: "Earnings",
-      value: isLoading
-        ? "..."
-        : `💎${Number(dashboard?.overview?.earnings ?? 0).toLocaleString()}`,
-      icon: "🪙",
-      color: "#4cde7e",
-      glow: "rgba(76,222,126,0.3)",
-    },
+    // {
+    //   label: "Win Rate",
+    //   value: isLoading ? "..." : `${dashboard?.overview?.winRate ?? 0}%`,
+    //   icon: "🔥",
+    //   color: "#ff6b35",
+    //   glow: "rgba(255,107,53,0.3)",
+    // },
+    // {
+    //   label: "Earnings",
+    //   value: isLoading
+    //     ? "..."
+    //     : `💎${Number(dashboard?.overview?.earnings ?? 0).toLocaleString()}`,
+    //   icon: "🪙",
+    //   color: "#4cde7e",
+    //   glow: "rgba(76,222,126,0.3)",
+    // },
   ];
 
   return (
-    <section className="grid grid-cols-3 gap-2">
+    <section className="grid grid-cols-1 gap-2">
       {summaryItems.map((item) => (
         <div
           key={item.label}

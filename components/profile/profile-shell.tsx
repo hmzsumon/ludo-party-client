@@ -12,7 +12,6 @@ import BottomNav from "../dashboard/bottom-nav";
 import ProfileAccountCard from "./profile-account-card";
 import ProfileHeroCard from "./profile-hero-card";
 import ProfileHistoryCard from "./profile-history-card";
-import ProfileStatisticsCard from "./profile-statistics-card";
 import ProfileSummaryStrip from "./profile-summary-strip";
 import ProfileWalletCard from "./profile-wallet-card";
 
@@ -64,10 +63,10 @@ const ProfileShell = () => {
           <div className="mt-4 grid grid-cols-1 gap-4">
             <ProfileWalletCard dashboard={dashboard} isLoading={isLoading} />
             <ProfileAccountCard dashboard={dashboard} isLoading={isLoading} />
-            <ProfileStatisticsCard
+            {/* <ProfileStatisticsCard
               dashboard={dashboard}
               isLoading={isLoading}
-            />
+            /> */}
             <ProfileHistoryCard dashboard={dashboard} isLoading={isLoading} />
           </div>
 

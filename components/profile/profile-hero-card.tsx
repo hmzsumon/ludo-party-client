@@ -48,7 +48,7 @@ const ProfileHeroCard = () => {
       ? user?.name.slice(0, 18) + "..."
       : user?.name || "Player Name";
 
-  const username = user?.username || "@player1234";
+  const username = user?.customerId || "@player1234";
 
   return (
     <section

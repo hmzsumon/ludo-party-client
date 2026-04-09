@@ -178,6 +178,22 @@ export const authApi = apiSlice.injectEndpoints({
       }),
     }),
 
+    /* ────────── Change Password ────────── */
+    changePassword: builder.mutation<
+      { success: boolean; message: string },
+      { oldPassword: string; newPassword: string }
+    >({
+      query: (body) => ({
+        url: "/change-password",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: [
+        { type: "User", id: "PERSONAL_PROFILE" },
+        { type: "User", id: "ME" },
+      ],
+    }),
+
     /* ────────── add user payment method ────────── */
     addUserPaymentMethod: builder.mutation<any, any>({
       query: (body) => ({
@@ -210,6 +226,7 @@ export const {
   useSendResetCodeMutation,
   useVerifyResetCodeMutation,
   useResetForgotPasswordMutation,
+  useChangePasswordMutation,
   useAddUserPaymentMethodMutation,
   useGetUserPaymentMethodsQuery,
 } = authApi;

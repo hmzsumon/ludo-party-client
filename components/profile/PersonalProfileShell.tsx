@@ -1,8 +1,7 @@
 "use client";
 
 // ✅ PersonalProfileShell.tsx
-// Personal Profile page এর main shell
-// Screenshot ১ এর মতো layout: topbar → account section → personal info section
+// Main shell
 
 import {
   useGetPersonalProfileQuery,
@@ -18,35 +17,32 @@ import PersonalInfoSection from "./PersonalInfoSection";
 export default function PersonalProfileShell() {
   const router = useRouter();
 
-  /* ── API Hooks ── */
+  /* ── API hooks ── */
   const { data, isLoading, isError } = useGetPersonalProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] =
     useUpdatePersonalProfileMutation();
   const [linkPhone, { isLoading: isLinkingPhone }] = useLinkPhoneMutation();
 
-  /* ── Update handler (PersonalInfoSection কে pass করি) ── */
+  /* ── Update profile handler ── */
   const handleUpdateProfile = async (payload: {
-    firstName?: string;
-    surname?: string;
     countryCode?: string;
     countryName?: string;
+    city?: string;
   }) => {
     const result = await updateProfile(payload).unwrap();
     return result;
   };
 
-  /* ── Phone link handler (AccountSection কে pass করি) ── */
+  /* ── Link phone handler ── */
   const handleLinkPhone = async (phone: string) => {
     const result = await linkPhone({ phone }).unwrap();
     return result;
   };
 
-  /* ── Loading state ── */
   if (isLoading) {
     return <PersonalProfileSkeleton />;
   }
 
-  /* ── Error state ── */
   if (isError || !data?.profile) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white/50 text-[14px]">
@@ -77,13 +73,14 @@ export default function PersonalProfileShell() {
           <h1 className="flex-1 text-center text-[17px] font-bold text-white">
             Personal profile
           </h1>
-          {/* ✅ placeholder right side balance করার জন্য */}
           <div className="w-9" />
         </div>
 
-        {/* ────────── Enter Details Banner ────────── */}
+        {/* ────────── Banner ────────── */}
         <button
-          onClick={() => toast("Edit profile details!", { icon: "✏️" })}
+          onClick={() =>
+            toast("Update your profile details below", { icon: "✏️" })
+          }
           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl mb-5 active:scale-[0.98] transition-transform"
           style={{
             background: "rgba(255,255,255,0.05)",
@@ -125,22 +122,15 @@ export default function PersonalProfileShell() {
   );
 }
 
-/* ────────── Loading Skeleton ────────── */
 function PersonalProfileSkeleton() {
   return (
     <main className="min-h-screen w-full" style={{ background: "#14041f" }}>
       <div className="w-full max-w-[480px] mx-auto px-4 pt-5">
-        {/* Topbar skeleton */}
         <div className="h-8 w-40 mx-auto bg-white/10 rounded-lg animate-pulse mb-6" />
-
-        {/* Banner skeleton */}
         <div className="h-14 w-full bg-white/5 rounded-2xl animate-pulse mb-5" />
-
-        {/* Section label */}
         <div className="h-3 w-16 bg-white/10 rounded animate-pulse mb-3" />
 
-        {/* Card skeleton */}
-        <div className="rounded-2xl overflow-hidden bg-white/5 border border-white/08">
+        <div className="rounded-2xl overflow-hidden bg-white/5 border border-white/10">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="px-4 py-4 border-b border-white/5">
               <div className="h-3.5 w-32 bg-white/10 rounded animate-pulse" />
@@ -148,10 +138,9 @@ function PersonalProfileSkeleton() {
           ))}
         </div>
 
-        {/* Second section */}
         <div className="h-3 w-28 bg-white/10 rounded animate-pulse mt-6 mb-3" />
-        <div className="rounded-2xl overflow-hidden bg-white/5 border border-white/08">
-          {[...Array(4)].map((_, i) => (
+        <div className="rounded-2xl overflow-hidden bg-white/5 border border-white/10">
+          {[...Array(3)].map((_, i) => (
             <div key={i} className="px-4 py-4 border-b border-white/5">
               <div className="h-3.5 w-24 bg-white/10 rounded animate-pulse" />
             </div>

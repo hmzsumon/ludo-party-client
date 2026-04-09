@@ -1,13 +1,11 @@
 "use client";
 
-// ✅ EmailChangeModal.tsx
-// Screenshot ৩ এর মতো হুবহু – "Attention" popup
-// Email change করতে customer support contact করতে বলে
+// ✅ PhoneChangeModal.tsx
+// Phone number change click করলে email modal-এর মতো support attention modal দেখাবে
 
-interface EmailChangeModalProps {
+interface PhoneChangeModalProps {
   open: boolean;
   onClose: () => void;
-  // Customer support page এ navigate করার callback
   onContactSupport: () => void;
 }
 
@@ -15,7 +13,7 @@ export default function PhoneChangeModal({
   open,
   onClose,
   onContactSupport,
-}: EmailChangeModalProps) {
+}: PhoneChangeModalProps) {
   if (!open) return null;
 
   return (
@@ -34,7 +32,7 @@ export default function PhoneChangeModal({
           boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
         }}
       >
-        {/* Content */}
+        {/* ── Content ── */}
         <div className="px-6 pt-6 pb-2 text-center">
           <h3 className="text-[18px] font-bold text-gray-900 mb-2">
             Attention
@@ -44,7 +42,7 @@ export default function PhoneChangeModal({
           </p>
         </div>
 
-        {/* Buttons */}
+        {/* ── Buttons ── */}
         <div className="p-4 flex flex-col gap-2">
           <button
             onClick={() => {

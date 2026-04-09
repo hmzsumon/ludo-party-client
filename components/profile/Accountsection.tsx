@@ -1,15 +1,20 @@
 "use client";
 
 // ✅ AccountSection.tsx
-// Personal Profile এর "Account" section
-// Account number, Username, Email, Phone, Password, Registration date
+// Account section
+// - email change => support modal
+// - phone change => support modal
+// - phone not exists => link modal
+// - password change => password modal
 
+import { useChangePasswordMutation } from "@/redux/features/auth/authApi";
 import { IPersonalProfile } from "@/redux/features/profile/personalProfileApi";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import AddFieldModal from "./AddFieldModal";
 import EmailChangeModal from "./EmailChangeModal";
+import PasswordChangeModal from "./PasswordChangeModal";
 import PhoneChangeModal from "./PhoneChangeModal";
 import ProfileInfoRow from "./ProfileInfoRow";
 
@@ -26,12 +31,17 @@ export default function AccountSection({
 }: AccountSectionProps) {
   const router = useRouter();
 
-  // ✅ কোন modal open আছে সেটা track করি
+  /* ── Modal states ── */
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showPhoneModal2, setShowPhoneModal2] = useState(false);
+  const [showPhoneSupportModal, setShowPhoneSupportModal] = useState(false);
+  const [showPhoneLinkModal, setShowPhoneLinkModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  // ✅ Registration date format করি
+  /* ── Password API hook ── */
+  const [changePassword, { isLoading: isChangingPassword }] =
+    useChangePasswordMutation();
+
+  /* ── Registration date format ── */
   const formattedDate = profile.registrationDate
     ? new Date(profile.registrationDate).toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -40,13 +50,29 @@ export default function AccountSection({
       })
     : "";
 
+  /* ── Phone link handler ── */
   const handlePhoneConfirm = async (phone: string) => {
     try {
       await onLinkPhone(phone);
-      setShowPhoneModal(false);
+      setShowPhoneLinkModal(false);
       toast.success("Phone linked successfully!");
-    } catch {
-      toast.error("Failed to link phone. Try again.");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to link phone. Try again.");
+    }
+  };
+
+  /* ── Password change handler ── */
+  const handlePasswordChange = async (payload: {
+    oldPassword: string;
+    newPassword: string;
+  }) => {
+    try {
+      const result = await changePassword(payload).unwrap();
+      toast.success(result?.message || "Password changed successfully");
+      setShowPasswordModal(false);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to change password");
+      throw error;
     }
   };
 
@@ -60,7 +86,7 @@ export default function AccountSection({
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Account number – শুধু static value */}
+        {/* ── Account number ── */}
         <ProfileInfoRow
           label="Account number"
           value={`id: ${profile.accountNumber}`}
@@ -68,18 +94,7 @@ export default function AccountSection({
           showDivider
         />
 
-        {/* Username – Add button (user model এ username field নেই তাই placeholder) */}
-        {/* <ProfileInfoRow
-          label="Username"
-          isEmpty
-          actionType="add"
-          onActionClick={() =>
-            toast("Username feature coming soon!", { icon: "🔧" })
-          }
-          showDivider
-        /> */}
-
-        {/* Email – Change click এ attention modal */}
+        {/* ── Email ── */}
         <ProfileInfoRow
           label="Email"
           value={profile.email || undefined}
@@ -88,25 +103,31 @@ export default function AccountSection({
           showDivider
         />
 
-        {/* Phone – না থাকলে Link button */}
+        {/* ── Phone ── */}
         <ProfileInfoRow
           label="Phone number"
           value={profile.phone || undefined}
           actionType={profile.phone ? "change" : "link"}
-          onActionClick={() => setShowPhoneModal2(true)}
+          onActionClick={() => {
+            if (profile.phone) {
+              setShowPhoneSupportModal(true);
+              return;
+            }
+            setShowPhoneLinkModal(true);
+          }}
           showDivider
         />
 
-        {/* Password – Change আলাদা page এ */}
+        {/* ── Password ── */}
         <ProfileInfoRow
           label="Password"
           value={`Days since last change: ${profile.daysSincePasswordChange}`}
           actionType="change"
-          onActionClick={() => router.push("/change-password")}
+          onActionClick={() => setShowPasswordModal(true)}
           showDivider
         />
 
-        {/* Registration date – শুধু static */}
+        {/* ── Registration date ── */}
         <ProfileInfoRow
           label="Registration date"
           value={formattedDate}
@@ -115,32 +136,40 @@ export default function AccountSection({
         />
       </div>
 
-      {/* ── Email Attention Modal ── */}
+      {/* ── Email support modal ── */}
       <EmailChangeModal
         open={showEmailModal}
         onClose={() => setShowEmailModal(false)}
         onContactSupport={() => router.push("/support")}
       />
 
-      {/* ── Phone Attention Modal ── */}
+      {/* ── Phone support modal ── */}
       <PhoneChangeModal
-        open={showPhoneModal}
-        onClose={() => setShowPhoneModal(false)}
+        open={showPhoneSupportModal}
+        onClose={() => setShowPhoneSupportModal(false)}
         onContactSupport={() => router.push("/support")}
       />
 
-      {/* ── Phone Link Modal ── */}
+      {/* ── Phone link modal ── */}
       <AddFieldModal
-        open={showPhoneModal}
+        open={showPhoneLinkModal}
         title="Link Phone Number"
         fieldLabel="Phone Number"
         placeholder="01XXXXXXXXX"
         inputType="tel"
-        prefix="+880"
         note="An SMS with an activation code will be sent to your phone."
         onConfirm={handlePhoneConfirm}
-        onClose={() => setShowPhoneModal(false)}
+        onClose={() => setShowPhoneLinkModal(false)}
         loading={isLinkingPhone}
+      />
+
+      {/* ── Password change modal ── */}
+      <PasswordChangeModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSubmit={handlePasswordChange}
+        loading={isChangingPassword}
+        daysSincePasswordChange={profile.daysSincePasswordChange}
       />
     </>
   );

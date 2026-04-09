@@ -1,5 +1,5 @@
 // ✅ personalProfileApi.ts
-// RTK Query – Personal Profile API endpoints
+// RTK Query – personal profile endpoints
 
 import { apiSlice } from "../api/apiSlice";
 
@@ -10,18 +10,16 @@ export interface IPersonalProfile {
   phone: string;
   registrationDate: string;
   daysSincePasswordChange: number;
-  firstName: string;
-  surname: string;
+  fullName: string;
   countryCode: string;
   countryName: string;
   city: string;
 }
 
 export interface IUpdateProfilePayload {
-  firstName?: string;
-  surname?: string;
   countryCode?: string;
   countryName?: string;
+  city?: string;
 }
 
 export interface ILinkPhonePayload {
@@ -31,7 +29,7 @@ export interface ILinkPhonePayload {
 /* ────────── API Slice Injection ────────── */
 export const personalProfileApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    /* 🔍 Profile data load করো */
+    /* 🔍 Profile data */
     getPersonalProfile: builder.query<
       { success: boolean; profile: IPersonalProfile },
       void
@@ -43,7 +41,7 @@ export const personalProfileApi = apiSlice.injectEndpoints({
       providesTags: [{ type: "User", id: "PERSONAL_PROFILE" }],
     }),
 
-    /* ✏️ Profile update (name, country) */
+    /* ✏️ Profile update */
     updatePersonalProfile: builder.mutation<
       { success: boolean; message: string },
       IUpdateProfilePayload
@@ -53,14 +51,13 @@ export const personalProfileApi = apiSlice.injectEndpoints({
         method: "PATCH",
         body,
       }),
-      // ✅ update এর পর profile cache invalidate করো
       invalidatesTags: [
         { type: "User", id: "PERSONAL_PROFILE" },
         { type: "User", id: "ME" },
       ],
     }),
 
-    /* 📱 Phone link করো */
+    /* 📱 Phone link */
     linkPhone: builder.mutation<
       { success: boolean; message: string },
       ILinkPhonePayload

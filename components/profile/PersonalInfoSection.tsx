@@ -1,8 +1,10 @@
 "use client";
 
 // ✅ PersonalInfoSection.tsx
-// Personal Profile এর "Personal information" section
-// Name, Surname, Country (with drawer), City
+// Personal information section
+// - Full Name read only
+// - Country editable
+// - City add / change editable
 
 import { IPersonalProfile } from "@/redux/features/profile/personalProfileApi";
 import { useState } from "react";
@@ -14,10 +16,9 @@ import ProfileInfoRow from "./ProfileInfoRow";
 interface PersonalInfoSectionProps {
   profile: IPersonalProfile;
   onUpdateProfile: (payload: {
-    firstName?: string;
-    surname?: string;
     countryCode?: string;
     countryName?: string;
+    city?: string;
   }) => Promise<unknown>;
   isUpdating: boolean;
 }
@@ -27,11 +28,9 @@ export default function PersonalInfoSection({
   onUpdateProfile,
   isUpdating,
 }: PersonalInfoSectionProps) {
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [showSurnameModal, setShowSurnameModal] = useState(false);
   const [showCountryDrawer, setShowCountryDrawer] = useState(false);
+  const [showCityModal, setShowCityModal] = useState(false);
 
-  // ✅ Fix 1: flag field বাদ — শুধু code, name, iso
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(
     profile.countryName
       ? {
@@ -42,31 +41,10 @@ export default function PersonalInfoSection({
       : null,
   );
 
-  /* ── Name update handler ── */
-  const handleNameUpdate = async (value: string) => {
-    try {
-      await onUpdateProfile({ firstName: value });
-      setShowNameModal(false);
-      toast.success("Name updated!");
-    } catch {
-      toast.error("Failed to update name.");
-    }
-  };
-
-  /* ── Surname update handler ── */
-  const handleSurnameUpdate = async (value: string) => {
-    try {
-      await onUpdateProfile({ surname: value });
-      setShowSurnameModal(false);
-      toast.success("Surname updated!");
-    } catch {
-      toast.error("Failed to update surname.");
-    }
-  };
-
-  /* ── Country select handler ── */
+  /* ── Country handler ── */
   const handleCountrySelect = async (country: Country) => {
     setSelectedCountry(country);
+
     try {
       await onUpdateProfile({
         countryCode: country.code,
@@ -78,7 +56,17 @@ export default function PersonalInfoSection({
     }
   };
 
-  // ✅ Fix 2: flag বাদ — শুধু code + name দেখাবে
+  /* ── City handler ── */
+  const handleCityUpdate = async (city: string) => {
+    try {
+      await onUpdateProfile({ city });
+      setShowCityModal(false);
+      toast.success("City updated!");
+    } catch {
+      toast.error("Failed to update city.");
+    }
+  };
+
   const countryDisplay = selectedCountry
     ? `${selectedCountry.code} ${selectedCountry.name}`.trim()
     : profile.countryName || "";
@@ -93,25 +81,15 @@ export default function PersonalInfoSection({
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Name */}
+        {/* ── Full name: read only ── */}
         <ProfileInfoRow
           label="Full Name"
-          value={profile.firstName || undefined}
-          actionType={profile.firstName ? "change" : "add"}
-          onActionClick={() => setShowNameModal(true)}
+          value={profile.fullName || undefined}
+          staticValue
           showDivider
         />
 
-        {/* Surname */}
-        {/* <ProfileInfoRow
-          label="Surname"
-          value={profile.surname || undefined}
-          actionType={profile.surname ? "change" : "add"}
-          onActionClick={() => setShowSurnameModal(true)}
-          showDivider
-        /> */}
-
-        {/* Country */}
+        {/* ── Country ── */}
         <ProfileInfoRow
           label="Country"
           value={countryDisplay || undefined}
@@ -120,41 +98,29 @@ export default function PersonalInfoSection({
           showDivider
         />
 
-        {/* City */}
+        {/* ── City ── */}
         <ProfileInfoRow
           label="City"
           value={profile.city || undefined}
           actionType={profile.city ? "change" : "add"}
-          onActionClick={() =>
-            toast("City feature coming soon!", { icon: "🏙️" })
-          }
+          onActionClick={() => setShowCityModal(true)}
           showDivider={false}
         />
       </div>
 
-      {/* ── Name Modal ── */}
+      {/* ── City modal ── */}
       <AddFieldModal
-        open={showNameModal}
-        title="Update Name"
-        fieldLabel="First Name"
-        placeholder="Enter your first name"
-        onConfirm={handleNameUpdate}
-        onClose={() => setShowNameModal(false)}
+        open={showCityModal}
+        title={profile.city ? "Update City" : "Add City"}
+        fieldLabel="City"
+        placeholder="Enter your city"
+        initialValue={profile.city || ""}
+        onConfirm={handleCityUpdate}
+        onClose={() => setShowCityModal(false)}
         loading={isUpdating}
       />
 
-      {/* ── Surname Modal ── */}
-      <AddFieldModal
-        open={showSurnameModal}
-        title="Update Surname"
-        fieldLabel="Surname"
-        placeholder="Enter your surname"
-        onConfirm={handleSurnameUpdate}
-        onClose={() => setShowSurnameModal(false)}
-        loading={isUpdating}
-      />
-
-      {/* ── Country Select Drawer ── */}
+      {/* ── Country drawer ── */}
       <CountrySelectDrawer
         open={showCountryDrawer}
         selected={selectedCountry}

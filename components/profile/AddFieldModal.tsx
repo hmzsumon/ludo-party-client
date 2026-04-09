@@ -1,8 +1,8 @@
 "use client";
 
 // ✅ AddFieldModal.tsx
-// DB তে data না থাকলে Add button click এ এই popup দেখাবে
-// Username add, phone link ইত্যাদির জন্য generic modal
+// Generic add/update modal
+// username / city / phone link ইত্যাদির জন্য reusable
 
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -12,16 +12,13 @@ interface AddFieldModalProps {
   title: string;
   fieldLabel: string;
   placeholder: string;
-  // "text" | "tel" | "password"
   inputType?: string;
-  // Submit হলে value pass করে দেবে
   onConfirm: (value: string) => void;
   onClose: () => void;
   loading?: boolean;
-  // Extra note নিচে দেখাবে (optional)
   note?: string;
-  // Prefix (phone এর জন্য country code)
   prefix?: string;
+  initialValue?: string;
 }
 
 export default function AddFieldModal({
@@ -35,17 +32,18 @@ export default function AddFieldModal({
   loading = false,
   note,
   prefix,
+  initialValue = "",
 }: AddFieldModalProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ Modal open হলে input clear + focus
+  // ✅ Modal open হলে default value set + focus
   useEffect(() => {
     if (open) {
-      setValue("");
+      setValue(initialValue);
       setTimeout(() => inputRef.current?.focus(), 200);
     }
-  }, [open]);
+  }, [open, initialValue]);
 
   const handleSubmit = () => {
     const trimmed = value.trim();
@@ -73,7 +71,7 @@ export default function AddFieldModal({
           boxShadow: "0 20px 60px rgba(0,0,0,0.7)",
         }}
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-[16px] font-bold text-white">{title}</h3>
           <button
@@ -84,7 +82,7 @@ export default function AddFieldModal({
           </button>
         </div>
 
-        {/* Input field */}
+        {/* ── Input field ── */}
         <label className="block mb-2 text-[12px] font-semibold text-white/50 uppercase tracking-wider">
           {fieldLabel}
         </label>
@@ -96,7 +94,6 @@ export default function AddFieldModal({
             border: "1px solid rgba(35,255,200,0.2)",
           }}
         >
-          {/* Prefix (country code) */}
           {prefix && (
             <span className="px-3 text-[14px] text-white/60 border-r border-white/10 py-3 shrink-0">
               {prefix}
@@ -114,14 +111,13 @@ export default function AddFieldModal({
           />
         </div>
 
-        {/* Optional note */}
         {note && (
           <p className="text-[11px] text-white/40 mb-4 leading-relaxed">
             {note}
           </p>
         )}
 
-        {/* Action buttons */}
+        {/* ── Action buttons ── */}
         <div className="flex gap-3">
           <button
             onClick={onClose}
