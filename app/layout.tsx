@@ -1,5 +1,6 @@
+import DisableZoom from "@/components/DisableZoom";
 import SocketProvider from "@/providers/SocketProvider";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
@@ -17,6 +18,14 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Ludo Party",
@@ -50,6 +59,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased app-default-bg`}
         suppressHydrationWarning={true}
       >
+        <DisableZoom />
         <StoreProvider>
           <SocketProvider>
             <Providers>{children}</Providers>

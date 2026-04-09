@@ -5,7 +5,6 @@ import { IPlayer } from "@/interfaces";
 import Link from "next/link";
 import Avatar from "../avatar";
 import Icon from "../icon";
-import { ROUTES } from "../pages/router/routerConfig";
 import Share from "../share";
 import Crown from "./crown";
 import { getLabelRanking, getOrganizedRanking } from "./helpers";
@@ -86,7 +85,7 @@ const GameOver = ({ players = [] }: { players: IPlayer[] }) => {
                 <Icon type="share" />
               </button>
             </Share>
-            <Link className="button yellow" href={ROUTES.LOBBY}>
+            <Link className="button yellow" href="/dashboard">
               <Icon type="home" />
             </Link>
           </div>
