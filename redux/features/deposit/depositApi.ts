@@ -120,6 +120,25 @@ export const depositApi = apiSlice.injectEndpoints({
       },
       providesTags: ["Deposits"],
     }),
+
+    // redux/features/deposit/depositApi.ts এ এই endpoint টি add করো:
+
+    createDepositWithBlockBee: builder.mutation<
+      any,
+      {
+        amount: number;
+        chain?: string;
+        network?: string;
+        sourceAddress?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/create-new-deposit",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Deposits"],
+    }),
   }),
 });
 
@@ -165,4 +184,6 @@ export const {
   /* ✅ Deposit Record (BDT) */
   useGetMyDepositsBDTQuery,
   useLazyGetMyDepositsBDTQuery,
+
+  useCreateDepositWithBlockBeeMutation,
 } = depositApi;

@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { FaAngleLeft } from "react-icons/fa";
 
+import blockBeeImg from "@/public/images/deposit/beep-20.png";
 import Bkash from "@/public/images/deposit/bkash.png";
 import Nagad from "@/public/images/deposit/nagad.png";
 import Rocket from "@/public/images/deposit/roket.png";
@@ -24,7 +25,9 @@ import { useGetDepositPromoInfoQuery } from "@/redux/features/promotion/promotio
 import { fetchBaseQueryError } from "@/redux/services/helpers";
 import Link from "next/link";
 
-type MethodKey = "Bkash" | "Nagad" | "Rocket";
+type MethodKey = "Bkash" | "Nagad" | "Rocket" | "BlockBee";
+
+const METHOD_ORDER: MethodKey[] = ["BlockBee", "Bkash", "Nagad", "Rocket"];
 
 const METHOD_META: Record<
   MethodKey,
@@ -47,6 +50,12 @@ const METHOD_META: Record<
     label: "ROCKET VIP",
     color: "#8B2FC9",
     glow: "rgba(139,47,201,0.35)",
+  },
+  BlockBee: {
+    image: blockBeeImg,
+    label: "Crypto (USDT)",
+    color: "#F5A623",
+    glow: "rgba(245,166,35,0.35)",
   },
 };
 
@@ -262,13 +271,15 @@ export default function DepositPage() {
     return map;
   }, [allMethods]);
 
-  const availableMethods = useMemo(
-    () =>
-      (Object.keys(grouped) as MethodKey[]).filter(
-        (k) => (grouped[k]?.length || 0) > 0,
-      ),
-    [grouped],
-  );
+  const availableMethods = useMemo(() => {
+    const dynamicMethods = (Object.keys(grouped) as MethodKey[]).filter(
+      (k) => (grouped[k]?.length || 0) > 0,
+    );
+
+    const methods = new Set<MethodKey>(["BlockBee", ...dynamicMethods]);
+
+    return METHOD_ORDER.filter((k) => methods.has(k));
+  }, [grouped]);
 
   const [selectedMethod, setSelectedMethod] = useState<MethodKey | null>(null);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(
@@ -278,18 +289,28 @@ export default function DepositPage() {
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!selectedMethod && availableMethods.length > 0)
-      setSelectedMethod(availableMethods[0]);
+    if (!selectedMethod && availableMethods.length > 0) {
+      setSelectedMethod(
+        availableMethods.includes("BlockBee")
+          ? "BlockBee"
+          : availableMethods[0],
+      );
+    }
   }, [availableMethods, selectedMethod]);
 
   const channels = selectedMethod ? grouped[selectedMethod] || [] : [];
 
   useEffect(() => {
+    if (selectedMethod === "BlockBee") {
+      setSelectedChannelId("blockbee-default");
+      return;
+    }
+
     if (!selectedChannelId && channels.length > 0) {
       const def = channels.find((c) => !!c.isDefault) || channels[0];
       setSelectedChannelId(def._id);
     }
-  }, [channels, selectedChannelId]);
+  }, [channels, selectedChannelId, selectedMethod]);
 
   if (!isLoading && availableMethods.length === 0) {
     return <NotFoundChannels onRefresh={() => refetch()} />;
@@ -303,16 +324,22 @@ export default function DepositPage() {
     Number.isFinite(amountNumber) &&
     amountNumber >= MIN_AMOUNT &&
     amountNumber <= MAX_AMOUNT;
-  const canNext = !!selectedMethod && !!selectedChannelId && isValidAmount;
+
+  const canNext =
+    !!selectedMethod &&
+    isValidAmount &&
+    (selectedMethod === "BlockBee" || !!selectedChannelId);
 
   const setAmountFromPreset = (v: number) => {
     setSelectedPreset(v);
     setAmountInput(String(v));
   };
+
   const onAmountChange = (raw: string) => {
     setAmountInput(raw.replace(/[^\d]/g, ""));
     setSelectedPreset(null);
   };
+
   const onAmountBlur = () => {
     if (!amountInput) return;
     const n = Number(amountInput);
@@ -331,11 +358,19 @@ export default function DepositPage() {
       toast.error(`Amount must be between ${MIN_AMOUNT} and ${MAX_AMOUNT}`);
       return;
     }
+
     if (!promoChoice) {
       toast.error("Please choose a promotion option");
       return;
     }
+
     const promoFlag = promoChoice === "opt_in" ? "1" : "0";
+
+    if (selectedMethod === "BlockBee") {
+      router.push(`/deposit/blockbee?amount=${amountInput}`);
+      return;
+    }
+
     router.push(
       `/deposit/payment?amount=${encodeURIComponent(amountInput)}&channelId=${encodeURIComponent(selectedChannelId!)}&promo=${encodeURIComponent(promoFlag)}`,
     );
@@ -344,7 +379,6 @@ export default function DepositPage() {
   return (
     <div className="min-h-screen" style={{ background: "#14041f" }}>
       <div className="mx-auto max-w-xl pb-10">
-        {/* Header */}
         <div
           className="sticky top-0 z-20 flex items-center justify-between px-4 py-3"
           style={{
@@ -376,7 +410,6 @@ export default function DepositPage() {
         </div>
 
         <div className="px-3 pt-4 space-y-3">
-          {/* Deposit Method */}
           <div className="rounded-2xl p-4" style={PANEL_STYLE}>
             <div className="mb-3 flex items-center gap-2">
               <div
@@ -387,6 +420,7 @@ export default function DepositPage() {
                 Deposit Method
               </span>
             </div>
+
             {isLoading ? (
               <div className="flex gap-3">
                 <div
@@ -416,6 +450,7 @@ export default function DepositPage() {
                 ))}
               </div>
             )}
+
             <div
               className="mt-3 rounded-xl p-3 text-[11px] leading-5"
               style={NOTICE_STYLE}
@@ -431,54 +466,56 @@ export default function DepositPage() {
             </div>
           </div>
 
-          {/* Payment Channels */}
-          <div className="rounded-2xl p-4" style={PANEL_STYLE}>
-            <div className="mb-3 flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-              <span className="text-xs font-bold uppercase tracking-widest text-white/50">
-                Payment Channels
-              </span>
-              {isFetching && (
-                <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-white/30">
-                  <Loader2 className="h-3 w-3 animate-spin" /> loading
+          {selectedMethod !== "BlockBee" && (
+            <div className="rounded-2xl p-4" style={PANEL_STYLE}>
+              <div className="mb-3 flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                <span className="text-xs font-bold uppercase tracking-widest text-white/50">
+                  Payment Channels
                 </span>
+                {isFetching && (
+                  <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-white/30">
+                    <Loader2 className="h-3 w-3 animate-spin" /> loading
+                  </span>
+                )}
+              </div>
+
+              {channels.length === 0 ? (
+                <NotFoundChannels onRefresh={() => refetch()} />
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    {channels.map((pm) => (
+                      <ChannelCard
+                        key={pm._id}
+                        active={selectedChannelId === pm._id}
+                        onClick={() => setSelectedChannelId(pm._id)}
+                        title={pm.title || METHOD_META[selectedMethod!].label}
+                        code={codeFromTitle(pm.title)}
+                      />
+                    ))}
+                  </div>
+
+                  <div
+                    className="mt-3 rounded-xl p-3 text-[11px] leading-5"
+                    style={NOTICE_STYLE}
+                  >
+                    <span className="font-bold" style={{ color: "#ffaaaa" }}>
+                      !
+                    </span>
+                    <span style={{ color: "#ffaaaa" }}>
+                      {" "}
+                      Beware of scammers pretending to be from Telegram or
+                      Facebook! All official deposits happen only through this
+                      platform. ⚠️
+                    </span>
+                  </div>
+                </>
               )}
             </div>
-            {channels.length === 0 ? (
-              <NotFoundChannels onRefresh={() => refetch()} />
-            ) : (
-              <>
-                <div className="grid grid-cols-3 gap-2">
-                  {channels.map((pm) => (
-                    <ChannelCard
-                      key={pm._id}
-                      active={selectedChannelId === pm._id}
-                      onClick={() => setSelectedChannelId(pm._id)}
-                      title={pm.title || METHOD_META[selectedMethod!].label}
-                      code={codeFromTitle(pm.title)}
-                    />
-                  ))}
-                </div>
-                <div
-                  className="mt-3 rounded-xl p-3 text-[11px] leading-5"
-                  style={NOTICE_STYLE}
-                >
-                  <span className="font-bold" style={{ color: "#ffaaaa" }}>
-                    !
-                  </span>
-                  <span style={{ color: "#ffaaaa" }}>
-                    {" "}
-                    Beware of scammers pretending to be from Telegram or
-                    Facebook! All official deposits happen only through this
-                    platform. ⚠️
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+          )}
 
-          {/* Deposit Amount */}
-          {channels.length > 0 && (
+          {(selectedMethod === "BlockBee" || channels.length > 0) && (
             <div className="rounded-2xl p-4" style={PANEL_STYLE}>
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-pink-400" />
@@ -486,6 +523,7 @@ export default function DepositPage() {
                   Deposit Amount
                 </span>
               </div>
+
               <div className="grid grid-cols-5 gap-1.5">
                 {presetAmounts.map((v) => (
                   <AmountChip
@@ -496,6 +534,7 @@ export default function DepositPage() {
                   />
                 ))}
               </div>
+
               <div
                 className="mt-3 flex items-center gap-3 rounded-xl px-4 py-3"
                 style={{
