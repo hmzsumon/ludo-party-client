@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { FaAngleLeft } from "react-icons/fa";
 
 import blockBeeImg from "@/public/images/deposit/beep-20.png";
+import BinanceImg from "@/public/images/deposit/binance.png";
 import Bkash from "@/public/images/deposit/bkash.png";
 import Nagad from "@/public/images/deposit/nagad.png";
 import Rocket from "@/public/images/deposit/roket.png";
@@ -25,9 +26,15 @@ import { useGetDepositPromoInfoQuery } from "@/redux/features/promotion/promotio
 import { fetchBaseQueryError } from "@/redux/services/helpers";
 import Link from "next/link";
 
-type MethodKey = "Bkash" | "Nagad" | "Rocket" | "BlockBee";
+type MethodKey = "Bkash" | "Nagad" | "Rocket" | "BlockBee" | "Binance";
 
-const METHOD_ORDER: MethodKey[] = ["BlockBee", "Bkash", "Nagad", "Rocket"];
+const METHOD_ORDER: MethodKey[] = [
+  "BlockBee",
+  "Binance",
+  "Bkash",
+  "Nagad",
+  "Rocket",
+];
 
 const METHOD_META: Record<
   MethodKey,
@@ -57,11 +64,48 @@ const METHOD_META: Record<
     color: "#F5A623",
     glow: "rgba(245,166,35,0.35)",
   },
+  Binance: {
+    image: BinanceImg,
+    label: "Binance Payment",
+    color: "#F7941D",
+    glow: "rgba(247,148,29,0.35)",
+  },
 };
 
-const MIN_AMOUNT = 100;
+/* ════════════════════════════════════════════════════════════════
+   currency config
+   কাজ:
+   ✅ usdt method হলে min 1
+   ✅ bdt method হলে min 100
+   ✅ icon / preset / placeholder dynamic
+════════════════════════════════════════════════════════════════ */
+const USDT_METHODS: MethodKey[] = ["BlockBee", "Binance"];
 const MAX_AMOUNT = 25000;
-const clamp = (n: number) => Math.min(MAX_AMOUNT, Math.max(MIN_AMOUNT, n));
+
+const getCurrencyCode = (method: MethodKey | null) => {
+  return method && USDT_METHODS.includes(method) ? "USDT" : "BDT";
+};
+
+const getMinAmount = (method: MethodKey | null) => {
+  return method && USDT_METHODS.includes(method) ? 1 : 100;
+};
+
+const getAmountIcon = (method: MethodKey | null) => {
+  return method && USDT_METHODS.includes(method) ? "USDT" : "৳";
+};
+
+const getPresetAmounts = (method: MethodKey | null) => {
+  if (method && USDT_METHODS.includes(method)) {
+    return [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+  }
+
+  return [100, 200, 500, 1000, 3000, 5000, 10000, 15000, 20000, 25000];
+};
+
+const clampAmountByMethod = (method: MethodKey | null, n: number) => {
+  const min = getMinAmount(method);
+  return Math.min(MAX_AMOUNT, Math.max(min, n));
+};
 
 const DepositMethodCard = ({
   active,
@@ -156,10 +200,12 @@ const AmountChip = ({
   value,
   active,
   onClick,
+  currency,
 }: {
   value: number;
   active: boolean;
   onClick: () => void;
+  currency: "BDT" | "USDT";
 }) => (
   <button
     type="button"
@@ -176,14 +222,14 @@ const AmountChip = ({
       boxShadow: active ? "0 0 12px rgba(147,51,234,0.4)" : "none",
     }}
   >
-    {value.toLocaleString()}
+    {currency === "USDT" ? `${value} USDT` : `৳${value.toLocaleString()}`}
   </button>
 );
 
 const NotFoundChannels = ({ onRefresh }: { onRefresh: () => void }) => (
   <div className="flex min-h-[55vh] flex-col items-center justify-center px-6 text-center">
     <div
-      className="h-28 w-28 rounded-full flex items-center justify-center text-5xl"
+      className="flex h-28 w-28 items-center justify-center rounded-full text-5xl"
       style={{ background: "rgba(255,255,255,0.05)" }}
     >
       💳
@@ -273,10 +319,15 @@ export default function DepositPage() {
 
   const availableMethods = useMemo(() => {
     const dynamicMethods = (Object.keys(grouped) as MethodKey[]).filter(
-      (k) => (grouped[k]?.length || 0) > 0,
+      (k) =>
+        !["BlockBee", "Binance"].includes(k) && (grouped[k]?.length || 0) > 0,
     );
 
-    const methods = new Set<MethodKey>(["BlockBee", ...dynamicMethods]);
+    const methods = new Set<MethodKey>([
+      "BlockBee",
+      "Binance",
+      ...dynamicMethods,
+    ]);
 
     return METHOD_ORDER.filter((k) => methods.has(k));
   }, [grouped]);
@@ -306,29 +357,41 @@ export default function DepositPage() {
       return;
     }
 
+    if (selectedMethod === "Binance") {
+      setSelectedChannelId("binance-default");
+      return;
+    }
+
     if (!selectedChannelId && channels.length > 0) {
       const def = channels.find((c) => !!c.isDefault) || channels[0];
       setSelectedChannelId(def._id);
     }
   }, [channels, selectedChannelId, selectedMethod]);
 
+  /* ════════════════════════════════════════════════════════════════
+     dynamic amount config by method
+  ════════════════════════════════════════════════════════════════ */
+  const currencyCode = getCurrencyCode(selectedMethod);
+  const minAmount = getMinAmount(selectedMethod);
+  const amountIcon = getAmountIcon(selectedMethod);
+  const presetAmounts = getPresetAmounts(selectedMethod);
+
   if (!isLoading && availableMethods.length === 0) {
     return <NotFoundChannels onRefresh={() => refetch()} />;
   }
 
-  const presetAmounts = [
-    100, 200, 500, 1000, 3000, 5000, 10000, 15000, 20000, 25000,
-  ];
   const amountNumber = amountInput ? Number(amountInput) : NaN;
   const isValidAmount =
     Number.isFinite(amountNumber) &&
-    amountNumber >= MIN_AMOUNT &&
+    amountNumber >= minAmount &&
     amountNumber <= MAX_AMOUNT;
 
   const canNext =
     !!selectedMethod &&
     isValidAmount &&
-    (selectedMethod === "BlockBee" || !!selectedChannelId);
+    (selectedMethod === "BlockBee" ||
+      selectedMethod === "Binance" ||
+      !!selectedChannelId);
 
   const setAmountFromPreset = (v: number) => {
     setSelectedPreset(v);
@@ -347,19 +410,19 @@ export default function DepositPage() {
       setAmountInput("");
       return;
     }
-    if (n < MIN_AMOUNT || n > MAX_AMOUNT) {
-      setAmountInput(String(clamp(n)));
-      toast.error(`Amount must be between ${MIN_AMOUNT} and ${MAX_AMOUNT}`);
+    if (n < minAmount || n > MAX_AMOUNT) {
+      setAmountInput(String(clampAmountByMethod(selectedMethod, n)));
+      toast.error(`Amount must be between ${minAmount} and ${MAX_AMOUNT}`);
     }
   };
 
   const onNext = () => {
     if (!canNext) {
-      toast.error(`Amount must be between ${MIN_AMOUNT} and ${MAX_AMOUNT}`);
+      toast.error(`Amount must be between ${minAmount} and ${MAX_AMOUNT}`);
       return;
     }
 
-    if (!promoChoice) {
+    if (!promoChoice && promo?.showPromo) {
       toast.error("Please choose a promotion option");
       return;
     }
@@ -367,7 +430,16 @@ export default function DepositPage() {
     const promoFlag = promoChoice === "opt_in" ? "1" : "0";
 
     if (selectedMethod === "BlockBee") {
-      router.push(`/deposit/blockbee?amount=${amountInput}`);
+      router.push(
+        `/deposit/blockbee?amount=${encodeURIComponent(amountInput)}`,
+      );
+      return;
+    }
+
+    if (selectedMethod === "Binance") {
+      router.push(
+        `/deposit/binance-payment?amount=${encodeURIComponent(amountInput)}&promo=${encodeURIComponent(promoFlag)}`,
+      );
       return;
     }
 
@@ -409,7 +481,7 @@ export default function DepositPage() {
           </Link>
         </div>
 
-        <div className="px-3 pt-4 space-y-3">
+        <div className="space-y-3 px-3 pt-4">
           <div className="rounded-2xl p-4" style={PANEL_STYLE}>
             <div className="mb-3 flex items-center gap-2">
               <div
@@ -424,11 +496,11 @@ export default function DepositPage() {
             {isLoading ? (
               <div className="flex gap-3">
                 <div
-                  className="h-24 w-1/2 rounded-2xl animate-pulse"
+                  className="h-24 w-1/2 animate-pulse rounded-2xl"
                   style={{ background: "rgba(255,255,255,0.06)" }}
                 />
                 <div
-                  className="h-24 w-1/2 rounded-2xl animate-pulse"
+                  className="h-24 w-1/2 animate-pulse rounded-2xl"
                   style={{ background: "rgba(255,255,255,0.06)" }}
                 />
               </div>
@@ -445,6 +517,8 @@ export default function DepositPage() {
                     onClick={() => {
                       setSelectedMethod(k);
                       setSelectedChannelId(null);
+                      setAmountInput("");
+                      setSelectedPreset(null);
                     }}
                   />
                 ))}
@@ -466,7 +540,7 @@ export default function DepositPage() {
             </div>
           </div>
 
-          {selectedMethod !== "BlockBee" && (
+          {selectedMethod !== "BlockBee" && selectedMethod !== "Binance" && (
             <div className="rounded-2xl p-4" style={PANEL_STYLE}>
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-teal-400" />
@@ -515,7 +589,9 @@ export default function DepositPage() {
             </div>
           )}
 
-          {(selectedMethod === "BlockBee" || channels.length > 0) && (
+          {(selectedMethod === "BlockBee" ||
+            selectedMethod === "Binance" ||
+            channels.length > 0) && (
             <div className="rounded-2xl p-4" style={PANEL_STYLE}>
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-pink-400" />
@@ -529,6 +605,7 @@ export default function DepositPage() {
                   <AmountChip
                     key={v}
                     value={v}
+                    currency={currencyCode}
                     active={selectedPreset === v}
                     onClick={() => setAmountFromPreset(v)}
                   />
@@ -551,15 +628,31 @@ export default function DepositPage() {
                       : undefined,
                 }}
               >
-                <span className="text-lg">💎</span>
+                <span className="min-w-[42px] text-sm font-extrabold text-white/80">
+                  {amountIcon}
+                </span>
+
                 <input
                   className="w-full bg-transparent text-sm font-extrabold text-white outline-none placeholder:text-white/25"
-                  placeholder={`${MIN_AMOUNT.toLocaleString()} - ${MAX_AMOUNT.toLocaleString()}`}
+                  placeholder={
+                    currencyCode === "USDT"
+                      ? `${minAmount} - ${MAX_AMOUNT} USDT`
+                      : `৳${minAmount.toLocaleString()} - ৳${MAX_AMOUNT.toLocaleString()}`
+                  }
                   value={amountInput}
                   onChange={(e) => onAmountChange(e.target.value)}
                   onBlur={onAmountBlur}
                   inputMode="numeric"
                 />
+              </div>
+
+              <div className="mt-2 text-[11px] text-white/35">
+                Minimum Deposit:{" "}
+                <span className="font-semibold text-white/70">
+                  {currencyCode === "USDT"
+                    ? `${minAmount} USDT`
+                    : `৳${minAmount.toLocaleString()}`}
+                </span>
               </div>
 
               {promo?.showPromo && (

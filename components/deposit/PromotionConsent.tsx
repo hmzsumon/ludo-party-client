@@ -52,7 +52,7 @@ export default function PromotionConsent({
   return (
     <div className="mt-6">
       {/* ────────── section title ────────── */}
-      <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-neutral-800">
+      <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-neutral-300">
         <span className="h-2 w-2 rounded-full bg-pink-500" />
         Participant in promotion
       </div>
@@ -136,8 +136,8 @@ export default function PromotionConsent({
                   <b>deposit + bonus</b>.
                 </li>
                 <li>
-                  Bonus applies only when you choose <b>Participate in
-                  promotions</b>.
+                  Bonus applies only when you choose{" "}
+                  <b>Participate in promotions</b>.
                 </li>
               </ul>
 

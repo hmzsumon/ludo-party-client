@@ -29,16 +29,6 @@ export const depositApi = apiSlice.injectEndpoints({
       query: () => "/deposit-method/active",
     }),
 
-    // deposit with binance
-    depositWithBinance: builder.mutation<any, any>({
-      query: (body) => ({
-        url: "/binance-payment",
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["User"],
-    }),
-
     /* ────────── Get Payment Methods ────────── */
     getPaymentMethods: builder.query<any, any>({
       query: () => "/payment-methods",
@@ -121,7 +111,7 @@ export const depositApi = apiSlice.injectEndpoints({
       providesTags: ["Deposits"],
     }),
 
-    // redux/features/deposit/depositApi.ts এ এই endpoint টি add করো:
+    /* ────────── redux/features/deposit/depositApi.ts এ এই endpoint টি add করো: ────────── */
 
     createDepositWithBlockBee: builder.mutation<
       any,
@@ -137,7 +127,29 @@ export const depositApi = apiSlice.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Deposits"],
+      invalidatesTags: ["Deposits", "User"],
+    }),
+    /* ────────── binance payment: ────────── */
+    depositWithBinance: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/binance-payment",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User", "Deposits"],
+    }),
+
+    /* ────────── binance payment: ────────── */
+    confirmBinanceDeposit: builder.mutation<
+      any,
+      { depositId: string; orderId: string }
+    >({
+      query: ({ depositId, orderId }) => ({
+        url: `/binance-payment/${depositId}/retry`,
+        method: "POST",
+        body: { orderId },
+      }),
+      invalidatesTags: ["User"],
     }),
   }),
 });
@@ -186,4 +198,6 @@ export const {
   useLazyGetMyDepositsBDTQuery,
 
   useCreateDepositWithBlockBeeMutation,
+
+  useConfirmBinanceDepositMutation,
 } = depositApi;
