@@ -113,6 +113,13 @@ export const depositApi = apiSlice.injectEndpoints({
 
     /* ────────── redux/features/deposit/depositApi.ts এ এই endpoint টি add করো: ────────── */
 
+    /* ════════════════════════════════════════════════════════════════
+   BlockBee Deposit API
+   ✅ amount
+   ✅ chain / network
+   ✅ sourceAddress
+   ✅ promotionOptIn
+════════════════════════════════════════════════════════════════ */
     createDepositWithBlockBee: builder.mutation<
       any,
       {
@@ -120,6 +127,7 @@ export const depositApi = apiSlice.injectEndpoints({
         chain?: string;
         network?: string;
         sourceAddress?: string;
+        promotionOptIn?: boolean;
       }
     >({
       query: (body) => ({
@@ -129,6 +137,7 @@ export const depositApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Deposits", "User"],
     }),
+
     /* ────────── binance payment: ────────── */
     depositWithBinance: builder.mutation<any, any>({
       query: (body) => ({

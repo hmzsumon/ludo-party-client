@@ -416,6 +416,11 @@ export default function DepositPage() {
     }
   };
 
+  /* ════════════════════════════════════════════════════════════════
+   deposit/page.tsx
+   ✅ amount + promo flag payment route এ পাঠায়
+   ✅ BDT / Binance / BlockBee — সব route consistent
+════════════════════════════════════════════════════════════════ */
   const onNext = () => {
     if (!canNext) {
       toast.error(`Amount must be between ${minAmount} and ${MAX_AMOUNT}`);
@@ -427,15 +432,23 @@ export default function DepositPage() {
       return;
     }
 
+    /* ────────── promo flag normalize ──────────
+     opt_in  -> "1"
+     opt_out -> "0"
+  */
     const promoFlag = promoChoice === "opt_in" ? "1" : "0";
 
+    /* ────────── BlockBee ──────────
+     amount + promo দুইটাই যাবে
+  */
     if (selectedMethod === "BlockBee") {
       router.push(
-        `/deposit/blockbee?amount=${encodeURIComponent(amountInput)}`,
+        `/deposit/blockbee?amount=${encodeURIComponent(amountInput)}&promo=${encodeURIComponent(promoFlag)}`,
       );
       return;
     }
 
+    /* ────────── Binance ────────── */
     if (selectedMethod === "Binance") {
       router.push(
         `/deposit/binance-payment?amount=${encodeURIComponent(amountInput)}&promo=${encodeURIComponent(promoFlag)}`,
@@ -443,6 +456,7 @@ export default function DepositPage() {
       return;
     }
 
+    /* ────────── BDT payment page ────────── */
     router.push(
       `/deposit/payment?amount=${encodeURIComponent(amountInput)}&channelId=${encodeURIComponent(selectedChannelId!)}&promo=${encodeURIComponent(promoFlag)}`,
     );

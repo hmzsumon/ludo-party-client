@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { FaArrowLeft } from "react-icons/fa";
 import { FiCheck, FiCopy } from "react-icons/fi";
 import { SquareLoader } from "react-spinners";
 
@@ -13,44 +14,71 @@ import { useCreateDepositWithBlockBeeMutation } from "@/redux/features/deposit/d
 import DepositHeader from "@/components/deposit/DepositHeader";
 import QRCodeCard from "@/components/deposit/QRCodeCard";
 import WalletAddress from "@/components/deposit/WalletAddress";
-import { FaArrowLeft } from "react-icons/fa";
 
-/* ── page component ────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   BlockBee Deposit Page
+   ✅ deposit amount query থেকে নেয়
+   ✅ promo flag query থেকে নেয়
+   ✅ backend এ promotionOptIn পাঠায়
+   ✅ hardcoded amount bug remove
+════════════════════════════════════════════════════════════════ */
 export default function DepositPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { socket } = useSocket();
 
   const [createDepositRequest, { isLoading }] =
     useCreateDepositWithBlockBeeMutation();
   const [deposit, setDeposit] = useState<any>(null);
 
-  // form/local ui states
+  /* ────────── local ui states ────────── */
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  // constants
+  /* ────────── query params ────────── */
   const network = "BEP20";
-  const minDeposit = 30;
+  const amountFromQuery = Number(searchParams.get("amount") || 0);
+  const promoFromQuery = searchParams.get("promo") || "0";
 
-  /* ── create a deposit once ───────────────────────────────── */
+  const promotionOptIn = promoFromQuery === "1";
+
+  /* ════════════════════════════════════════════════════════════════
+     create deposit once
+     ✅ query amount use করবে
+     ✅ promo flag backend এ যাবে
+  ════════════════════════════════════════════════════════════════ */
   useEffect(() => {
     (async () => {
       try {
+        if (!Number.isFinite(amountFromQuery) || amountFromQuery <= 0) {
+          toast.error("Invalid deposit amount");
+          router.push("/deposit");
+          return;
+        }
+
         const response = await createDepositRequest({
-          amount: minDeposit,
-          chain: "usdt",
+          amount: amountFromQuery,
+          chain: "USDT",
           network: "bep20",
+          promotionOptIn,
         }).unwrap();
-        if (response?.deposit) setDeposit(response.deposit);
-        else toast.error("Failed to create deposit");
+
+        if (response?.deposit) {
+          setDeposit(response.deposit);
+        } else {
+          toast.error("Failed to create deposit");
+        }
       } catch (err: any) {
         toast.error(err?.data?.message || "An unexpected error occurred");
       }
     })();
-  }, [createDepositRequest]);
+  }, [createDepositRequest, amountFromQuery, promotionOptIn, router]);
 
-  /* ── socket events ───────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════════════
+     socket events
+     ✅ callback approve হলে realtime update পাবে
+  ════════════════════════════════════════════════════════════════ */
   useEffect(() => {
     if (!socket) return;
 
@@ -70,12 +98,13 @@ export default function DepositPage() {
     };
   }, [socket, router]);
 
-  /* ── derived ui data ─────────────────────────────────────── */
+  /* ────────── derived ui data ────────── */
   const walletAddress = deposit?.destinationAddress || "Generating address…";
   const qrCodeImage = deposit?.qrCode
     ? `data:image/png;base64,${deposit.qrCode}`
     : null;
 
+  /* ────────── dummy history ui ────────── */
   const depositHistory = useMemo(
     () => [
       {
@@ -96,7 +125,7 @@ export default function DepositPage() {
     [],
   );
 
-  /* ── helpers ─────────────────────────────────────────────── */
+  /* ────────── helpers ────────── */
   const handleCopyAddress = () => {
     if (!walletAddress || walletAddress.startsWith("Generating")) return;
     navigator.clipboard.writeText(walletAddress);
@@ -115,10 +144,10 @@ export default function DepositPage() {
   return (
     <div className="min-h-screen bg-neutral-950 px-1 py-4 md:px-6 md:py-8">
       <div className="mx-auto w-full max-w-4xl">
-        {/* ── header (title + actions) ───────────────────────── */}
+        {/* ────────── header ────────── */}
         <DepositHeader
           title={`Deposit USDT (${network})`}
-          subtitle="Secure and fast deposits"
+          subtitle={`Secure and fast deposits • Promotion: ${promotionOptIn ? "Opt-in" : "Opt-out"}`}
           actions={
             <div className="flex items-center gap-2">
               <Link
@@ -127,40 +156,36 @@ export default function DepositPage() {
               >
                 Learn more
               </Link>
-              <Link
-                href="/settings/profile"
-                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-neutral-950 hover:bg-emerald-400"
+
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white hover:bg-white/10"
               >
-                Complete profile
-              </Link>
+                <FaArrowLeft className="mr-1 inline" />
+                Back
+              </button>
             </div>
-          }
-          backLink={
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center text-sm text-neutral-300 hover:text-white"
-            >
-              <FaArrowLeft className="mr-1 " /> Back to Wallet
-            </Link>
           }
         />
 
-        {/* ── card ───────────────────────────────────────────── */}
+        {/* ────────── deposit card ────────── */}
         <div className="overflow-hidden rounded-2xl border border-neutral-800 shadow-xl">
-          {/* header strip (emerald gradient) */}
           <div className="bg-gradient-to-r from-emerald-600 to-cyan-600 px-6 py-4 text-white">
             <div className="flex items-center justify-between">
               <span className="text-sm/none opacity-80">
                 USDT ({network}) deposit
               </span>
+
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
+                Amount: {Number.isFinite(amountFromQuery) ? amountFromQuery : 0}{" "}
+                USDT
+              </span>
             </div>
           </div>
 
-          {/* history panel (optional) */}
-
-          {/* body */}
           <div className="space-y-6 bg-neutral-950 p-6">
-            {/* QR code or loader */}
+            {/* ────────── QR code ────────── */}
             <QRCodeCard
               isLoading={isLoading}
               qr={qrCodeImage}
@@ -171,7 +196,7 @@ export default function DepositPage() {
               }
             />
 
-            {/* address copy */}
+            {/* ────────── wallet address ────────── */}
             <WalletAddress
               network={network}
               address={walletAddress}
