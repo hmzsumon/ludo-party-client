@@ -43,48 +43,126 @@ interface BetAmountProps {
   onConfirm: (amount: number) => void;
 }
 
+/* ────────── amount validation helper ────────── */
+const isAllowedAmount = (amount: number) => {
+  if (!Number.isInteger(amount) || amount < 50) return false;
+
+  /* ────────── 50 to 1000 must be divisible by 50 ────────── */
+  if (amount <= 1000) {
+    return amount % 50 === 0;
+  }
+
+  /* ────────── 1001 to 100000 must be divisible by 100 ────────── */
+  if (amount <= 100000) {
+    return amount % 100 === 0;
+  }
+
+  /* ────────── above 100000 must be divisible by 1000 ────────── */
+  return amount % 1000 === 0;
+};
+
+/* ────────── validation message helper ────────── */
+const getAmountValidationMessage = (rawValue: string) => {
+  const trimmedValue = rawValue.trim();
+
+  /* ────────── empty input means no warning ────────── */
+  if (!trimmedValue) {
+    return "Enter an amount.";
+  }
+
+  const amount = Number(trimmedValue);
+
+  /* ────────── invalid number check ────────── */
+  if (!Number.isFinite(amount)) {
+    return "Enter a valid number.";
+  }
+
+  /* ────────── whole number check ────────── */
+  if (!Number.isInteger(amount)) {
+    return "Only whole numbers are allowed.";
+  }
+
+  /* ────────── minimum amount check ────────── */
+  if (amount < 50) {
+    return "Minimum amount is 50.";
+  }
+
+  /* ────────── 50 to 1000 validation rule ────────── */
+  if (amount <= 1000 && amount % 50 !== 0) {
+    return "Use 50-step amounts up to 1000. Example: 50, 100, 150, 200.";
+  }
+
+  /* ────────── 1001 to 100000 validation rule ────────── */
+  if (amount > 1000 && amount <= 100000 && amount % 100 !== 0) {
+    return "Use 100-step amounts from 1100 to 100000. Example: 1100, 1200, 1300.";
+  }
+
+  /* ────────── above 100000 validation rule ────────── */
+  if (amount > 100000 && amount % 1000 !== 0) {
+    return "Use 1000-step amounts above 100000. Example: 101000, 102000, 103000.";
+  }
+
+  return "";
+};
+
 const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
   const { data } = useGetWalletQuery();
   const { user } = useSelector((state: any) => state.auth) || {};
-  const [selectedAmount, setSelectedAmount] = useState<number>(50);
-  const [customAmount, setCustomAmount] = useState<string>("");
+
+  /* ────────── input value state ────────── */
+  const [amountInput, setAmountInput] = useState<string>("50");
 
   /* ────────── derived wallet balance ────────── */
   const walletBalance = useMemo(() => Number(data?.balance || 0), [data, user]);
 
-  /* ────────── final amount resolver ────────── */
+  /* ────────── selected preset detector ────────── */
+  const selectedPresetAmount = useMemo(() => {
+    const numericAmount = Number(amountInput || 0);
+    return PRESET_AMOUNTS.includes(numericAmount) ? numericAmount : null;
+  }, [amountInput]);
+
+  /* ────────── parsed amount ────────── */
   const finalAmount = useMemo(() => {
-    const custom = Number(customAmount || 0);
-    if (custom > 0) return custom;
-    return Number(selectedAmount || 0);
-  }, [customAmount, selectedAmount]);
+    return Number(amountInput || 0);
+  }, [amountInput]);
+
+  /* ────────── validation message ────────── */
+  const validationMessage = useMemo(() => {
+    return getAmountValidationMessage(amountInput);
+  }, [amountInput]);
+
+  /* ────────── final validity state ────────── */
+  const isFinalAmountValid = useMemo(() => {
+    return validationMessage === "" && isAllowedAmount(finalAmount);
+  }, [validationMessage, finalAmount]);
+
+  /* ────────── button disabled state ────────── */
+  const isConfirmDisabled = useMemo(() => {
+    if (!isFinalAmountValid) return true;
+    if (finalAmount <= 0) return true;
+    if (walletBalance < finalAmount) return true;
+    return false;
+  }, [finalAmount, isFinalAmountValid, walletBalance]);
 
   /* ────────── confirm selected amount ────────── */
   const handleConfirm = () => {
-    const normalizedAmount = Number(customAmount || selectedAmount || 0);
+    const normalizedAmount = Number(amountInput || 0);
 
-    if (!Number.isFinite(normalizedAmount) || normalizedAmount < 50) {
+    /* ────────── strict validity check before submit ────────── */
+    if (!isAllowedAmount(normalizedAmount)) {
       swal({
         title: "Invalid amount",
-        text: "Minimum wager amount is 50",
+        text: "Please enter an allowed wager amount.",
         icon: "error",
       });
       return;
     }
 
-    if (!Number.isInteger(normalizedAmount)) {
-      swal({
-        title: "Invalid amount",
-        text: "Please enter a whole number",
-        icon: "error",
-      });
-      return;
-    }
-
+    /* ────────── wallet balance check ────────── */
     if (walletBalance < normalizedAmount) {
       swal({
         title: "Insufficient balance",
-        text: "Your wallet balance is lower than the wager amount",
+        text: "Your wallet balance is lower than the wager amount.",
         icon: "error",
       });
       return;
@@ -185,7 +263,7 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
           }}
         >
           {PRESET_AMOUNTS.map((amount) => {
-            const active = !customAmount && selectedAmount === amount;
+            const active = selectedPresetAmount === amount;
             const colors = PRESET_STYLES[amount];
 
             return (
@@ -193,8 +271,8 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                 key={amount}
                 type="button"
                 onClick={() => {
-                  setSelectedAmount(amount);
-                  setCustomAmount("");
+                  /* ────────── show selected preset inside input ────────── */
+                  setAmountInput(String(amount));
                 }}
                 style={{
                   position: "relative",
@@ -273,7 +351,7 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                 textAlign: "center",
               }}
             >
-              Or Enter Custom Amount
+              Enter Amount
             </label>
 
             <div
@@ -284,7 +362,9 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                 borderRadius: 16,
                 padding: "0 14px",
                 background: "rgba(255,255,255,0.12)",
-                border: "1px solid rgba(255,214,10,0.45)",
+                border: validationMessage
+                  ? "1px solid rgba(255,99,99,0.65)"
+                  : "1px solid rgba(255,214,10,0.45)",
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
               }}
             >
@@ -304,9 +384,9 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                 type="number"
                 min={50}
                 step={1}
-                placeholder="Type custom amount"
-                value={customAmount}
-                onChange={(event) => setCustomAmount(event.target.value)}
+                placeholder="Type amount"
+                value={amountInput}
+                onChange={(event) => setAmountInput(event.target.value)}
                 style={{
                   width: "100%",
                   height: 52,
@@ -320,6 +400,39 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                 }}
               />
             </div>
+
+            {/* ────────── inline amount warning and suggestion ────────── */}
+            {validationMessage ? (
+              <p
+                style={{
+                  marginTop: 10,
+                  marginBottom: 0,
+                  color: "#ffb3b3",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textAlign: "left",
+                  lineHeight: 1.45,
+                  paddingLeft: 4,
+                }}
+              >
+                {validationMessage}
+              </p>
+            ) : (
+              <p
+                style={{
+                  marginTop: 10,
+                  marginBottom: 0,
+                  color: "#9fffb0",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textAlign: "left",
+                  lineHeight: 1.45,
+                  paddingLeft: 4,
+                }}
+              >
+                Valid amount. You can continue.
+              </p>
+            )}
 
             <p
               style={{
@@ -337,6 +450,22 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
                 {finalAmount}
               </span>
             </p>
+
+            {/* ────────── low balance helper ────────── */}
+            {isFinalAmountValid && walletBalance < finalAmount && (
+              <p
+                style={{
+                  marginTop: 8,
+                  marginBottom: 0,
+                  color: "#ffb3b3",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textAlign: "center",
+                }}
+              >
+                Insufficient balance for this wager amount.
+              </p>
+            )}
           </div>
         </div>
 
@@ -350,16 +479,25 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
             marginTop: 4,
           }}
         >
-          <GameActionButton
-            onClick={handleConfirm}
-            label={"Search Same Amount Player"}
-            size="lg"
-            colors={{
-              start: "#ffd66e",
-              mid: "#ffb340",
-              end: "#d67b00",
+          <div
+            style={{
+              opacity: isConfirmDisabled ? 0.65 : 1,
+              pointerEvents: isConfirmDisabled ? "none" : "auto",
+              filter: isConfirmDisabled ? "grayscale(0.25)" : "none",
+              transition: "all 0.2s ease",
             }}
-          />
+          >
+            <GameActionButton
+              onClick={handleConfirm}
+              label={"Search Same Amount Player"}
+              size="lg"
+              colors={{
+                start: "#ffd66e",
+                mid: "#ffb340",
+                end: "#d67b00",
+              }}
+            />
+          </div>
         </div>
       </div>
     </PageWrapper>
