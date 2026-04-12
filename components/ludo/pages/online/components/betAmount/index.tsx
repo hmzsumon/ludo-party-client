@@ -173,330 +173,349 @@ const BetAmount = ({ onBack, onConfirm }: BetAmountProps) => {
 
   return (
     <PageWrapper>
-      <Logo />
-
-      {/* ────────── main container ────────── */}
+      {/* ────────── mobile safe screen wrapper ────────── */}
       <div
         style={{
           width: "100%",
-          maxWidth: 430,
-          margin: "0 auto",
-          padding: "8px 16px 20px",
+          minHeight: "100dvh",
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 18,
+          justifyContent: "flex-start",
+          paddingBottom: "max(24px, env(safe-area-inset-bottom))",
         }}
       >
-        {/* ────────── heading card ────────── */}
+        <Logo />
+
+        {/* ────────── main container ────────── */}
         <div
           style={{
             width: "100%",
-            borderRadius: 20,
-            padding: "14px 16px",
-            background:
-              "linear-gradient(180deg, rgba(8,33,77,0.68) 0%, rgba(6,20,48,0.48) 100%)",
-            border: "1px solid rgba(255,255,255,0.16)",
-            boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
-            textAlign: "center",
-            backdropFilter: "blur(6px)",
+            maxWidth: 430,
+            margin: "0 auto",
+            padding: "8px 16px 20px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 18,
+            flex: "0 0 auto",
           }}
         >
-          <h2
-            style={{
-              color: "#ffffff",
-              fontSize: 28,
-              fontWeight: 900,
-              letterSpacing: "0.04em",
-              lineHeight: 1.1,
-              textTransform: "uppercase",
-              textShadow: "0 2px 10px rgba(0,0,0,0.28)",
-              margin: 0,
-            }}
-          >
-            Choose Wager Amount
-          </h2>
-
-          <div
-            style={{
-              marginTop: 12,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              padding: "10px 16px",
-              borderRadius: 999,
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
-              border: "1px solid rgba(255,255,255,0.18)",
-            }}
-          >
-            <span
-              style={{
-                color: "#dff7ff",
-                fontSize: 15,
-                fontWeight: 700,
-              }}
-            >
-              Available Balance:
-            </span>
-            <span
-              style={{
-                color: "#ffe36e",
-                fontSize: 18,
-                fontWeight: 900,
-                textShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              }}
-            >
-              {walletBalance}
-            </span>
-          </div>
-        </div>
-
-        {/* ────────── preset amount grid ────────── */}
-        <div
-          style={{
-            width: "100%",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: 14,
-          }}
-        >
-          {PRESET_AMOUNTS.map((amount) => {
-            const active = selectedPresetAmount === amount;
-            const colors = PRESET_STYLES[amount];
-
-            return (
-              <button
-                key={amount}
-                type="button"
-                onClick={() => {
-                  /* ────────── show selected preset inside input ────────── */
-                  setAmountInput(String(amount));
-                }}
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  border: "none",
-                  background: "transparent",
-                  padding: 0,
-                  cursor: "pointer",
-                  borderRadius: 22,
-                  transform: active ? "translateY(-2px) scale(1.02)" : "none",
-                  transition: "all 0.2s ease",
-                  boxShadow: active
-                    ? "0 0 0 3px #ffe066, 0 12px 24px rgba(0,0,0,0.22)"
-                    : "0 8px 18px rgba(0,0,0,0.14)",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    zIndex: 2,
-                    opacity: active ? 1 : 0,
-                    transition: "opacity 0.2s ease",
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "#ffe066",
-                      color: "#3b2f00",
-                      borderRadius: 999,
-                      fontSize: 10,
-                      fontWeight: 900,
-                      padding: "4px 8px",
-                      boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
-                    }}
-                  >
-                    SELECTED
-                  </div>
-                </div>
-
-                <GameActionButton
-                  label={`${amount}`}
-                  size="lg"
-                  colors={colors}
-                  className="w-full"
-                />
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ────────── smart custom amount input ────────── */}
-        <div style={{ width: "100%" }}>
+          {/* ────────── heading card ────────── */}
           <div
             style={{
               width: "100%",
-              borderRadius: 22,
-              padding: "14px 14px 12px",
+              borderRadius: 20,
+              padding: "14px 16px",
               background:
-                "linear-gradient(180deg, rgba(9,34,74,0.66) 0%, rgba(4,15,35,0.46) 100%)",
+                "linear-gradient(180deg, rgba(8,33,77,0.68) 0%, rgba(6,20,48,0.48) 100%)",
               border: "1px solid rgba(255,255,255,0.16)",
-              boxShadow: "0 12px 24px rgba(0,0,0,0.18)",
-              backdropFilter: "blur(8px)",
+              boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
+              textAlign: "center",
+              backdropFilter: "blur(6px)",
             }}
           >
-            <label
-              htmlFor="custom-wager-amount"
+            <h2
               style={{
-                display: "block",
                 color: "#ffffff",
-                fontSize: 12,
-                fontWeight: 800,
-                marginBottom: 10,
-                textShadow: "0 1px 6px rgba(0,0,0,0.2)",
-                textAlign: "center",
+                fontSize: 28,
+                fontWeight: 900,
+                letterSpacing: "0.04em",
+                lineHeight: 1.1,
+                textTransform: "uppercase",
+                textShadow: "0 2px 10px rgba(0,0,0,0.28)",
+                margin: 0,
               }}
             >
-              Enter Amount
-            </label>
+              Choose Wager Amount
+            </h2>
 
             <div
               style={{
-                display: "flex",
+                marginTop: 12,
+                display: "inline-flex",
                 alignItems: "center",
-                gap: 10,
-                borderRadius: 16,
-                padding: "0 14px",
-                background: "rgba(255,255,255,0.12)",
-                border: validationMessage
-                  ? "1px solid rgba(255,99,99,0.65)"
-                  : "1px solid rgba(255,214,10,0.45)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
+                justifyContent: "center",
+                gap: 8,
+                padding: "10px 16px",
+                borderRadius: 999,
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
+                border: "1px solid rgba(255,255,255,0.18)",
               }}
             >
               <span
                 style={{
-                  color: "#ffe36e",
-                  fontWeight: 900,
-                  fontSize: 18,
-                  minWidth: 20,
+                  color: "#dff7ff",
+                  fontSize: 15,
+                  fontWeight: 700,
                 }}
               >
-                💎
+                Available Balance:
               </span>
-
-              <input
-                id="custom-wager-amount"
-                type="number"
-                min={50}
-                step={1}
-                placeholder="Type amount"
-                value={amountInput}
-                onChange={(event) => setAmountInput(event.target.value)}
+              <span
                 style={{
-                  width: "100%",
-                  height: 52,
-                  border: "none",
-                  outline: "none",
-                  background: "transparent",
-                  color: "#ffffff",
+                  color: "#ffe36e",
                   fontSize: 18,
-                  fontWeight: 700,
-                  textAlign: "left",
+                  fontWeight: 900,
+                  textShadow: "0 2px 8px rgba(0,0,0,0.2)",
                 }}
-              />
+              >
+                {walletBalance}
+              </span>
             </div>
+          </div>
 
-            {/* ────────── inline amount warning and suggestion ────────── */}
-            {validationMessage ? (
-              <p
-                style={{
-                  marginTop: 10,
-                  marginBottom: 0,
-                  color: "#ffb3b3",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textAlign: "left",
-                  lineHeight: 1.45,
-                  paddingLeft: 4,
-                }}
-              >
-                {validationMessage}
-              </p>
-            ) : (
-              <p
-                style={{
-                  marginTop: 10,
-                  marginBottom: 0,
-                  color: "#9fffb0",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textAlign: "left",
-                  lineHeight: 1.45,
-                  paddingLeft: 4,
-                }}
-              >
-                Valid amount. You can continue.
-              </p>
-            )}
+          {/* ────────── preset amount grid ────────── */}
+          <div
+            style={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: 14,
+            }}
+          >
+            {PRESET_AMOUNTS.map((amount) => {
+              const active = selectedPresetAmount === amount;
+              const colors = PRESET_STYLES[amount];
 
-            <p
+              return (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => {
+                    /* ────────── show selected preset inside input ────────── */
+                    setAmountInput(String(amount));
+                  }}
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    border: "none",
+                    background: "transparent",
+                    padding: 0,
+                    cursor: "pointer",
+                    borderRadius: 22,
+                    transform: active ? "translateY(-2px) scale(1.02)" : "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: active
+                      ? "0 0 0 3px #ffe066, 0 12px 24px rgba(0,0,0,0.22)"
+                      : "0 8px 18px rgba(0,0,0,0.14)",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -8,
+                      right: -8,
+                      zIndex: 2,
+                      opacity: active ? 1 : 0,
+                      transition: "opacity 0.2s ease",
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: "#ffe066",
+                        color: "#3b2f00",
+                        borderRadius: 999,
+                        fontSize: 10,
+                        fontWeight: 900,
+                        padding: "4px 8px",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
+                      }}
+                    >
+                      SELECTED
+                    </div>
+                  </div>
+
+                  <GameActionButton
+                    label={`${amount}`}
+                    size="lg"
+                    colors={colors}
+                    className="w-full"
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ────────── smart custom amount input ────────── */}
+          <div style={{ width: "100%" }}>
+            <div
               style={{
-                marginTop: 10,
-                marginBottom: 0,
-                color: "#dff7ff",
-                opacity: 0.92,
-                fontSize: 14,
-                fontWeight: 700,
-                textAlign: "center",
+                width: "100%",
+                borderRadius: 22,
+                padding: "14px 14px 12px",
+                background:
+                  "linear-gradient(180deg, rgba(9,34,74,0.66) 0%, rgba(4,15,35,0.46) 100%)",
+                border: "1px solid rgba(255,255,255,0.16)",
+                boxShadow: "0 12px 24px rgba(0,0,0,0.18)",
+                backdropFilter: "blur(8px)",
               }}
             >
-              Selected Amount:{" "}
-              <span style={{ color: "#ffe36e", fontWeight: 900 }}>
-                {finalAmount}
-              </span>
-            </p>
+              <label
+                htmlFor="custom-wager-amount"
+                style={{
+                  display: "block",
+                  color: "#ffffff",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  marginBottom: 10,
+                  textShadow: "0 1px 6px rgba(0,0,0,0.2)",
+                  textAlign: "center",
+                }}
+              >
+                Enter Amount
+              </label>
 
-            {/* ────────── low balance helper ────────── */}
-            {isFinalAmountValid && walletBalance < finalAmount && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  borderRadius: 16,
+                  padding: "0 14px",
+                  background: "rgba(255,255,255,0.12)",
+                  border: validationMessage
+                    ? "1px solid rgba(255,99,99,0.65)"
+                    : "1px solid rgba(255,214,10,0.45)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
+                }}
+              >
+                <span
+                  style={{
+                    color: "#ffe36e",
+                    fontWeight: 900,
+                    fontSize: 18,
+                    minWidth: 20,
+                  }}
+                >
+                  💎
+                </span>
+
+                <input
+                  id="custom-wager-amount"
+                  type="number"
+                  min={50}
+                  step={1}
+                  inputMode="numeric"
+                  placeholder="Type amount"
+                  value={amountInput}
+                  onChange={(event) => setAmountInput(event.target.value)}
+                  style={{
+                    width: "100%",
+                    height: 52,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    color: "#ffffff",
+                    fontSize: 18,
+                    fontWeight: 700,
+                    textAlign: "left",
+                  }}
+                />
+              </div>
+
+              {/* ────────── inline amount warning and suggestion ────────── */}
+              {validationMessage ? (
+                <p
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 0,
+                    color: "#ffb3b3",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textAlign: "left",
+                    lineHeight: 1.45,
+                    paddingLeft: 4,
+                  }}
+                >
+                  {validationMessage}
+                </p>
+              ) : (
+                <p
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 0,
+                    color: "#9fffb0",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textAlign: "left",
+                    lineHeight: 1.45,
+                    paddingLeft: 4,
+                  }}
+                >
+                  Valid amount. You can continue.
+                </p>
+              )}
+
               <p
                 style={{
-                  marginTop: 8,
+                  marginTop: 10,
                   marginBottom: 0,
-                  color: "#ffb3b3",
-                  fontSize: 12,
+                  color: "#dff7ff",
+                  opacity: 0.92,
+                  fontSize: 14,
                   fontWeight: 700,
                   textAlign: "center",
                 }}
               >
-                Insufficient balance for this wager amount.
+                Selected Amount:{" "}
+                <span style={{ color: "#ffe36e", fontWeight: 900 }}>
+                  {finalAmount}
+                </span>
               </p>
-            )}
-          </div>
-        </div>
 
-        {/* ────────── action buttons ────────── */}
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            marginTop: 4,
-          }}
-        >
+              {/* ────────── low balance helper ────────── */}
+              {isFinalAmountValid && walletBalance < finalAmount && (
+                <p
+                  style={{
+                    marginTop: 8,
+                    marginBottom: 0,
+                    color: "#ffb3b3",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textAlign: "center",
+                  }}
+                >
+                  Insufficient balance for this wager amount.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* ────────── action buttons ────────── */}
           <div
             style={{
-              opacity: isConfirmDisabled ? 0.65 : 1,
-              pointerEvents: isConfirmDisabled ? "none" : "auto",
-              filter: isConfirmDisabled ? "grayscale(0.25)" : "none",
-              transition: "all 0.2s ease",
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 4,
             }}
           >
-            <GameActionButton
-              onClick={handleConfirm}
-              label={"Search Same Amount Player"}
-              size="lg"
-              colors={{
-                start: "#ffd66e",
-                mid: "#ffb340",
-                end: "#d67b00",
+            <div
+              style={{
+                width: "100%",
+                opacity: isConfirmDisabled ? 0.65 : 1,
+                pointerEvents: isConfirmDisabled ? "none" : "auto",
+                filter: isConfirmDisabled ? "grayscale(0.35)" : "none",
+                transition: "all 0.2s ease",
               }}
-            />
+            >
+              <GameActionButton
+                onClick={handleConfirm}
+                label={"Search Same Amount Player"}
+                size="lg"
+                colors={{
+                  start: "#ffd66e",
+                  mid: "#ffb340",
+                  end: "#d67b00",
+                }}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
       </div>
