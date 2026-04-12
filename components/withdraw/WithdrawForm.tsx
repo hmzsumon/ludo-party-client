@@ -6,6 +6,53 @@ const PROVIDER_LABELS: Record<string, string> = {
   bkash: "bKash",
   nagad: "Nagad",
   rocket: "Rocket",
+  binance: "Binance",
+  crypto: "Crypto",
+};
+
+const getAccountMeta = (provider?: string) => {
+  const key = String(provider || "").toLowerCase();
+
+  if (key === "binance") {
+    return {
+      label: "Binance Pay ID / Binance UID",
+      placeholder: "Enter your Binance Pay ID or UID",
+      error: (value: string) => {
+        if (!value) return "Please enter Binance Pay ID / UID";
+        if (!/^[A-Za-z0-9_-]{6,32}$/.test(value)) {
+          return "Enter a valid Binance Pay ID / UID";
+        }
+        return "";
+      },
+      notice: "Binance withdraw এ অবশ্যই নিজের Binance account ID দিন। ভুল ID দিলে payment lost হতে পারে.",
+    };
+  }
+
+  if (key === "crypto") {
+    return {
+      label: "TRC-20 Wallet Address",
+      placeholder: "Enter your TRC20 address",
+      error: (value: string) => {
+        if (!value) return "Please enter TRC-20 wallet address";
+        if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(value)) {
+          return "Enter a valid TRC-20 address";
+        }
+        return "";
+      },
+      notice: "শুধু TRC-20 network address দিন। অন্য network address দিলে payment fail হতে পারে.",
+    };
+  }
+
+  return {
+    label: `${PROVIDER_LABELS[key] || provider || "E-Wallet"} Personal Account Number`,
+    placeholder: `Enter your ${PROVIDER_LABELS[key] || provider || "wallet"} number`,
+    error: (value: string) => {
+      if (!value) return "Please enter account number";
+      if (!/^01[3-9]\d{8}$/.test(value)) return "Enter a valid 11-digit mobile number";
+      return "";
+    },
+    notice: "Funds are transferred to personal accounts only. Agent or merchant accounts are not supported. Please double-check your number before submitting.",
+  };
 };
 
 export default function WithdrawForm({
@@ -28,9 +75,12 @@ export default function WithdrawForm({
   const [accountNumber, setAccountNumber] = useState("");
   const [show, setShow] = useState(false);
 
+  const providerKey = String(provider || "").toLowerCase();
   const providerLabel = provider
-    ? (PROVIDER_LABELS[provider.toLowerCase()] ?? provider)
+    ? (PROVIDER_LABELS[providerKey] ?? provider)
     : "E-Wallet";
+
+  const accountMeta = getAccountMeta(providerKey);
 
   const n = Number(amount || 0);
   const amountErr = !amount
@@ -43,11 +93,7 @@ export default function WithdrawForm({
           ? "Insufficient balance"
           : "";
 
-  const accountErr = !accountNumber
-    ? "Please enter account number"
-    : !/^01[3-9]\d{8}$/.test(accountNumber)
-      ? "Enter a valid 11-digit mobile number"
-      : "";
+  const accountErr = accountMeta.error(accountNumber);
 
   const isValid = useMemo(
     () => !amountErr && !accountErr && pass.length >= 6,
@@ -72,27 +118,20 @@ export default function WithdrawForm({
       >
         <span className="mt-0.5 text-base">⚠️</span>
         <p className="text-xs leading-relaxed text-yellow-300/80">
-          Funds are transferred to{" "}
-          <span className="font-semibold text-yellow-300">
-            personal accounts only
-          </span>
-          . Agent or merchant accounts are not supported. Please double-check
-          your number before submitting.
+          {accountMeta.notice}
         </p>
       </div>
 
       {/* ── Account Number ── */}
       <div>
         <label className={labelClass}>
-          {providerLabel} Personal Account Number
+          {accountMeta.label}
         </label>
         <input
           value={accountNumber}
-          onChange={(e) =>
-            setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 11))
-          }
-          inputMode="numeric"
-          placeholder={`Enter your ${providerLabel} number`}
+          onChange={(e) => setAccountNumber(e.target.value.trim())}
+          inputMode={providerKey === "crypto" ? "text" : "text"}
+          placeholder={accountMeta.placeholder}
           className={inputClass}
         />
         {accountNumber && accountErr && (

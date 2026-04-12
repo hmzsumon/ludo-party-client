@@ -36,7 +36,7 @@ export default function WalletTabs({
         Select E-wallet
       </p>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="grid w-full grid-cols-3 gap-3 ">
         {providers.map((provider) => {
           const isSelected = value === provider.id;
           const isEnabled = provider.active !== false;

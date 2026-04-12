@@ -54,8 +54,6 @@ export type Withdraw = {
   rejected_reason?: string;
 };
 
-
-
 export type GetMyWithdrawsResponse = {
   success: boolean;
   withdraws: Withdraw[];
@@ -63,16 +61,17 @@ export type GetMyWithdrawsResponse = {
   totalNetAmount: number;
 };
 
-export type CreateWithdrawRequestBody = {
-  amount: number;
-  method: any; // তোমার form অনুযায়ী method object/string যা পাঠাও সেটা বসাও
-  pass: string;
-};
-
 export type CreateWithdrawRequestResponse = {
   success: boolean;
   message: string;
   data?: Withdraw;
+};
+
+export type CreateWithdrawRequestBody = {
+  amount: number;
+  method: any;
+  payoutCurrency: "BDT" | "USDT";
+  pass: string;
 };
 
 /* ────────── API ────────── */

@@ -20,9 +20,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
 
+import UsdtLogo from "@/public/images/deposit/beep-20.png";
+import BinanceLogo from "@/public/images/deposit/binance.png";
 import BkashLogo from "@/public/images/deposit/bkash-logo.png";
+import CashLogo from "@/public/images/deposit/cash-logo.png";
 import NagadLogo from "@/public/images/deposit/nagad-logo.png";
-import RocketLogo from "@/public/images/deposit/roket.png";
+import RocketLogo from "@/public/images/deposit/roket-logo.png";
 
 const formatBDT = (n: number) =>
   `💎 ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -54,6 +57,27 @@ const walletProviders: WalletProviderConfig[] = [
     logoSrc: RocketLogo,
     bgClassName: "bg-[#8E2BAF]",
     active: true,
+  },
+  {
+    id: "binance",
+    title: "Binance",
+    logoSrc: BinanceLogo,
+    bgClassName: "bg-[#24272E]",
+    active: true,
+  },
+  {
+    id: "crypto",
+    title: "Crypto",
+    logoSrc: UsdtLogo,
+    bgClassName: "bg-[#4D5156]",
+    active: true,
+  },
+  {
+    id: "cash",
+    title: "Cash",
+    logoSrc: CashLogo,
+    bgClassName: "bg-[#4D5156]",
+    active: false, // এই method কে অস্থায়ীভাবে নিষ্ক্রিয় করা হয়েছে
   },
 ];
 
@@ -96,6 +120,14 @@ export default function WithdrawPage() {
     () => wallets.filter((w) => w.provider === provider),
     [wallets, provider],
   );
+
+  // যেসব method আগে bound wallet দিয়ে চলতো সেগুলো intact থাকবে
+  const isLegacyWalletProvider = [
+    "bkash",
+    "nagad",
+    "rocket",
+    "bank_transfer",
+  ].includes(String(provider));
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -161,16 +193,20 @@ export default function WithdrawPage() {
       return;
     }
 
+    const payoutCurrency = ["binance", "crypto"].includes(provider)
+      ? "USDT"
+      : "BDT";
+
     await createWithdrawRequest({
       amount: amt,
       method: {
-        name: provider, // selected provider id
-        accountNumber: accountNumber, // form থেকে আসা নম্বর
+        name: provider,
+        accountNumber: accountNumber,
       },
+      payoutCurrency,
       pass,
     }).unwrap();
   };
-
   useEffect(() => {
     if (isError) toast.error((createError as fetchBaseQueryError).data?.error);
 
