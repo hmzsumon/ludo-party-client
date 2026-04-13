@@ -1,8 +1,8 @@
 /* ────────────────────────────────────────────────────────────────
    profile-hero-card.tsx  (UPDATED)
-   
+
    ✅ Current VIP cashback rank দেখাবে (API থেকে real data)
-   ✅ Progress bar দেখাবে (turnover progress)
+   ✅ Progress bar দেখাবে (fresh progress)
    ✅ VIP cashback page এ navigate করার link আছে
    ✅ Loading skeleton আছে
    ────────────────────────────────────────────────────────────── */
@@ -13,6 +13,47 @@ import { useGetMyVipCashbackInfoQuery } from "@/redux/features/vipCashback/vipCa
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { getRankConfig } from "../vip/VipRankBadge";
+
+/* ────────── Progress helper ────────── */
+const getProgressPercent = (
+  currentStageMatches: number,
+  currentStageTurnover: number,
+  currentRankName?: string | null,
+  nextRank?: {
+    minMatches: number;
+    minTurnover: number;
+  } | null,
+) => {
+  if (!nextRank) return currentRankName ? 100 : 0;
+
+  if (!currentRankName && Number(nextRank.minTurnover) === 0) {
+    const targetMatches = Math.max(1, Number(nextRank.minMatches || 0));
+    return Math.min(100, (currentStageMatches / targetMatches) * 100);
+  }
+
+  const targetTurnover = Math.max(1, Number(nextRank.minTurnover || 0));
+  return Math.min(100, (currentStageTurnover / targetTurnover) * 100);
+};
+
+/* ────────── Progress label helper ────────── */
+const getProgressText = (
+  currentStageMatches: number,
+  currentStageTurnover: number,
+  currentRankName?: string | null,
+  nextRank?: {
+    rank: string;
+    minMatches: number;
+    minTurnover: number;
+  } | null,
+) => {
+  if (!nextRank) return "Max Rank Reached 🎉";
+
+  if (!currentRankName && Number(nextRank.minTurnover) === 0) {
+    return `${currentStageMatches.toLocaleString()} / ${nextRank.minMatches.toLocaleString()} Match → ${nextRank.rank}`;
+  }
+
+  return `${currentStageTurnover.toLocaleString()} / ${nextRank.minTurnover.toLocaleString()} XP → ${nextRank.rank}`;
+};
 
 /* ────────────────────────────────────────────────────────────────
    ProfileHeroCard
@@ -32,15 +73,23 @@ const ProfileHeroCard = () => {
   /* ── Rank config (color, glow etc.) ── */
   const rankCfg = getRankConfig(currentRank?.rank);
 
-  /* ── Progress percent (turnover toward next rank) ── */
-  const progressPercent = nextRank
-    ? Math.min(
-        100,
-        ((userProgress?.turnoverTotal ?? 0) / nextRank.minTurnover) * 100,
-      )
-    : currentRank
-      ? 100
-      : 0;
+  const currentStageMatches = userProgress?.currentStageMatches ?? 0;
+  const currentStageTurnover = userProgress?.currentStageTurnover ?? 0;
+
+  /* ── Progress percent (fresh progress toward next rank) ── */
+  const progressPercent = getProgressPercent(
+    currentStageMatches,
+    currentStageTurnover,
+    currentRank?.rank,
+    nextRank,
+  );
+
+  const progressText = getProgressText(
+    currentStageMatches,
+    currentStageTurnover,
+    currentRank?.rank,
+    nextRank,
+  );
 
   /* ── Name ── */
   const shortName =
@@ -60,13 +109,11 @@ const ProfileHeroCard = () => {
         boxShadow: `0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)`,
       }}
     >
-      {/* Top shine */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
 
       <div className="flex flex-col gap-5">
         {/* ── Avatar + Name section ── */}
         <div className="flex items-center gap-4">
-          {/* Avatar */}
           <div className="relative shrink-0">
             <div
               className="flex h-24 w-24 items-center justify-center rounded-full text-[44px]"
@@ -78,12 +125,10 @@ const ProfileHeroCard = () => {
             >
               👨
             </div>
-            {/* Online dot */}
             <div
               className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-[#1a0533] bg-green-400"
               style={{ boxShadow: "0 0 6px rgba(46,204,113,0.8)" }}
             />
-            {/* Country badge */}
             <div
               className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full px-2 py-0.5 text-[10px] font-black text-white whitespace-nowrap"
               style={{
@@ -95,7 +140,6 @@ const ProfileHeroCard = () => {
             </div>
           </div>
 
-          {/* Name & Username */}
           <div>
             <h2 className="text-[24px] font-black tracking-tight text-white leading-tight">
               {shortName}
@@ -123,12 +167,10 @@ const ProfileHeroCard = () => {
                 : "0 0 20px rgba(255,215,0,0.1)",
             }}
           >
-            {/* ── Label ── */}
             <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">
               Current Rank
             </p>
 
-            {/* ── Rank name ── */}
             {vipLoading ? (
               <div className="h-8 w-24 rounded-lg bg-white/10 animate-pulse my-1" />
             ) : (
@@ -143,7 +185,6 @@ const ProfileHeroCard = () => {
               </h3>
             )}
 
-            {/* ── Cashback % badge ── */}
             {currentRank && !vipLoading && (
               <div className="mt-2 flex items-center gap-2">
                 <span
@@ -153,12 +194,11 @@ const ProfileHeroCard = () => {
                   {currentRank.cashback}% cashback
                 </span>
                 <span className="text-[10px] text-white/40 font-semibold">
-                  {userProgress?.totalMatches ?? 0} matches
+                  {currentStageMatches} fresh matches
                 </span>
               </div>
             )}
 
-            {/* ── Progress bar (turnover toward next rank) ── */}
             <div
               className="mt-3 w-full rounded-full overflow-hidden h-1.5"
               style={{ background: "rgba(255,255,255,0.1)" }}
@@ -175,18 +215,10 @@ const ProfileHeroCard = () => {
               />
             </div>
 
-            {/* ── Progress label ── */}
             <p className="mt-1 text-[10px] text-white/30 font-semibold">
-              {vipLoading
-                ? "Loading..."
-                : nextRank
-                  ? `${(userProgress?.turnoverTotal ?? 0).toLocaleString()} / ${nextRank.minTurnover.toLocaleString()} XP → ${nextRank.rank}`
-                  : currentRank
-                    ? "Max Rank Reached 🎉"
-                    : "Play games to earn XP"}
+              {vipLoading ? "Loading..." : progressText}
             </p>
 
-            {/* Navigate arrow */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-lg">
               →
             </div>

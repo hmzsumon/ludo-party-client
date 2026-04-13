@@ -14,6 +14,7 @@ export interface IVipRankConfig {
   minTurnover: number;
   order: number;
   isActive: boolean;
+  achieved?: boolean;
 }
 
 export interface IVipCashbackInfo {
@@ -29,11 +30,17 @@ export interface IVipCashbackInfo {
     cashback: number;
     minMatches: number;
     minTurnover: number;
+    remainingMatches: number;
+    remainingTurnover: number;
   } | null;
   allRanks: IVipRankConfig[];
   userProgress: {
     totalMatches: number;
     turnoverTotal: number;
+    baselineMatches: number;
+    baselineTurnover: number;
+    currentStageMatches: number;
+    currentStageTurnover: number;
   };
   thisWeek: {
     weekStart: string;
