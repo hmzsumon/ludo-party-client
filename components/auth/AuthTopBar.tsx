@@ -177,7 +177,7 @@ export default function AuthTopBar() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-xl">
-        <div className="mx-auto flex h-[74px] w-full max-w-[430px] items-center justify-between px-4">
+        <div className="mx-auto flex h-[74px] w-full max-w-[430px] items-center justify-between px-6">
           {/* ── Left: Logo ── */}
           <div className="flex items-center">
             <Logo

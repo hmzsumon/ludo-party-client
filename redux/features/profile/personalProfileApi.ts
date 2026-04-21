@@ -20,6 +20,7 @@ export interface IUpdateProfilePayload {
   countryCode?: string;
   countryName?: string;
   city?: string;
+  avatar?: string;
 }
 
 export interface ILinkPhonePayload {
