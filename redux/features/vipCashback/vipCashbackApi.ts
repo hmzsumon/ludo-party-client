@@ -14,7 +14,18 @@ export interface IVipRankConfig {
   minTurnover: number;
   order: number;
   isActive: boolean;
-  achieved?: boolean;
+}
+
+export interface IVipPendingCashback {
+  _id: string;
+  rank: string;
+  amount: number;
+  percent: number;
+  weekStart: string;
+  weekEnd: string;
+  weekMatches: number;
+  netLoss: number;
+  turnoverRequired: number;
 }
 
 export interface IVipCashbackInfo {
@@ -51,6 +62,7 @@ export interface IVipCashbackInfo {
     currentNetLoss: number;
     estimatedCashback: number;
   };
+  pendingCashback: IVipPendingCashback | null;
   lastCashback: {
     rank: string;
     amount: number;
@@ -77,10 +89,9 @@ export interface IVipCashbackLog {
   createdAt: string;
 }
 
-/* ────────── API Slice Injection ────────── */
 export const vipCashbackApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    /* 🏅 আমার VIP cashback info লোড করো */
+    /* ────────── আমার VIP cashback info ────────── */
     getMyVipCashbackInfo: builder.query<
       { status: string; data: IVipCashbackInfo },
       void
@@ -89,10 +100,13 @@ export const vipCashbackApi = apiSlice.injectEndpoints({
         url: "/vip-cashback/info",
         method: "GET",
       }),
-      providesTags: [{ type: "User", id: "VIP_CASHBACK_INFO" }],
+      providesTags: [
+        { type: "User", id: "VIP_CASHBACK_INFO" },
+        { type: "User", id: "VIP_CASHBACK_HISTORY" },
+      ],
     }),
 
-    /* 📜 আমার cashback history */
+    /* ────────── আমার cashback history ────────── */
     getMyVipCashbackHistory: builder.query<
       {
         status: string;
@@ -114,8 +128,33 @@ export const vipCashbackApi = apiSlice.injectEndpoints({
       }),
       providesTags: [{ type: "User", id: "VIP_CASHBACK_HISTORY" }],
     }),
+
+    /* ────────── pending VIP cashback claim করো ────────── */
+    claimMyVipCashback: builder.mutation<
+      {
+        status: string;
+        message: string;
+        data: {
+          claimedAmount: number;
+          turnoverRequired: number;
+        };
+      },
+      string
+    >({
+      query: (logId) => ({
+        url: `/vip-cashback/claim/${logId}`,
+        method: "POST",
+      }),
+      invalidatesTags: [
+        { type: "User", id: "VIP_CASHBACK_INFO" },
+        { type: "User", id: "VIP_CASHBACK_HISTORY" },
+      ],
+    }),
   }),
 });
 
-export const { useGetMyVipCashbackInfoQuery, useGetMyVipCashbackHistoryQuery } =
-  vipCashbackApi;
+export const {
+  useGetMyVipCashbackInfoQuery,
+  useGetMyVipCashbackHistoryQuery,
+  useClaimMyVipCashbackMutation,
+} = vipCashbackApi;

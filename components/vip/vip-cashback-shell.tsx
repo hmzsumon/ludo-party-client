@@ -1,22 +1,25 @@
 /* ────────────────────────────────────────────────────────────────
    vip-cashback-shell.tsx
-   VIP Cashback Page — screenshot এর মত হুবহু
+   VIP Cashback Page
 
-   ✅ Top section: current rank + cashback % + exp rate + progress bar
-   ✅ Available from date দেখাবে
-   ✅ VIP cashback statuses list (Copper → VIP)
-   ✅ প্রতিটা rank এ cashback % + experience + matches দেখাবে
-   ✅ Current rank টা highlighted হবে
-   ✅ নতুন rank পাওয়ার পর progress নতুন করে start হবে
+   ✅ pending cashback card
+   ✅ claim button
+   ✅ notification url থেকে claim target highlight
+   ✅ claim করলে history + wallet refetch হবে
    ────────────────────────────────────────────────────────────── */
 
 "use client";
 
-import { useGetMyVipCashbackInfoQuery } from "@/redux/features/vipCashback/vipCashbackApi";
+import {
+  useClaimMyVipCashbackMutation,
+  useGetMyVipCashbackInfoQuery,
+} from "@/redux/features/vipCashback/vipCashbackApi";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { getRankConfig } from "./VipRankBadge";
 
-/* ────────── Rank icon SVG/emoji map ────────── */
+/* ────────── Rank icon map ────────── */
 const RANK_MEDAL_ICON: Record<string, string> = {
   Copper: "🥉",
   Bronze: "🥈",
@@ -28,7 +31,7 @@ const RANK_MEDAL_ICON: Record<string, string> = {
   VIP: "👑",
 };
 
-/* ────────── Number format করো ────────── */
+/* ────────── Number format ────────── */
 const fmt = (n: number) =>
   n >= 1_000_000
     ? `${(n / 1_000_000).toFixed(1)}M`
@@ -36,82 +39,41 @@ const fmt = (n: number) =>
       ? `${(n / 1_000).toFixed(0)} 000`
       : String(n);
 
-/* ────────── Progress text helper ────────── */
-const getProgressLabel = (
-  currentStageMatches: number,
-  currentStageTurnover: number,
-  currentRankName?: string | null,
-  nextRank?: {
-    rank: string;
-    cashback: number;
-    minMatches: number;
-    minTurnover: number;
-  } | null,
-) => {
-  if (!nextRank) return "Max Rank";
-
-  /* ── Copper only matches based ── */
-  if (!currentRankName && Number(nextRank.minTurnover) === 0) {
-    return `${currentStageMatches.toLocaleString()} / ${nextRank.minMatches.toLocaleString()} matches`;
-  }
-
-  /* ── বাকি সব rank fresh turnover based ── */
-  return `${currentStageTurnover.toLocaleString()} / ${nextRank.minTurnover.toLocaleString()}`;
-};
-
-/* ────────── Progress percent helper ────────── */
-const getProgressPercent = (
-  currentStageMatches: number,
-  currentStageTurnover: number,
-  currentRankName?: string | null,
-  nextRank?: {
-    minMatches: number;
-    minTurnover: number;
-  } | null,
-) => {
-  if (!nextRank) return currentRankName ? 100 : 0;
-
-  if (!currentRankName && Number(nextRank.minTurnover) === 0) {
-    const targetMatches = Math.max(1, Number(nextRank.minMatches || 0));
-    return Math.min(100, (currentStageMatches / targetMatches) * 100);
-  }
-
-  const targetTurnover = Math.max(1, Number(nextRank.minTurnover || 0));
-  return Math.min(100, (currentStageTurnover / targetTurnover) * 100);
-};
-
 /* ────────────────────────────────────────────────────────────────
    VipCashbackShell
    ────────────────────────────────────────────────────────────── */
 const VipCashbackShell = () => {
-  const { data, isLoading } = useGetMyVipCashbackInfoQuery();
+  const searchParams = useSearchParams();
+  const claimTargetId = searchParams.get("claim");
+
+  const { data, isLoading, refetch } = useGetMyVipCashbackInfoQuery();
+  const [claimMyVipCashback, { isLoading: isClaiming }] =
+    useClaimMyVipCashbackMutation();
+
+  const [claimSuccessMessage, setClaimSuccessMessage] = useState("");
 
   const info = data?.data;
   const currentRank = info?.currentRank;
   const allRanks = info?.allRanks ?? [];
   const userProgress = info?.userProgress;
   const thisWeek = info?.thisWeek;
+  const lastCashback = info?.lastCashback;
+  const pendingCashback = info?.pendingCashback;
 
-  /* ── Progress এখন fresh stage based ── */
+  /* ────────── next rank progress ────────── */
   const nextRank = info?.nextRank;
-  const currentStageMatches = userProgress?.currentStageMatches ?? 0;
-  const currentStageTurnover = userProgress?.currentStageTurnover ?? 0;
+  const progressPercent =
+    nextRank && currentRank
+      ? Math.min(
+          100,
+          ((userProgress?.currentStageTurnover ?? 0) / nextRank.minTurnover) *
+            100,
+        )
+      : currentRank
+        ? 100
+        : 0;
 
-  const progressPercent = getProgressPercent(
-    currentStageMatches,
-    currentStageTurnover,
-    currentRank?.rank,
-    nextRank,
-  );
-
-  const progressLabel = getProgressLabel(
-    currentStageMatches,
-    currentStageTurnover,
-    currentRank?.rank,
-    nextRank,
-  );
-
-  /* ── Next available cashback date: পরের রবিবার ── */
+  /* ────────── next Sunday ────────── */
   const nextSunday = thisWeek?.weekEnd ? new Date(thisWeek.weekEnd) : null;
 
   const formatDate = (d: Date | null) => {
@@ -126,12 +88,48 @@ const VipCashbackShell = () => {
       .padStart(2, "0")}.${d.getUTCFullYear()}`;
   };
 
+  const formatDateShort = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr);
+    return `${d.getDate().toString().padStart(2, "0")}.${(d.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}.${d.getFullYear()}`;
+  };
+
   const rankCfg = getRankConfig(currentRank?.rank);
+
+  /* ────────── notification থেকে আসা claim target match করছে কিনা ────────── */
+  const isHighlightedPending =
+    pendingCashback?._id && claimTargetId === pendingCashback._id;
+
+  /* ────────── claim handler ────────── */
+  const handleClaim = async () => {
+    if (!pendingCashback?._id || isClaiming) return;
+
+    try {
+      const res = await claimMyVipCashback(pendingCashback._id).unwrap();
+
+      setClaimSuccessMessage(
+        `Claim successful. 💎${res.data.claimedAmount.toLocaleString()} added to m_balance. 1x turnover required.`,
+      );
+
+      await refetch();
+    } catch (error: any) {
+      alert(error?.data?.message || "Claim failed");
+    }
+  };
+
+  const claimCardTitle = useMemo(() => {
+    if (!pendingCashback) return "No cashback ready";
+    return isHighlightedPending
+      ? "Your notification cashback is ready"
+      : "VIP cashback ready to claim";
+  }, [pendingCashback, isHighlightedPending]);
 
   return (
     <main className="min-h-screen w-full text-white ls-stars-bg">
       <div className="relative min-h-screen w-full pb-28">
-        {/* ── Glow Blobs ── */}
+        {/* ── Glow ── */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full opacity-20"
@@ -162,6 +160,130 @@ const VipCashbackShell = () => {
           </div>
 
           {/* ─────────────────────────────────────────────────────────
+              CLAIM CARD
+              ───────────────────────────────────────────────────────── */}
+          <section
+            className="relative rounded-[22px] overflow-hidden p-5 mb-4"
+            style={{
+              background: isHighlightedPending
+                ? "linear-gradient(145deg, rgba(16,185,129,0.18) 0%, rgba(29,5,70,0.92) 100%)"
+                : "linear-gradient(145deg, rgba(30,10,60,0.85) 0%, rgba(10,2,30,0.95) 100%)",
+              border: isHighlightedPending
+                ? "1px solid rgba(16,185,129,0.6)"
+                : "1px solid rgba(255,215,0,0.18)",
+              boxShadow: isHighlightedPending
+                ? "0 0 28px rgba(16,185,129,0.22)"
+                : "0 10px 30px rgba(0,0,0,0.35)",
+            }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/45 font-black">
+                  Claim Cashback
+                </p>
+                <h2 className="mt-1 text-[18px] font-black text-white">
+                  {claimCardTitle}
+                </h2>
+              </div>
+
+              {pendingCashback && (
+                <span
+                  className="rounded-full px-3 py-1 text-[11px] font-black"
+                  style={{
+                    background: "rgba(96,165,250,0.16)",
+                    color: "#93c5fd",
+                    border: "1px solid rgba(96,165,250,0.25)",
+                  }}
+                >
+                  Pending
+                </span>
+              )}
+            </div>
+
+            {pendingCashback ? (
+              <>
+                <div
+                  className="mt-4 rounded-[18px] p-4"
+                  style={{ background: "rgba(255,255,255,0.04)" }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] text-white/45 font-semibold">
+                        Rank
+                      </p>
+                      <p className="text-[15px] font-black text-white">
+                        {pendingCashback.rank} · {pendingCashback.percent}%
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-[11px] text-white/45 font-semibold">
+                        Claim Amount
+                      </p>
+                      <p className="text-[24px] font-black text-emerald-400">
+                        💎 {pendingCashback.amount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div
+                      className="rounded-xl p-3"
+                      style={{ background: "rgba(255,255,255,0.04)" }}
+                    >
+                      <p className="text-[10px] text-white/35 font-semibold uppercase">
+                        Week
+                      </p>
+                      <p className="mt-1 text-[13px] font-black text-white">
+                        {formatDateShort(pendingCashback.weekStart)} →{" "}
+                        {formatDateShort(pendingCashback.weekEnd)}
+                      </p>
+                    </div>
+
+                    <div
+                      className="rounded-xl p-3"
+                      style={{ background: "rgba(255,255,255,0.04)" }}
+                    >
+                      <p className="text-[10px] text-white/35 font-semibold uppercase">
+                        1x Turnover
+                      </p>
+                      <p className="mt-1 text-[13px] font-black text-yellow-300">
+                        💎 {pendingCashback.turnoverRequired.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleClaim}
+                    disabled={isClaiming}
+                    className="mt-4 w-full rounded-xl py-3 text-[14px] font-black text-black disabled:opacity-60"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #34d399 0%, #10b981 100%)",
+                      boxShadow: "0 8px 24px rgba(16,185,129,0.35)",
+                    }}
+                  >
+                    {isClaiming ? "Claiming..." : "Claim Now"}
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {claimSuccessMessage ? (
+              <div
+                className="mt-4 rounded-xl p-3 text-[13px] font-semibold"
+                style={{
+                  background: "rgba(16,185,129,0.12)",
+                  border: "1px solid rgba(16,185,129,0.25)",
+                  color: "#a7f3d0",
+                }}
+              >
+                {claimSuccessMessage}
+              </div>
+            ) : null}
+          </section>
+
+          {/* ─────────────────────────────────────────────────────────
               CURRENT RANK CARD
               ───────────────────────────────────────────────────────── */}
           <section
@@ -175,7 +297,6 @@ const VipCashbackShell = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
 
-            {/* ── Rank icon + badges row ── */}
             <div className="flex items-center gap-4">
               <div
                 className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-4xl"
@@ -209,7 +330,6 @@ const VipCashbackShell = () => {
                     {currentRank?.cashback ?? 0}% cashback
                   </span>
 
-                  {/* ── current stage matches দেখাও ── */}
                   <span
                     className="rounded-full px-3 py-1 text-[12px] font-black"
                     style={{
@@ -218,23 +338,22 @@ const VipCashbackShell = () => {
                       color: "#ff9f00",
                     }}
                   >
-                    {currentRank
-                      ? currentStageMatches
-                      : (userProgress?.totalMatches ?? 0)}{" "}
-                    matches
+                    {userProgress?.totalMatches ?? 0} matches
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* ── Turnover / fresh progress bar ── */}
             <div className="mt-5">
               <div className="flex justify-between mb-1.5">
                 <span className="text-[11px] font-semibold text-white/50">
-                  Experience (Turnover)
+                  Current stage turnover
                 </span>
                 <span className="text-[11px] font-black text-white/80">
-                  {progressLabel}
+                  {(userProgress?.currentStageTurnover ?? 0).toLocaleString()}
+                  {nextRank
+                    ? ` / ${nextRank.minTurnover.toLocaleString()}`
+                    : " (Max)"}
                 </span>
               </div>
               <div
@@ -259,7 +378,7 @@ const VipCashbackShell = () => {
           </section>
 
           {/* ─────────────────────────────────────────────────────────
-              THIS WEEK STATS + AVAILABLE FROM DATE
+              WEEKLY CARD
               ───────────────────────────────────────────────────────── */}
           <section
             className="rounded-[20px] overflow-hidden mb-4"
@@ -320,7 +439,38 @@ const VipCashbackShell = () => {
           </section>
 
           {/* ─────────────────────────────────────────────────────────
-              VIP CASHBACK STATUSES LIST
+              LAST CLAIM CARD
+              ───────────────────────────────────────────────────────── */}
+          {lastCashback ? (
+            <section
+              className="rounded-[20px] p-4 mb-4"
+              style={{
+                background:
+                  "linear-gradient(145deg, rgba(16,185,129,0.1) 0%, rgba(10,2,30,0.9) 100%)",
+                border: "1px solid rgba(16,185,129,0.16)",
+              }}
+            >
+              <p className="text-[11px] uppercase tracking-[0.18em] text-white/40 font-black">
+                Last Claimed Cashback
+              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <div>
+                  <p className="text-[15px] font-black text-white">
+                    {lastCashback.rank} · {lastCashback.percent}%
+                  </p>
+                  <p className="text-[12px] text-white/50 mt-1">
+                    Week: {formatDateShort(lastCashback.weekStart)}
+                  </p>
+                </div>
+                <p className="text-[22px] font-black text-emerald-400">
+                  💎 {lastCashback.amount.toLocaleString()}
+                </p>
+              </div>
+            </section>
+          ) : null}
+
+          {/* ─────────────────────────────────────────────────────────
+              STATUSES LIST
               ───────────────────────────────────────────────────────── */}
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -351,7 +501,8 @@ const VipCashbackShell = () => {
                         minMatches={rankItem.minMatches}
                         minTurnover={rankItem.minTurnover}
                         isActive={isCurrent}
-                        achieved={Boolean(rankItem.achieved)}
+                        userMatches={userProgress?.totalMatches ?? 0}
+                        userTurnover={userProgress?.turnoverTotal ?? 0}
                       />
                     );
                   })}
@@ -366,17 +517,17 @@ const VipCashbackShell = () => {
 export default VipCashbackShell;
 
 /* ════════════════════════════════════════════════════════════════
-   SUB-COMPONENTS
+   SUB COMPONENTS
    ════════════════════════════════════════════════════════════════ */
 
-/* ────────── Rank Status Card ────────── */
 interface RankStatusCardProps {
   rank: string;
   cashback: number;
   minMatches: number;
   minTurnover: number;
   isActive: boolean;
-  achieved: boolean;
+  userMatches: number;
+  userTurnover: number;
 }
 
 const RankStatusCard = ({
@@ -385,9 +536,11 @@ const RankStatusCard = ({
   minMatches,
   minTurnover,
   isActive,
-  achieved,
+  userMatches,
+  userTurnover,
 }: RankStatusCardProps) => {
   const cfg = getRankConfig(rank);
+  const qualified = userMatches >= minMatches && userTurnover >= minTurnover;
 
   return (
     <div
@@ -423,7 +576,7 @@ const RankStatusCard = ({
       >
         {RANK_MEDAL_ICON[rank] ?? "⚪"}
 
-        {achieved && (
+        {qualified && (
           <div
             className="absolute -bottom-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full text-[10px] font-black"
             style={{ background: "#22c55e", border: "1.5px solid #000" }}
@@ -481,7 +634,6 @@ const RankStatusCard = ({
   );
 };
 
-/* ────────── Loading skeleton ────────── */
 const RankCardSkeleton = () => (
   <div
     className="flex items-center gap-4 rounded-[18px] p-4 animate-pulse"
