@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 
@@ -34,7 +35,19 @@ const DashboardHeader = () => {
               boxShadow: "0 0 0 2px #7c3aed, 0 4px 12px rgba(0,0,0,0.4)",
             }}
           >
-            👨
+            {user?.avatar ? (
+              <Image
+                src={user.avatar}
+                alt="user avatar"
+                className=" w-10 h-10 rounded-full"
+                width={40}
+                height={40}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-[44px]">
+                👨
+              </div>
+            )}
           </div>
 
           <div className="min-w-0">

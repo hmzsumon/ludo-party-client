@@ -8,11 +8,13 @@ const PROVIDER_LABELS: Record<string, string> = {
   rocket: "Rocket",
   binance: "Binance",
   crypto: "Crypto",
+  cash: "Cash",
 };
 
 const getAccountMeta = (provider?: string) => {
   const key = String(provider || "").toLowerCase();
 
+  /* ────────── Provider Wise Account Input Meta ────────── */
   if (key === "binance") {
     return {
       label: "Binance Pay ID / Binance UID",
@@ -24,22 +26,24 @@ const getAccountMeta = (provider?: string) => {
         }
         return "";
       },
-      notice: "Binance withdraw এ অবশ্যই নিজের Binance account ID দিন। ভুল ID দিলে payment lost হতে পারে.",
+      notice:
+        "Please use your own Binance account ID. Using a wrong ID may result in a lost payment.",
     };
   }
 
   if (key === "crypto") {
     return {
       label: "TRC-20 Wallet Address",
-      placeholder: "Enter your TRC20 address",
+      placeholder: "Enter your TRC-20 wallet address",
       error: (value: string) => {
         if (!value) return "Please enter TRC-20 wallet address";
         if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(value)) {
-          return "Enter a valid TRC-20 address";
+          return "Enter a valid TRC-20 wallet address";
         }
         return "";
       },
-      notice: "শুধু TRC-20 network address দিন। অন্য network address দিলে payment fail হতে পারে.",
+      notice:
+        "Only use a TRC-20 network wallet address. Using another network address may cause the payment to fail.",
     };
   }
 
@@ -48,10 +52,13 @@ const getAccountMeta = (provider?: string) => {
     placeholder: `Enter your ${PROVIDER_LABELS[key] || provider || "wallet"} number`,
     error: (value: string) => {
       if (!value) return "Please enter account number";
-      if (!/^01[3-9]\d{8}$/.test(value)) return "Enter a valid 11-digit mobile number";
+      if (!/^01[3-9]\d{8}$/.test(value)) {
+        return "Enter a valid 11-digit mobile number";
+      }
       return "";
     },
-    notice: "Funds are transferred to personal accounts only. Agent or merchant accounts are not supported. Please double-check your number before submitting.",
+    notice:
+      "Funds are transferred to personal accounts only. Agent or merchant accounts are not supported. Please double-check your number before submitting.",
   };
 };
 
@@ -76,18 +83,22 @@ export default function WithdrawForm({
   const [show, setShow] = useState(false);
 
   const providerKey = String(provider || "").toLowerCase();
-  const providerLabel = provider
-    ? (PROVIDER_LABELS[providerKey] ?? provider)
-    : "E-Wallet";
 
   const accountMeta = getAccountMeta(providerKey);
+
+  /* ────────── Dynamic Amount Placeholder ────────── */
+  const amountPlaceholder = useMemo(() => {
+    const minText = min.toLocaleString();
+    const maxText = Number.isFinite(max) ? max.toLocaleString() : "Unlimited";
+    return `${minText} - ${maxText}`;
+  }, [min, max]);
 
   const n = Number(amount || 0);
   const amountErr = !amount
     ? "Please enter an amount"
     : n < min
       ? `Minimum withdrawal amount is 💎${min.toLocaleString()}`
-      : n > max
+      : Number.isFinite(max) && n > max
         ? `Maximum withdrawal amount is 💎${max.toLocaleString()}`
         : n > available
           ? "Insufficient balance"
@@ -107,7 +118,7 @@ export default function WithdrawForm({
     "mb-1.5 block text-xs font-semibold uppercase tracking-widest text-white/40";
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       {/* ── Notice ── */}
       <div
         className="flex items-start gap-2.5 rounded-xl px-3.5 py-3"
@@ -124,13 +135,11 @@ export default function WithdrawForm({
 
       {/* ── Account Number ── */}
       <div>
-        <label className={labelClass}>
-          {accountMeta.label}
-        </label>
+        <label className={labelClass}>{accountMeta.label}</label>
         <input
           value={accountNumber}
           onChange={(e) => setAccountNumber(e.target.value.trim())}
-          inputMode={providerKey === "crypto" ? "text" : "text"}
+          inputMode="text"
           placeholder={accountMeta.placeholder}
           className={inputClass}
         />
@@ -145,7 +154,7 @@ export default function WithdrawForm({
       <div>
         <label className={labelClass}>Withdrawal Amount</label>
         <div className="relative">
-          <span className="absolute  left-2 top-1/2 -translate-y-1/2 text-base font-bold ">
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-base font-bold">
             💎
           </span>
           <input
@@ -154,15 +163,17 @@ export default function WithdrawForm({
               setAmount(e.target.value.replace(/[^\d]/g, "").slice(0, 7))
             }
             inputMode="numeric"
-            placeholder={`${min.toLocaleString()} – ${max.toLocaleString()}`}
+            placeholder={amountPlaceholder}
             className={`${inputClass} pl-8`}
           />
         </div>
+
         {amount && amountErr && (
           <p className="mt-1.5 flex items-center gap-1 text-xs text-red-400">
             <span>⚠</span> {amountErr}
           </p>
         )}
+
         {!amountErr && amount && (
           <p className="mt-1.5 text-xs text-emerald-400/70">
             ✓ Amount looks good
@@ -184,8 +195,8 @@ export default function WithdrawForm({
           <button
             type="button"
             onClick={() => setShow((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-white/40 hover:text-white/70 transition"
-            aria-label="Toggle password"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-white/40 transition hover:text-white/70"
+            aria-label="Toggle password visibility"
           >
             <svg
               width="17"
@@ -208,7 +219,7 @@ export default function WithdrawForm({
         type="button"
         disabled={!isValid || disabled}
         onClick={() => onSubmit(Number(amount), pass, accountNumber)}
-        className="w-full rounded-xl py-3 text-sm font-bold tracking-widest uppercase transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded-xl py-3 text-sm font-bold uppercase tracking-widest transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
         style={
           isValid && !disabled
             ? {

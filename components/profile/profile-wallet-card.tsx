@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSelector } from "react-redux";
 
 type Props = {
   dashboard?: any;
@@ -8,7 +9,8 @@ type Props = {
 };
 
 const ProfileWalletCard = ({ dashboard, isLoading }: Props) => {
-  const balance = Number(dashboard?.wallet?.balance ?? 0);
+  const { user } = useSelector((state: any) => state.auth);
+  const balance = Number(user?.m_balance ?? 0);
 
   return (
     <section

@@ -56,7 +56,7 @@ const walletProviders: WalletProviderConfig[] = [
     title: "Rocket",
     logoSrc: RocketLogo,
     bgClassName: "bg-[#8E2BAF]",
-    active: true,
+    active: false,
   },
   {
     id: "binance",
@@ -77,7 +77,7 @@ const walletProviders: WalletProviderConfig[] = [
     title: "Cash",
     logoSrc: CashLogo,
     bgClassName: "bg-[#4D5156]",
-    active: false, // এই method কে অস্থায়ীভাবে নিষ্ক্রিয় করা হয়েছে
+    active: false,
   },
 ];
 
@@ -182,6 +182,31 @@ export default function WithdrawPage() {
   const selectedWallet =
     providerWallets.find((w) => w.id === selectedId) || null;
 
+  /* ────────── Provider Wise Withdraw Limit Config ────────── */
+  const withdrawLimits = useMemo(() => {
+    if (provider === "binance" || provider === "crypto") {
+      return {
+        min: 1000,
+        max: 500000,
+        maxLabel: formatBDT(500000),
+      };
+    }
+
+    if (provider === "cash") {
+      return {
+        min: 200,
+        max: Infinity,
+        maxLabel: "Unlimited",
+      };
+    }
+
+    return {
+      min: 500,
+      max: 25000,
+      maxLabel: formatBDT(25000),
+    };
+  }, [provider]);
+
   // handleSubmit আপডেট
   const handleSubmit = async (
     amt: number,
@@ -190,6 +215,17 @@ export default function WithdrawPage() {
   ) => {
     if (!selectedWallet && !accountNumber) {
       toast.error("Select an E-wallet and enter account number");
+      return;
+    }
+
+    /* ────────── Withdraw Amount Validation By Provider ────────── */
+    if (amt < withdrawLimits.min) {
+      toast.error(`Minimum withdraw is ${formatBDT(withdrawLimits.min)}`);
+      return;
+    }
+
+    if (Number.isFinite(withdrawLimits.max) && amt > withdrawLimits.max) {
+      toast.error(`Maximum withdraw is ${formatBDT(withdrawLimits.max)}`);
       return;
     }
 
@@ -207,6 +243,7 @@ export default function WithdrawPage() {
       pass,
     }).unwrap();
   };
+
   useEffect(() => {
     if (isError) toast.error((createError as fetchBaseQueryError).data?.error);
 
@@ -288,13 +325,13 @@ export default function WithdrawPage() {
             <div>
               <div className="text-[10px] text-white/35">Min Withdraw</div>
               <div className="text-xs font-semibold text-white/70 mt-0.5">
-                {formatBDT(500)}
+                {formatBDT(withdrawLimits.min)}
               </div>
             </div>
             <div className="text-right">
               <div className="text-[10px] text-white/35">Max Withdraw</div>
               <div className="text-xs font-semibold text-white/70 mt-0.5">
-                {formatBDT(25000)}
+                {withdrawLimits.maxLabel}
               </div>
             </div>
           </div>
@@ -330,8 +367,10 @@ export default function WithdrawPage() {
 
         <div className="rounded-2xl overflow-hidden" style={PANEL}>
           <WithdrawForm
+            min={withdrawLimits.min}
+            max={withdrawLimits.max}
             available={available}
-            provider={provider} // ← এটা যোগ করো
+            provider={provider}
             disabled={isSubmitting}
             onSubmit={handleSubmit}
           />
