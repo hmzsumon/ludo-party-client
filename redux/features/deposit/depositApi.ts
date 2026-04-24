@@ -53,20 +53,32 @@ export const depositApi = apiSlice.injectEndpoints({
        GET /agent/me/payment-methods -> { success:true, data:[...] }
     ───────────────────────────────────────────── */
 
-    getMyAgentPaymentMethods: builder.query<
-      GetMyAgentPaymentMethodsResponse,
+    getMyDepositPaymentMethods: builder.query<
+      GetMyDepositPaymentMethodsResponse,
       void
     >({
       query: () => ({
-        url: "/payment-methods-for-user",
+        url: "/deposit-payment-methods/active",
+        method: "GET",
+      }),
+      providesTags: ["AgentPaymentMethods"],
+    }),
+
+    /* ────────── Backward Compatible Hook Alias ────────── */
+    getMyAgentPaymentMethods: builder.query<
+      GetMyDepositPaymentMethodsResponse,
+      void
+    >({
+      query: () => ({
+        url: "/deposit-payment-methods/active",
         method: "GET",
       }),
       providesTags: ["AgentPaymentMethods"],
     }),
 
     // Optional helper endpoint (client side filter alternative)
-    getMyAgentPaymentMethodsByName: builder.query<
-      GetMyAgentPaymentMethodsResponse,
+    getMyDepositPaymentMethodsByName: builder.query<
+      GetMyDepositPaymentMethodsResponse,
       string
     >({
       query: (methodName) => ({
@@ -78,12 +90,23 @@ export const depositApi = apiSlice.injectEndpoints({
       providesTags: ["AgentPaymentMethods"],
     }),
 
-    getMyAgentPaymentMethodById: builder.query<
-      { success: boolean; data: AgentPaymentMethod },
+    getMyDepositPaymentMethodById: builder.query<
+      { success: boolean; data: DepositPaymentMethod },
       string
     >({
       query: (id) => ({
-        url: `/agent/me/payment-methods/${id}`,
+        url: `/deposit-payment-methods/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    /* ────────── Backward Compatible Payment Method By ID Hook ────────── */
+    getMyAgentPaymentMethodById: builder.query<
+      { success: boolean; data: DepositPaymentMethod },
+      string
+    >({
+      query: (id) => ({
+        url: `/deposit-payment-methods/${id}`,
         method: "GET",
       }),
     }),
@@ -166,7 +189,7 @@ export const depositApi = apiSlice.injectEndpoints({
 /* ─────────────────────────────
    ✅ NEW Types (ADDED ONLY)
 ───────────────────────────── */
-export type AgentPaymentMethod = {
+export type DepositPaymentMethod = {
   _id: string;
   accountNumber: string;
   methodName: string;
@@ -179,10 +202,15 @@ export type AgentPaymentMethod = {
   updatedAt?: string;
 };
 
-export type GetMyAgentPaymentMethodsResponse = {
+export type GetMyDepositPaymentMethodsResponse = {
   success: boolean;
-  data: AgentPaymentMethod[];
+  data: DepositPaymentMethod[];
 };
+
+/* ────────── Backward Compatible Type Aliases ────────── */
+export type AgentPaymentMethod = DepositPaymentMethod;
+export type GetMyAgentPaymentMethodsResponse =
+  GetMyDepositPaymentMethodsResponse;
 
 export const {
   useCreateDepositRequestMutation,
@@ -194,12 +222,16 @@ export const {
   useCreateDepositWithBDTMutation,
   useGetPaymentMethodByNameQuery,
 
-  /* ✅ NEW hooks (ADDED ONLY) */
+  /* ────────── Deposit Payment Method Hooks ────────── */
+  useGetMyDepositPaymentMethodsQuery,
+  useLazyGetMyDepositPaymentMethodsQuery,
   useGetMyAgentPaymentMethodsQuery,
   useLazyGetMyAgentPaymentMethodsQuery,
-  useGetMyAgentPaymentMethodsByNameQuery,
-  useLazyGetMyAgentPaymentMethodsByNameQuery,
+  useGetMyDepositPaymentMethodsByNameQuery,
+  useLazyGetMyDepositPaymentMethodsByNameQuery,
 
+  useGetMyDepositPaymentMethodByIdQuery,
+  useLazyGetMyDepositPaymentMethodByIdQuery,
   useGetMyAgentPaymentMethodByIdQuery,
   useLazyGetMyAgentPaymentMethodByIdQuery,
   /* ✅ Deposit Record (BDT) */

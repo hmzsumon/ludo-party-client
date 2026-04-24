@@ -162,40 +162,6 @@ const VipCashbackHistoryShell = () => {
                       </div>
                     </div>
 
-                    {(log.status === "paid" || log.status === "pending") && (
-                      <div
-                        className="mt-3 flex gap-3 rounded-xl p-3"
-                        style={{ background: "rgba(255,255,255,0.04)" }}
-                      >
-                        <div className="flex-1 text-center">
-                          <p className="text-[10px] text-white/30 font-semibold">
-                            Win
-                          </p>
-                          <p className="text-[13px] font-black text-green-400">
-                            +{log.weekWinAmount.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="w-px bg-white/10" />
-                        <div className="flex-1 text-center">
-                          <p className="text-[10px] text-white/30 font-semibold">
-                            Loss
-                          </p>
-                          <p className="text-[13px] font-black text-red-400">
-                            -{log.weekLossAmount.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="w-px bg-white/10" />
-                        <div className="flex-1 text-center">
-                          <p className="text-[10px] text-white/30 font-semibold">
-                            Net
-                          </p>
-                          <p className="text-[13px] font-black text-red-400">
-                            -{log.netLoss.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
                     {log.status === "pending" && (
                       <button
                         onClick={() => handleClaim(log._id)}

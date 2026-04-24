@@ -401,31 +401,9 @@ const VipCashbackShell = () => {
             </div>
 
             <div className="px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">
-                    This week's net loss
-                  </p>
-                  <p className="text-[22px] font-black text-red-400 mt-0.5">
-                    💎 {(thisWeek?.currentNetLoss ?? 0).toLocaleString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">
-                    Est. cashback
-                  </p>
-                  <p
-                    className="text-[22px] font-black mt-0.5"
-                    style={{ color: rankCfg.color }}
-                  >
-                    💎 {(thisWeek?.estimatedCashback ?? 0).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
               <Link href="/vip-cashback/history">
                 <button
-                  className="mt-4 w-full rounded-xl py-3 text-[13px] font-black text-white"
+                  className=" w-full rounded-xl py-3 text-[13px] font-black text-white"
                   style={{
                     background:
                       "linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)",
