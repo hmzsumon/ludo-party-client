@@ -74,6 +74,7 @@ const getAccountMeta = (provider?: string) => {
 
 export type CashWithdrawAgentOption = {
   _id: string;
+  agentTitle?: string;
   name?: string;
   customerId?: string;
   phone?: string;
@@ -107,6 +108,8 @@ export default function WithdrawForm({
   const [pass, setPass] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [cashAgentId, setCashAgentId] = useState("");
+  const [cashAgentSearch, setCashAgentSearch] = useState("");
+  const [cashDropdownOpen, setCashDropdownOpen] = useState(false);
   const [show, setShow] = useState(false);
 
   const providerKey = String(provider || "").toLowerCase();
@@ -132,6 +135,35 @@ export default function WithdrawForm({
           : "";
 
   const isCashProvider = providerKey === "cash";
+
+  /* ────────── smart cash agent search list ──────────
+     agentTitle unique, তাই dropdown/search এ title first দেখাচ্ছি।
+  ────────── */
+  const selectedCashAgent = useMemo(
+    () => cashAgents.find((agent) => String(agent._id) === String(cashAgentId)),
+    [cashAgents, cashAgentId],
+  );
+
+  const filteredCashAgents = useMemo(() => {
+    const q = cashAgentSearch.trim().toLowerCase();
+
+    if (!q) return cashAgents;
+
+    return cashAgents.filter((agent) => {
+      const haystack = [
+        agent.agentTitle,
+        agent.name,
+        agent.customerId,
+        agent.phone,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [cashAgents, cashAgentSearch]);
+
   const accountErr = isCashProvider ? "" : accountMeta.error(accountNumber);
   const cashAgentErr =
     isCashProvider && !cashAgentId ? "Please select a cash agent" : "";
@@ -168,24 +200,74 @@ export default function WithdrawForm({
         <label className={labelClass}>{accountMeta.label}</label>
 
         {isCashProvider ? (
-          <select
-            value={cashAgentId}
-            onChange={(e) => setCashAgentId(e.target.value)}
-            disabled={cashAgentsLoading}
-            className={inputClass}
-          >
-            <option value="">
-              {cashAgentsLoading
-                ? "Loading cash agents..."
-                : "Select cash agent"}
-            </option>
-            {cashAgents.map((agent) => (
-              <option key={agent._id} value={agent._id}>
-                {agent.name || "Cash Agent"} — {agent.customerId || "No ID"}
-                {agent.phone ? ` (${agent.phone})` : ""}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            {/* ────────── smart searchable cash agent dropdown ────────── */}
+            <button
+              type="button"
+              disabled={cashAgentsLoading}
+              onClick={() => setCashDropdownOpen((v) => !v)}
+              className={`${inputClass} flex items-center justify-between text-left`}
+            >
+              <span
+                className={selectedCashAgent ? "text-white" : "text-white/35"}
+              >
+                {cashAgentsLoading
+                  ? "Loading cash agents..."
+                  : selectedCashAgent
+                    ? `${selectedCashAgent.agentTitle || selectedCashAgent.name || "Cash Agent"} — ${selectedCashAgent.customerId || "No ID"}`
+                    : "Select cash agent"}
+              </span>
+              <span className="text-white/35">⌄</span>
+            </button>
+
+            {cashDropdownOpen && (
+              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-2xl border border-white/10 bg-[#12091d] shadow-2xl">
+                <div className="border-b border-white/10 p-2">
+                  <input
+                    autoFocus
+                    value={cashAgentSearch}
+                    onChange={(e) => setCashAgentSearch(e.target.value)}
+                    placeholder="Search by agent title, name, ID, phone"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none placeholder-white/30 focus:border-violet-500/60"
+                  />
+                </div>
+
+                <div className="max-h-64 overflow-y-auto p-1.5">
+                  {filteredCashAgents.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-xs text-white/40">
+                      No cash agent found
+                    </div>
+                  ) : (
+                    filteredCashAgents.map((agent) => (
+                      <button
+                        key={agent._id}
+                        type="button"
+                        onClick={() => {
+                          setCashAgentId(agent._id);
+                          setCashDropdownOpen(false);
+                          setCashAgentSearch("");
+                        }}
+                        className="mb-1 w-full rounded-xl px-3 py-2 text-left transition hover:bg-white/10"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold text-white">
+                            {agent.agentTitle || agent.name || "Cash Agent"}
+                          </span>
+                          <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] text-violet-200">
+                            cash
+                          </span>
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-white/45">
+                          {agent.name || "-"} • {agent.customerId || "No ID"}
+                          {agent.phone ? ` • ${agent.phone}` : ""}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <input
             value={accountNumber}

@@ -280,7 +280,7 @@ function WithdrawCard({ w }: { w: any }) {
   const amount = Number(w?.amount || 0).toFixed(2);
   const charge = Number(w?.charge || w?.handlingFee || 0).toFixed(2);
   const netAmount = Number(w?.netAmount || w?.amount || 0).toFixed(2);
-  const ref = String(w?.orderId || w?.ref || w?._id || "-");
+  const ref = String(w?.withdrawCode || w?.orderId || w?.ref || w?._id || "-");
   const st = statusLabel(w?.status);
 
   const copyRef = async () => {
@@ -334,7 +334,7 @@ function WithdrawCard({ w }: { w: any }) {
         }}
       >
         <div className="text-[10px] text-white/40 uppercase tracking-widest">
-          Ref#
+          Withdraw Code
         </div>
         <div className="text-xs font-mono text-white/70 flex-1 truncate">
           {ref}

@@ -42,6 +42,8 @@ export type Withdraw = {
 
   status?: string;
 
+  withdrawCode?: string;
+
   txnId?: string;
   agentNumber?: string;
 
@@ -76,6 +78,7 @@ export type CreateWithdrawRequestBody = {
 
 export type CashWithdrawAgent = {
   _id: string;
+  agentTitle?: string;
   name?: string;
   customerId?: string;
   phone?: string;
