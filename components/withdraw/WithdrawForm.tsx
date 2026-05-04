@@ -47,6 +47,16 @@ const getAccountMeta = (provider?: string) => {
     };
   }
 
+  if (key === "cash") {
+    return {
+      label: "Cash Agent",
+      placeholder: "Select cash agent",
+      error: (_value: string) => "",
+      notice:
+        "Cash withdraw এর জন্য নিচের list থেকে cash type agent select করুন। Request টি selected agent এর কাছে approval এর জন্য যাবে।",
+    };
+  }
+
   return {
     label: `${PROVIDER_LABELS[key] || provider || "E-Wallet"} Personal Account Number`,
     placeholder: `Enter your ${PROVIDER_LABELS[key] || provider || "wallet"} number`,
@@ -62,12 +72,21 @@ const getAccountMeta = (provider?: string) => {
   };
 };
 
+export type CashWithdrawAgentOption = {
+  _id: string;
+  name?: string;
+  customerId?: string;
+  phone?: string;
+};
+
 export default function WithdrawForm({
   min = 500,
   max = 25000,
   available,
   disabled,
   provider,
+  cashAgents = [],
+  cashAgentsLoading = false,
   onSubmit,
 }: {
   min?: number;
@@ -75,11 +94,19 @@ export default function WithdrawForm({
   available: number;
   disabled?: boolean;
   provider?: string;
-  onSubmit: (amount: number, txPass: string, accountNumber: string) => void;
+  cashAgents?: CashWithdrawAgentOption[];
+  cashAgentsLoading?: boolean;
+  onSubmit: (
+    amount: number,
+    txPass: string,
+    accountNumber: string,
+    cashAgentId?: string,
+  ) => void;
 }) {
   const [amount, setAmount] = useState<string>("");
   const [pass, setPass] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [cashAgentId, setCashAgentId] = useState("");
   const [show, setShow] = useState(false);
 
   const providerKey = String(provider || "").toLowerCase();
@@ -104,11 +131,14 @@ export default function WithdrawForm({
           ? "Insufficient balance"
           : "";
 
-  const accountErr = accountMeta.error(accountNumber);
+  const isCashProvider = providerKey === "cash";
+  const accountErr = isCashProvider ? "" : accountMeta.error(accountNumber);
+  const cashAgentErr =
+    isCashProvider && !cashAgentId ? "Please select a cash agent" : "";
 
   const isValid = useMemo(
-    () => !amountErr && !accountErr && pass.length >= 6,
-    [amountErr, accountErr, pass],
+    () => !amountErr && !accountErr && !cashAgentErr && pass.length >= 6,
+    [amountErr, accountErr, cashAgentErr, pass],
   );
 
   const inputClass =
@@ -133,19 +163,48 @@ export default function WithdrawForm({
         </p>
       </div>
 
-      {/* ── Account Number ── */}
+      {/* ── Account Number / Cash Agent ── */}
       <div>
         <label className={labelClass}>{accountMeta.label}</label>
-        <input
-          value={accountNumber}
-          onChange={(e) => setAccountNumber(e.target.value.trim())}
-          inputMode="text"
-          placeholder={accountMeta.placeholder}
-          className={inputClass}
-        />
-        {accountNumber && accountErr && (
+
+        {isCashProvider ? (
+          <select
+            value={cashAgentId}
+            onChange={(e) => setCashAgentId(e.target.value)}
+            disabled={cashAgentsLoading}
+            className={inputClass}
+          >
+            <option value="">
+              {cashAgentsLoading
+                ? "Loading cash agents..."
+                : "Select cash agent"}
+            </option>
+            {cashAgents.map((agent) => (
+              <option key={agent._id} value={agent._id}>
+                {agent.name || "Cash Agent"} — {agent.customerId || "No ID"}
+                {agent.phone ? ` (${agent.phone})` : ""}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            value={accountNumber}
+            onChange={(e) => setAccountNumber(e.target.value.trim())}
+            inputMode="text"
+            placeholder={accountMeta.placeholder}
+            className={inputClass}
+          />
+        )}
+
+        {!isCashProvider && accountNumber && accountErr && (
           <p className="mt-1.5 flex items-center gap-1 text-xs text-red-400">
             <span>⚠</span> {accountErr}
+          </p>
+        )}
+
+        {isCashProvider && cashAgentErr && (
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-red-400">
+            <span>⚠</span> {cashAgentErr}
           </p>
         )}
       </div>
@@ -218,7 +277,9 @@ export default function WithdrawForm({
       <button
         type="button"
         disabled={!isValid || disabled}
-        onClick={() => onSubmit(Number(amount), pass, accountNumber)}
+        onClick={() =>
+          onSubmit(Number(amount), pass, accountNumber, cashAgentId)
+        }
         className="w-full rounded-xl py-3 text-sm font-bold uppercase tracking-widest transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
         style={
           isValid && !disabled

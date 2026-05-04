@@ -15,7 +15,10 @@ import WalletTabs, {
   WalletProviderConfig,
 } from "@/components/withdraw/WalletTabs";
 import { useGetUserPaymentMethodsQuery } from "@/redux/features/auth/authApi";
-import { useCreateWithdrawRequestMutation } from "@/redux/features/withdraw/withdrawApi";
+import {
+  useCreateWithdrawRequestMutation,
+  useGetCashWithdrawAgentsQuery,
+} from "@/redux/features/withdraw/withdrawApi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
@@ -77,7 +80,7 @@ const walletProviders: WalletProviderConfig[] = [
     title: "Cash",
     logoSrc: CashLogo,
     bgClassName: "bg-[#4D5156]",
-    active: false,
+    active: true,
   },
 ];
 
@@ -86,6 +89,8 @@ export default function WithdrawPage() {
   const { user } = useSelector((s: any) => s.auth) || { user: null };
 
   const { data } = useGetUserPaymentMethodsQuery(undefined);
+  const { data: cashAgentsData, isLoading: isCashAgentsLoading } =
+    useGetCashWithdrawAgentsQuery(undefined);
 
   const apiList: Array<{
     _id: string;
@@ -97,6 +102,8 @@ export default function WithdrawPage() {
     createdAt?: string;
     isDefault?: boolean;
   }> = data?.userPaymentMethods ?? [];
+
+  const cashAgents = cashAgentsData?.data || [];
 
   const getAccount = (pm: any) =>
     pm.accountNumber || pm.number || pm.wallet || "";
@@ -212,8 +219,14 @@ export default function WithdrawPage() {
     amt: number,
     pass: string,
     accountNumber: string,
+    cashAgentId?: string,
   ) => {
-    if (!selectedWallet && !accountNumber) {
+    if (provider === "cash") {
+      if (!cashAgentId) {
+        toast.error("Please select a cash agent");
+        return;
+      }
+    } else if (!selectedWallet && !accountNumber) {
       toast.error("Select an E-wallet and enter account number");
       return;
     }
@@ -233,11 +246,19 @@ export default function WithdrawPage() {
       ? "USDT"
       : "BDT";
 
+    const selectedCashAgent = cashAgents.find(
+      (agent: any) => String(agent._id) === String(cashAgentId || ""),
+    );
+
     await createWithdrawRequest({
       amount: amt,
       method: {
         name: provider,
-        accountNumber: accountNumber,
+        accountNumber:
+          provider === "cash"
+            ? selectedCashAgent?.customerId || selectedCashAgent?.name || "cash"
+            : accountNumber,
+        cashAgentId: provider === "cash" ? cashAgentId : undefined,
       },
       payoutCurrency,
       pass,
@@ -372,6 +393,8 @@ export default function WithdrawPage() {
             available={available}
             provider={provider}
             disabled={isSubmitting}
+            cashAgents={cashAgents}
+            cashAgentsLoading={isCashAgentsLoading}
             onSubmit={handleSubmit}
           />
         </div>

@@ -74,6 +74,15 @@ export type CreateWithdrawRequestBody = {
   pass: string;
 };
 
+export type CashWithdrawAgent = {
+  _id: string;
+  name?: string;
+  customerId?: string;
+  phone?: string;
+  agentType?: "cash";
+  status?: string;
+};
+
 /* ────────── API ────────── */
 
 export const withdrawApi = apiSlice.injectEndpoints({
@@ -105,6 +114,14 @@ export const withdrawApi = apiSlice.injectEndpoints({
       query: () => `/get-all-agents`,
     }),
 
+    // cash type agents for cash withdraw dropdown
+    getCashWithdrawAgents: builder.query<
+      { success: boolean; data: CashWithdrawAgent[] },
+      void
+    >({
+      query: () => `/withdraw/cash-agents`,
+    }),
+
     // ✅ NEW: filtered withdraw record (from/to/status)
     // endpoint name = getMyWithdraws  => hook = useGetMyWithdrawsQuery ✅
     getMyWithdraws: builder.query<GetMyWithdrawsResponse, GetMyWithdrawsArgs>({
@@ -125,6 +142,7 @@ export const {
   useCreateWithdrawRequestMutation,
   useGetMyWithdrawRequestsQuery,
   useGetAllAgentsQuery,
+  useGetCashWithdrawAgentsQuery,
 
   // ✅ fixed hook name
   useGetMyWithdrawsQuery,
