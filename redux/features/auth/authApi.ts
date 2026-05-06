@@ -148,7 +148,8 @@ export const authApi = apiSlice.injectEndpoints({
       { email: string }
     >({
       query: (body) => ({
-        url: "/resend-verification-email",
+        /* ────────── forgot password এর নিজস্ব OTP endpoint ────────── */
+        url: "/forgot-password/send-otp",
         method: "POST",
         body,
       }),
@@ -156,7 +157,7 @@ export const authApi = apiSlice.injectEndpoints({
 
     /* ────────── Forgot Password: Verify Code ────────── */
     verifyResetCode: builder.mutation<
-      { success: boolean; message: string },
+      { success: boolean; message: string; resetToken: string },
       { email: string; otp: string }
     >({
       query: (body) => ({
@@ -169,7 +170,7 @@ export const authApi = apiSlice.injectEndpoints({
     /* ────────── Forgot Password: Reset Password ────────── */
     resetForgotPassword: builder.mutation<
       { success: boolean; message: string },
-      { email: string; newPassword: string }
+      { email: string; newPassword: string; resetToken: string }
     >({
       query: (body) => ({
         url: "/reset-forgot-password",

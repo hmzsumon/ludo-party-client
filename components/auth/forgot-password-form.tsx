@@ -37,6 +37,7 @@ function getApiError(error: any): string {
 export default function ForgotPasswordForm(): JSX.Element {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
 
   const [sendResetCode, { isLoading: isSending }] = useSendResetCodeMutation();
   const [verifyResetCode, { isLoading: isVerifying }] =
@@ -70,6 +71,23 @@ export default function ForgotPasswordForm(): JSX.Element {
   const currentPassword = passwordForm.watch("newPassword");
   const currentConfirmPassword = passwordForm.watch("confirmPassword");
 
+  /* ────────── Email link থেকে email/code থাকলে form ready করে দিলাম ────────── */
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryEmail = searchParams.get("email")?.trim().toLowerCase();
+    const queryCode = searchParams.get("code")?.trim();
+
+    if (!queryEmail) return;
+
+    setEmail(queryEmail);
+    emailForm.setValue("email", queryEmail);
+
+    if (queryCode) {
+      otpForm.setValue("otp", queryCode);
+      setStep(2);
+    }
+  }, [emailForm, otpForm]);
+
   /* ────────── Clear Errors On Typing ────────── */
   useEffect(() => {
     if (currentEmail) emailForm.clearErrors("email");
@@ -97,6 +115,7 @@ export default function ForgotPasswordForm(): JSX.Element {
       }).unwrap();
 
       setEmail(normalizedEmail);
+      setResetToken("");
       setStep(2);
       toast.success(response?.message || "Verification code sent");
     } catch (error: any) {
@@ -119,6 +138,8 @@ export default function ForgotPasswordForm(): JSX.Element {
         otp: data.otp.trim(),
       }).unwrap();
 
+      /* ────────── OTP verify হলে reset token save করে রাখলাম ────────── */
+      setResetToken(response.resetToken);
       setStep(3);
       toast.success(response?.message || "Code verified successfully");
     } catch (error: any) {
@@ -139,11 +160,13 @@ export default function ForgotPasswordForm(): JSX.Element {
       const response = await resetForgotPassword({
         email,
         newPassword: data.newPassword,
+        resetToken,
       }).unwrap();
 
       toast.success(response?.message || "Password reset successfully");
       setStep(1);
       setEmail("");
+      setResetToken("");
       emailForm.reset();
       otpForm.reset();
       passwordForm.reset();
