@@ -1,3 +1,4 @@
+import ApkDownloadCard from "../ApkDownloadCard";
 import DashboardHeader from "./dashboard-header";
 import HeroSection from "./hero-section";
 import ModeCards from "./mode-cards";
@@ -49,6 +50,7 @@ const DashboardShell = () => {
 
         <div className="relative z-10 w-full space-y-4">
           <DashboardHeader />
+          <ApkDownloadCard />
           <HeroSection />
           <ModeCards />
         </div>
