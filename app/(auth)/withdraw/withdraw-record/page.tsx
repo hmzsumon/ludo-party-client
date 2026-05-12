@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCancelMyWithdrawRequestMutation,
   useGetMyWithdrawsQuery,
   WithdrawStatus,
 } from "@/redux/features/withdraw/withdrawApi";
@@ -270,7 +271,144 @@ function DateRangeModal({
   );
 }
 
-function WithdrawCard({ w }: { w: any }) {
+function CancelWithdrawModal({
+  open,
+  withdraw,
+  cancelling,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  withdraw: any | null;
+  cancelling: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open || !withdraw) return null;
+
+  const amount = Number(withdraw?.amount || 0).toFixed(2);
+  const netAmount = Number(
+    withdraw?.netAmount || withdraw?.amount || 0,
+  ).toFixed(2);
+  const methodName = String(
+    withdraw?.methodName || withdraw?.method?.name || "WITHDRAW",
+  ).toUpperCase();
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.78)", backdropFilter: "blur(8px)" }}
+    >
+      <div
+        className="w-full max-w-[360px] overflow-hidden rounded-[28px]"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(58,9,80,0.98) 0%, rgba(20,4,31,1) 100%)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 24px 70px rgba(0,0,0,0.55)",
+        }}
+      >
+        {/* Cancel confirmation modal - smart UI */}
+        <div className="relative px-5 pt-5 pb-4 text-center">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={cancelling}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-xl text-white/45 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            ×
+          </button>
+
+          <div
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl text-3xl"
+            style={{
+              background:
+                "linear-gradient(135deg,rgba(239,68,68,0.22),rgba(192,38,211,0.22))",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            ⚠️
+          </div>
+
+          <h3 className="mt-4 text-lg font-black text-white">
+            Cancel Withdraw?
+          </h3>
+          <p className="mx-auto mt-1 max-w-[270px] text-xs leading-5 text-white/55">
+            This pending withdraw request will be cancelled and the amount will
+            return to your wallet.
+          </p>
+        </div>
+
+        <div
+          className="mx-5 rounded-2xl bg-black/20 p-3"
+          style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
+              Method
+            </span>
+            <span className="text-xs font-extrabold text-white/75">
+              {methodName}
+            </span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
+              Request
+            </span>
+            <span className="text-sm font-black text-red-300">
+              BDT {amount}
+            </span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
+              Net Return
+            </span>
+            <span className="text-sm font-black text-purple-300">
+              BDT {netAmount}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 px-5 pb-5 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={cancelling}
+            className="rounded-2xl py-3 text-sm font-extrabold text-white/70 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            Keep
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={cancelling}
+            className="rounded-2xl py-3 text-sm font-extrabold text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              background: "linear-gradient(135deg,#ef4444,#be123c)",
+              boxShadow: "0 12px 26px rgba(190,18,60,0.28)",
+            }}
+          >
+            {cancelling ? "Cancelling..." : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WithdrawCard({
+  w,
+  onCancel,
+  cancelling,
+}: {
+  w: any;
+  onCancel: (w: any) => void;
+  cancelling: boolean;
+}) {
   const methodName = String(
     w?.methodName || w?.method?.name || "WITHDRAW",
   ).toUpperCase();
@@ -282,6 +420,7 @@ function WithdrawCard({ w }: { w: any }) {
   const netAmount = Number(w?.netAmount || w?.amount || 0).toFixed(2);
   const ref = String(w?.withdrawCode || w?.orderId || w?.ref || w?._id || "-");
   const st = statusLabel(w?.status);
+  const canCancel = String(w?.status || "") === "pending" && Boolean(w?._id);
 
   const copyRef = async () => {
     try {
@@ -364,6 +503,27 @@ function WithdrawCard({ w }: { w: any }) {
         ))}
       </div>
 
+      {canCancel ? (
+        <div
+          className="px-4 pb-3"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}
+        >
+          {/* User চাইলে pending withdraw নিজে cancel করতে পারবে */}
+          <button
+            type="button"
+            disabled={cancelling}
+            onClick={() => onCancel(w)}
+            className="mt-3 w-full rounded-xl py-2.5 text-xs font-extrabold text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              background: "linear-gradient(135deg,#ef4444,#be123c)",
+              boxShadow: "0 10px 22px rgba(0,0,0,0.22)",
+            }}
+          >
+            {cancelling ? "Cancelling..." : "Cancel Withdraw"}
+          </button>
+        </div>
+      ) : null}
+
       {/* Amounts footer */}
       <div
         className="grid grid-cols-3 gap-2 px-4 py-3"
@@ -399,6 +559,9 @@ export default function WithdrawRecordPage() {
   const [typesOpen, setTypesOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [status, setStatus] = useState<WithdrawStatus>("all");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<any | null>(null);
+  const [cancelMyWithdrawRequest] = useCancelMyWithdrawRequestMutation();
 
   const { from, to, label } = useMemo(() => {
     const today = new Date();
@@ -435,6 +598,34 @@ export default function WithdrawRecordPage() {
   const withdraws = data?.withdraws || [];
   const totalAmount = Number(data?.totalAmount || 0).toFixed(2);
   const st = statusLabel(status);
+
+  const openCancelModal = (withdraw: any) => {
+    if (!withdraw?._id || cancellingId) return;
+    setCancelTarget(withdraw);
+  };
+
+  const closeCancelModal = () => {
+    if (cancellingId) return;
+    setCancelTarget(null);
+  };
+
+  const handleCancelWithdraw = async () => {
+    const id = String(cancelTarget?._id || "");
+    if (!id || cancellingId) return;
+
+    try {
+      setCancellingId(id);
+      await cancelMyWithdrawRequest(id).unwrap();
+      toast.success("Withdraw cancelled successfully");
+      setCancelTarget(null);
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message || error?.message || "Withdraw cancel failed",
+      );
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen pb-10" style={{ background: "#14041f" }}>
@@ -548,7 +739,12 @@ export default function WithdrawRecordPage() {
         ) : (
           <>
             {withdraws.map((w: any) => (
-              <WithdrawCard key={String(w?._id)} w={w} />
+              <WithdrawCard
+                key={String(w?._id)}
+                w={w}
+                onCancel={openCancelModal}
+                cancelling={cancellingId === String(w?._id)}
+              />
             ))}
             <div
               className="mx-3 rounded-2xl px-4 py-3 flex items-center justify-between"
@@ -582,6 +778,14 @@ export default function WithdrawRecordPage() {
         to={to}
         onClose={() => setDateOpen(false)}
         onApply={(f, t) => toast.success(`Date set: ${f} → ${t}`)}
+      />
+
+      <CancelWithdrawModal
+        open={Boolean(cancelTarget)}
+        withdraw={cancelTarget}
+        cancelling={Boolean(cancellingId)}
+        onClose={closeCancelModal}
+        onConfirm={handleCancelWithdraw}
       />
     </div>
   );

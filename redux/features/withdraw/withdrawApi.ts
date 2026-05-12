@@ -103,6 +103,18 @@ export const withdrawApi = apiSlice.injectEndpoints({
       invalidatesTags: ["User", "Withdraws"],
     }),
 
+    // cancel own pending withdraw request
+    cancelMyWithdrawRequest: builder.mutation<
+      { success: boolean; message: string; withdraw: Withdraw },
+      string
+    >({
+      query: (id) => ({
+        url: `/withdraw/cancel/${id}`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["User", "Withdraws"],
+    }),
+
     // old: get my withdraw requests (no filter)
     getMyWithdrawRequests: builder.query<
       { success: boolean; withdraws: Withdraw[] },
@@ -143,6 +155,7 @@ export const withdrawApi = apiSlice.injectEndpoints({
 
 export const {
   useCreateWithdrawRequestMutation,
+  useCancelMyWithdrawRequestMutation,
   useGetMyWithdrawRequestsQuery,
   useGetAllAgentsQuery,
   useGetCashWithdrawAgentsQuery,
