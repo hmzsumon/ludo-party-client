@@ -1,7 +1,6 @@
 import { MdOutlineSupportAgent } from "react-icons/md";
 
-const TELEGRAM_SUPPORT_URL =
-  process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_URL || "https://t.me/zakaria_sumon";
+const TELEGRAM_SUPPORT_URL = "https://t.me/ludo_party";
 
 export default function SupportFloatingButton() {
   return (
