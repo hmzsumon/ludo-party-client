@@ -215,7 +215,7 @@ export default function WithdrawForm({
                 {cashAgentsLoading
                   ? "Loading cash agents..."
                   : selectedCashAgent
-                    ? `${selectedCashAgent.agentTitle || selectedCashAgent.name || "Cash Agent"} — ${selectedCashAgent.customerId || "No ID"}`
+                    ? `${selectedCashAgent.agentTitle || selectedCashAgent.name || "Cash Agent"} `
                     : "Select cash agent"}
               </span>
               <span className="text-white/35">

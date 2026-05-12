@@ -1,20 +1,21 @@
 // ✅ txn-utils.ts
 // Transaction purpose category detect + color/icon helper
 
-export type TxnCategory = "deposit" | "withdraw" | "bonus" | "other";
+export type TxnCategory = "deposit" | "withdraw" | "refund" | "bonus" | "other";
 
 /* ────────── Purpose → Category map ────────── */
-const DEPOSIT_SET = new Set([
-  "Deposit",
-  "Admin Deposit",
-  "Refund",
+const DEPOSIT_SET = new Set(["Deposit", "Admin Deposit", "Refund"]);
+
+const REFUND_SET = new Set([
   "Withdrawal Refund",
+  "Withdrawal Cancel Refund", // ✅ old data support: আগে bonus হিসেবে দেখাচ্ছিল
 ]);
 
 const WITHDRAW_SET = new Set(["Withdraw Request", "Withdraw Completed"]);
 
 export function getPurposeCategory(purpose: string): TxnCategory {
   if (DEPOSIT_SET.has(purpose)) return "deposit";
+  if (REFUND_SET.has(purpose)) return "refund";
   if (WITHDRAW_SET.has(purpose)) return "withdraw";
   return "bonus";
 }
@@ -22,6 +23,7 @@ export function getPurposeCategory(purpose: string): TxnCategory {
 /* ────────────────────────────────────────────
    ✅ Dark theme color config — প্রজেক্টের #14041f base
    - deposit:  teal  (#23ffc8) — + icon
+   - refund:   blue  (#3cb4ff) — + icon
    - withdraw: red   (#ff5c5c) — − icon
    - bonus:    gold  (#ffc403) — + icon
 ─────────────────────────────────────────────*/
@@ -51,6 +53,21 @@ export function getTxnStyle(category: TxnCategory): TxnStyle {
       amountColor: "#23ffc8",
       amountPrefix: "+",
       badgeLabel: "DEPOSIT",
+    };
+  }
+
+  if (category === "refund") {
+    return {
+      // ✅ Refund card — bonus না, balance return বোঝাবে
+      cardBg:
+        "linear-gradient(135deg, rgba(60,180,255,0.16) 0%, rgba(40,60,130,0.30) 100%)",
+      borderColor: "rgba(60,180,255,0.48)",
+      iconBg: "rgba(60,180,255,0.20)",
+      iconColor: "#3cb4ff",
+      icon: "+",
+      amountColor: "#3cb4ff",
+      amountPrefix: "+",
+      badgeLabel: "REFUND",
     };
   }
 
