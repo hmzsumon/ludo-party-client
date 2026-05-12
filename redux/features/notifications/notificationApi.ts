@@ -24,6 +24,15 @@ export const notificationApi = apiSlice.injectEndpoints({
       invalidatesTags: ["MyUnreadNotifications", "MyUnreadNotificationsCount"],
     }),
 
+    /* ────────── delete one notification ────────── */
+    deleteNotification: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/notification/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["MyUnreadNotifications", "MyUnreadNotificationsCount"],
+    }),
+
     /* ────────── admin list ────────── */
     getAdminNotifications: builder.query<any, void>({
       query: () => "/admin-notifications?limit=50&skip=0",
@@ -49,6 +58,7 @@ export const {
   useGetMyUnreadNotificationsQuery,
   useGetMyUnreadNotificationsCountQuery,
   useUpdateNotificationMutation,
+  useDeleteNotificationMutation,
   useGetAdminNotificationsQuery,
   useUpdateAdminNotificationIsReadMutation,
 } = notificationApi;
