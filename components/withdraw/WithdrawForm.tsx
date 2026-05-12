@@ -1,5 +1,6 @@
 /* ── Component: WithdrawForm ────────────────────────────────────────────── */
 "use client";
+import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -217,7 +218,9 @@ export default function WithdrawForm({
                     ? `${selectedCashAgent.agentTitle || selectedCashAgent.name || "Cash Agent"} — ${selectedCashAgent.customerId || "No ID"}`
                     : "Select cash agent"}
               </span>
-              <span className="text-white/35">⌄</span>
+              <span className="text-white/35">
+                <ChevronDown size={16} />
+              </span>
             </button>
 
             {cashDropdownOpen && (
@@ -253,13 +256,6 @@ export default function WithdrawForm({
                           <span className="text-sm font-bold text-white">
                             {agent.agentTitle || agent.name || "Cash Agent"}
                           </span>
-                          <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] text-violet-200">
-                            cash
-                          </span>
-                        </div>
-                        <div className="mt-0.5 text-[11px] text-white/45">
-                          {agent.name || "-"} • {agent.customerId || "No ID"}
-                          {agent.phone ? ` • ${agent.phone}` : ""}
                         </div>
                       </button>
                     ))

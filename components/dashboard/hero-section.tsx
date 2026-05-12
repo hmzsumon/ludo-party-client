@@ -29,7 +29,7 @@ const HeroSection = () => {
         </p>
 
         {/* Online players pill */}
-        <div
+        {/* <div
           className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1"
           style={{
             background: "rgba(0,0,0,0.3)",
@@ -40,7 +40,7 @@ const HeroSection = () => {
           <span className="text-[11px] font-bold text-green-400">
             2,341 Online Now
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* ── Right: Dice illustration ── */}
