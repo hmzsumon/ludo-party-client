@@ -11,8 +11,8 @@ import { FaAngleLeft } from "react-icons/fa";
 
 import blockBeeImg from "@/public/images/deposit/beep-20.png";
 import BinanceImg from "@/public/images/deposit/binance.png";
-import Bkash from "@/public/images/deposit/bkash.png";
-import Nagad from "@/public/images/deposit/nagad.png";
+import Bkash from "@/public/images/deposit/bkash-logo.png";
+import Nagad from "@/public/images/deposit/nagad-logo.png";
 import Rocket from "@/public/images/deposit/roket.png";
 
 import PromotionConsent, {
@@ -124,7 +124,7 @@ const DepositMethodCard = ({
 }) => (
   <button
     onClick={onClick}
-    className="relative w-full rounded-2xl p-4 text-left transition-all duration-200"
+    className="relative w-full rounded-2xl p-3 text-left transition-all duration-200"
     style={{
       background: active
         ? "linear-gradient(135deg, rgba(67,11,88,0.95) 0%, rgba(34,7,54,0.98) 100%)"
@@ -146,12 +146,7 @@ const DepositMethodCard = ({
         ✓
       </span>
     )}
-    <span
-      className="absolute left-2 top-2 inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px]"
-      style={{ background: "linear-gradient(135deg,#ff9500,#ff5500)" }}
-    >
-      👍
-    </span>
+
     <div className="flex flex-col items-center gap-2 pt-2">
       <Image src={image} alt={title} className="w-12" />
       <div className="text-xs font-extrabold tracking-wide" style={{ color }}>
