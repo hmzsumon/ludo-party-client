@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardLayoutShell from "@/components/auth/Layout";
+import UserNoticePopup from "@/components/notice/UserNoticePopup";
 import SupportFloatingButton from "@/components/SupportFloatingButton";
 import { useLoadUserQuery } from "@/redux/features/auth/authApi";
 
@@ -16,6 +17,7 @@ export default function DashboardLayout({
       <div>
         {children}
         <SupportFloatingButton />
+        <UserNoticePopup />
       </div>
     </DashboardLayoutShell>
   );
