@@ -1,4 +1,5 @@
 import DisableZoom from "@/components/DisableZoom";
+import MaintenanceGate from "@/components/MaintenanceGate";
 import SocketProvider from "@/providers/SocketProvider";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
@@ -62,7 +63,9 @@ export default function RootLayout({
         <DisableZoom />
         <StoreProvider>
           <SocketProvider>
-            <Providers>{children}</Providers>
+            <Providers>
+              <MaintenanceGate>{children}</MaintenanceGate>
+            </Providers>
           </SocketProvider>
         </StoreProvider>
 
