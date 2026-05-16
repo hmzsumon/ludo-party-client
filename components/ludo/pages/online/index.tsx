@@ -19,13 +19,16 @@ import {
 
 const OnlinePage = () => {
   const { isAuthenticated } = useSelector((state: any) => state.auth);
+  const { user: reduxUser } = useSelector((state: any) => state.auth);
   const { user, authOptions = [] } = useUserContext();
 
   /* ────────── play with friends flag ────────── */
   const [playWithFriends, setPlayWithFriends] = useState(false);
 
   /* ────────── selected bet amount for quick match ────────── */
-  const [selectedBetAmount, setSelectedBetAmount] = useState<number | null>(null);
+  const [selectedBetAmount, setSelectedBetAmount] = useState<number | null>(
+    null,
+  );
 
   /* ────────── socket payload state ────────── */
   const [dataSocket, setDataSocket] = useState<IDataSocket>({
@@ -45,8 +48,63 @@ const OnlinePage = () => {
     isAuthenticated,
     useCallback((data) => {
       setDataSocket((current) => ({ ...current, ...data }));
-    }, [])
+    }, []),
   );
+
+  /* ════════════════════════════════════════════════════════════════
+     account inactive block — online game সম্পূর্ণ বন্ধ
+     কাজ: admin inactive করলে online game play করতে পারবে না
+     offline game চলবে, শুধু online (wager) blocked
+     সব hooks এর পরে রাখা হয়েছে — Rules of Hooks মেনে
+     ════════════════════════════════════════════════════════════════ */
+  const isAccountInactive = isAuthenticated && reduxUser?.is_active === false;
+
+  /* ────────── inactive user কে online game থেকে block ────────── */
+  if (isAccountInactive) {
+    return (
+      <div
+        className="min-h-screen flex flex-col px-4"
+        style={{ background: "#14041f" }}
+      >
+        {/* ────────── back button ────────── */}
+        <div className="pt-4 pb-2">
+          <button
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-white/70 transition hover:text-white"
+            style={{ background: "rgba(255,255,255,0.07)" }}
+            onClick={() => window.history.back()}
+            type="button"
+          >
+            ← Back
+          </button>
+        </div>
+
+        {/* ────────── inactive message ────────── */}
+        <div className="flex-1 flex items-center justify-center">
+          <div
+            className="w-full max-w-sm rounded-2xl p-7 flex flex-col items-center gap-4 text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(120,10,10,0.75), rgba(60,4,4,0.92))",
+              border: "1px solid rgba(255,80,80,0.25)",
+            }}
+          >
+            <div className="text-5xl">🚫</div>
+            <h2 className="text-lg font-extrabold text-red-400 tracking-wide">
+              Online Play Restricted
+            </h2>
+            <p className="text-sm text-white/60 leading-relaxed">
+              Your account is currently inactive. Online wager games are not
+              available. You can still play{" "}
+              <span className="text-white/80 font-semibold">Offline</span> mode.
+            </p>
+            <p className="text-xs text-white/35">
+              Contact support to reactivate your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ────────── auth gate ────────── */
   if (!isAuthenticated && !dataSocket.playAsGuest) {

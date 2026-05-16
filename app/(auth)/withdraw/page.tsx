@@ -276,6 +276,14 @@ export default function WithdrawPage() {
 
   const canWithdraw = wagerRemaining <= 0;
 
+  /* ────────── admin withdraw block check ────────── */
+  /* is_withdraw_block true হলে পুরো withdraw form এর আগে blocked screen দেখাবে */
+  const isWithdrawBlocked = user?.is_withdraw_block === true;
+
+  /* ────────── account inactive check ────────── */
+  /* is_active false হলে withdraw করতে পারবে না ────────── */
+  const isAccountInactive = user?.is_active === false;
+
   return (
     <div className="min-h-screen pb-10" style={{ background: "#14041f" }}>
       <div
@@ -310,95 +318,160 @@ export default function WithdrawPage() {
         </Link>
       </div>
 
-      <div className="mx-auto w-full max-w-md px-3 py-4 space-y-3">
-        <div
-          className="rounded-2xl p-4"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(80,10,120,0.7), rgba(30,5,60,0.9))",
-            border: "1px solid rgba(180,80,255,0.2)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">
-                Main Wallet
-              </div>
-              <div className="text-xl font-extrabold text-white">
-                {formatBDT(mainBalance)}
-              </div>
-            </div>
-
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">
-                Available
-              </div>
-              <div className="text-lg font-bold" style={{ color: "#a78bfa" }}>
-                {formatBDT(available)}
-              </div>
-            </div>
-          </div>
-
+      {/* ════════════════════════════════════════════════════════════════
+          account inactive block screen
+          কাজ: admin inactive করলে এই screen দেখাবে, সব withdraw বন্ধ
+          ════════════════════════════════════════════════════════════════ */}
+      {isAccountInactive && (
+        <div className="mx-auto w-full max-w-md px-3 py-10 flex flex-col items-center gap-4">
           <div
-            className="grid grid-cols-2 gap-2 pt-3"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+            className="w-full rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(120,10,10,0.7), rgba(60,4,4,0.9))",
+              border: "1px solid rgba(255,80,80,0.25)",
+            }}
           >
-            <div>
-              <div className="text-[10px] text-white/35">Min Withdraw</div>
-              <div className="text-xs font-semibold text-white/70 mt-0.5">
-                {formatBDT(withdrawLimits.min)}
+            <div className="text-5xl">🔐</div>
+            <h2 className="text-lg font-extrabold text-red-400 tracking-wide">
+              Account Inactive
+            </h2>
+            <p className="text-sm text-white/60 leading-relaxed">
+              Your account has been deactivated by admin. Withdrawals are not
+              available while your account is inactive.
+            </p>
+            <p className="text-xs text-white/35 mt-1">
+              Please contact support for assistance.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          withdraw blocked screen
+          কাজ: admin withdraw block করলে এই screen দেখাবে
+          is_withdraw_block=true হলে form এর বদলে এই message
+          ════════════════════════════════════════════════════════════════ */}
+      {!isAccountInactive && isWithdrawBlocked && (
+        <div className="mx-auto w-full max-w-md px-3 py-10 flex flex-col items-center gap-4">
+          <div
+            className="w-full rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(80,40,10,0.75), rgba(40,20,4,0.9))",
+              border: "1px solid rgba(255,160,50,0.25)",
+            }}
+          >
+            <div className="text-5xl">🔒</div>
+            <h2 className="text-lg font-extrabold text-orange-400 tracking-wide">
+              Withdrawal Blocked
+            </h2>
+            <p className="text-sm text-white/60 leading-relaxed">
+              Your withdrawal access has been temporarily blocked by the admin.
+              You cannot make any withdrawal requests at this time.
+            </p>
+            <p className="text-xs text-white/35 mt-1">
+              Please contact support if you believe this is a mistake.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          normal withdraw content
+          কাজ: account active এবং withdraw block না হলে দেখাবে
+          ════════════════════════════════════════════════════════════════ */}
+      {!isAccountInactive && !isWithdrawBlocked && (
+        <div className="mx-auto w-full max-w-md px-3 py-4 space-y-3">
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(80,10,120,0.7), rgba(30,5,60,0.9))",
+              border: "1px solid rgba(180,80,255,0.2)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">
+                  Main Wallet
+                </div>
+                <div className="text-xl font-extrabold text-white">
+                  {formatBDT(mainBalance)}
+                </div>
+              </div>
+
+              <div className="text-right">
+                <div className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">
+                  Available
+                </div>
+                <div className="text-lg font-bold" style={{ color: "#a78bfa" }}>
+                  {formatBDT(available)}
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-[10px] text-white/35">Max Withdraw</div>
-              <div className="text-xs font-semibold text-white/70 mt-0.5">
-                {withdrawLimits.maxLabel}
+
+            <div
+              className="grid grid-cols-2 gap-2 pt-3"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <div>
+                <div className="text-[10px] text-white/35">Min Withdraw</div>
+                <div className="text-xs font-semibold text-white/70 mt-0.5">
+                  {formatBDT(withdrawLimits.min)}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-white/35">Max Withdraw</div>
+                <div className="text-xs font-semibold text-white/70 mt-0.5">
+                  {withdrawLimits.maxLabel}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/40">
-            <div>
-              Withdrawal time: <span className="text-white/60">24 hours</span>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/40">
+              <div>
+                Withdrawal time: <span className="text-white/60">24 hours</span>
+              </div>
+              <div className="text-right">
+                Daily limit: <span className="text-white/60">Unlimited</span>
+              </div>
             </div>
-            <div className="text-right">
-              Daily limit: <span className="text-white/60">Unlimited</span>
+
+            <div className="mt-3">
+              <RecallBalanceBtn onClick={handleRecall} />
             </div>
           </div>
 
-          <div className="mt-3">
-            <RecallBalanceBtn onClick={handleRecall} />
+          <div className="rounded-2xl p-4" style={PANEL}>
+            <WalletTabs
+              value={provider}
+              onChange={setProvider}
+              providers={walletProviders}
+              counts={counts}
+            />
+          </div>
+
+          {/* <TurnoverNotice
+            remaining={wagerRemaining}
+            required={wagerRequired}
+            onOk={() => console.log("ok")}
+          /> */}
+
+          <div className="rounded-2xl overflow-hidden" style={PANEL}>
+            <WithdrawForm
+              min={withdrawLimits.min}
+              max={withdrawLimits.max}
+              available={available}
+              provider={provider}
+              disabled={isSubmitting}
+              cashAgents={cashAgents}
+              cashAgentsLoading={isCashAgentsLoading}
+              onSubmit={handleSubmit}
+            />
           </div>
         </div>
-
-        <div className="rounded-2xl p-4" style={PANEL}>
-          <WalletTabs
-            value={provider}
-            onChange={setProvider}
-            providers={walletProviders}
-            counts={counts}
-          />
-        </div>
-
-        {/* <TurnoverNotice
-          remaining={wagerRemaining}
-          required={wagerRequired}
-          onOk={() => console.log("ok")}
-        /> */}
-
-        <div className="rounded-2xl overflow-hidden" style={PANEL}>
-          <WithdrawForm
-            min={withdrawLimits.min}
-            max={withdrawLimits.max}
-            available={available}
-            provider={provider}
-            disabled={isSubmitting}
-            cashAgents={cashAgents}
-            cashAgentsLoading={isCashAgentsLoading}
-            onSubmit={handleSubmit}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,9 @@
 /* ────────── imports ────────── */
 import socketUrl from "@/config/socketUrl";
 import { apiSlice } from "@/redux/features/api/apiSlice";
+import { logoutUser, updateUserStatus } from "@/redux/features/auth/authSlice";
 import { SocketUser } from "@/types";
+import { removeAccessToken } from "@/utils/authToken";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -173,16 +175,102 @@ export const SocketContextProvider = ({
       }
     };
 
+    /* ════════════════════════════════════════════════════════════════
+       admin triggered account events — real-time restriction apply
+       ════════════════════════════════════════════════════════════════ */
+
+    /* ────────── account closed → সব device থেকে force logout ────────── */
+    /* admin "close account" করলে এই event আসবে */
+    /* user কে logout করে /login এ redirect করা হবে */
+    const onAccountClosed = () => {
+      toast.error("⛔ Your account has been permanently closed.", {
+        duration: 5000,
+      });
+
+      /* ────────── token clear + redux logout ────────── */
+      removeAccessToken();
+      dispatch(logoutUser());
+
+      /* ────────── login page এ redirect ────────── */
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
+    };
+
+    /* ────────── account inactive → withdraw/deposit/online game block ────────── */
+    /* admin "inactive" করলে এই event আসবে */
+    /* user কে page reload ছাড়াই restrict করা হয় */
+    const onAccountInactive = (payload: any) => {
+      toast.error("🚫 Your account has been deactivated by admin.", {
+        duration: 5000,
+      });
+
+      /* ────────── redux store এ is_active false করা হয় ────────── */
+      dispatch(updateUserStatus({ is_active: false }));
+
+      /* ────────── fresh user data load করা হয় API থেকে ────────── */
+      dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
+    };
+
+    /* ────────── account active → restriction তুলে নেওয়া হয় ────────── */
+    /* admin "active" করলে এই event আসবে */
+    const onAccountActive = (payload: any) => {
+      toast.success("✅ Your account has been activated.", {
+        duration: 4000,
+      });
+
+      /* ────────── redux store এ is_active true করা হয় ────────── */
+      dispatch(updateUserStatus({ is_active: true }));
+      dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
+    };
+
+    /* ────────── withdraw blocked → withdraw page এ message দেখাবে ────────── */
+    /* admin "block withdraw" করলে এই event আসবে */
+    const onWithdrawBlocked = (payload: any) => {
+      toast.error("🔒 Your withdrawal access has been blocked.", {
+        duration: 5000,
+      });
+
+      /* ────────── redux store এ is_withdraw_block true করা হয় ────────── */
+      dispatch(updateUserStatus({ is_withdraw_block: true }));
+      dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
+    };
+
+    /* ────────── withdraw unblocked → withdraw page আবার চালু হয় ────────── */
+    const onWithdrawUnblocked = (payload: any) => {
+      toast.success("🔓 Your withdrawal access has been restored.", {
+        duration: 4000,
+      });
+
+      /* ────────── redux store এ is_withdraw_block false করা হয় ────────── */
+      dispatch(updateUserStatus({ is_withdraw_block: false }));
+      dispatch(apiSlice.util.invalidateTags([{ type: "User", id: "ME" }]));
+    };
+
     /* ────────── bind listeners ────────── */
     socket.on("getUsers", onGetUsers);
     socket.on("user-notification", onUserNotification);
     socket.on("admin-notification", onAdminNotification);
+
+    /* ────────── admin status event listeners ────────── */
+    socket.on("account-closed", onAccountClosed);
+    socket.on("account-inactive", onAccountInactive);
+    socket.on("account-active", onAccountActive);
+    socket.on("withdraw-blocked", onWithdrawBlocked);
+    socket.on("withdraw-unblocked", onWithdrawUnblocked);
 
     /* ────────── cleanup listeners ────────── */
     return () => {
       socket.off("getUsers", onGetUsers);
       socket.off("user-notification", onUserNotification);
       socket.off("admin-notification", onAdminNotification);
+
+      /* ────────── admin status event cleanup ────────── */
+      socket.off("account-closed", onAccountClosed);
+      socket.off("account-inactive", onAccountInactive);
+      socket.off("account-active", onAccountActive);
+      socket.off("withdraw-blocked", onWithdrawBlocked);
+      socket.off("withdraw-unblocked", onWithdrawUnblocked);
     };
   }, [socket, dispatch]);
 

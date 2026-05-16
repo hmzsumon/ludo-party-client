@@ -56,6 +56,17 @@ export const authSlice = createSlice({
       state.isForgotPassword = action.payload.isForgotPassword;
       state.emailForgotPassword = action.payload.emailForgotPassword;
     },
+
+    /* ────────── admin action এ user এর status real-time update ────────── */
+    /* কাজ: socket event আসলে redux store এ user object patch করা হয় */
+    /* যেন পুরো page reload ছাড়াই নতুন restriction apply হয় */
+    updateUserStatus: (state, action) => {
+      if (state.user) {
+        /* ────────── শুধু যে fields পাঠানো হবে সেগুলোই merge হবে ────────── */
+        /* spread এর বদলে Object.assign — immer draft type এর সাথে compatible */
+        Object.assign(state.user, action.payload);
+      }
+    },
   },
 });
 
@@ -65,6 +76,7 @@ export const {
   logoutUser,
   loadUser,
   setForgotPasswordState,
+  updateUserStatus,
 } = authSlice.actions;
 
 export default authSlice.reducer;

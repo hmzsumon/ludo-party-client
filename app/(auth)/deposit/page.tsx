@@ -25,6 +25,7 @@ import {
 import { useGetDepositPromoInfoQuery } from "@/redux/features/promotion/promotionApi";
 import { fetchBaseQueryError } from "@/redux/services/helpers";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 
 type MethodKey = "Bkash" | "Nagad" | "Rocket" | "BlockBee" | "Binance";
 
@@ -276,6 +277,12 @@ const NOTICE_STYLE = {
 
 export default function DepositPage() {
   const router = useRouter();
+
+  /* ────────── account inactive check for deposit block ────────── */
+  /* is_active=false হলে deposit বন্ধ, admin থেকে inactive করলে apply হয় */
+  const { user } = useSelector((s: any) => s.auth) || { user: null };
+  const isAccountInactive = user?.is_active === false;
+
   const [promoChoice, setPromoChoice] = useState<PromoChoice | null>(null);
   const { data: promoRes } = useGetDepositPromoInfoQuery();
   const promo = promoRes?.data;
@@ -373,6 +380,65 @@ export default function DepositPage() {
 
   if (!isLoading && availableMethods.length === 0) {
     return <NotFoundChannels onRefresh={() => refetch()} />;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     account inactive block — deposit সম্পূর্ণ বন্ধ
+     কাজ: admin inactive করলে deposit page এ এই screen দেখাবে
+     ════════════════════════════════════════════════════════════════ */
+  if (isAccountInactive) {
+    return (
+      <div
+        className="min-h-screen flex flex-col"
+        style={{ background: "#14041f" }}
+      >
+        <div
+          className="sticky top-0 z-20 flex items-center justify-between px-4 py-3"
+          style={{
+            background:
+              "linear-gradient(180deg,rgba(30,5,50,0.98),rgba(20,4,31,0.95))",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <button
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-white/70 transition hover:text-white"
+            style={{ background: "rgba(255,255,255,0.07)" }}
+            onClick={() => router.back()}
+            type="button"
+          >
+            ← Back
+          </button>
+          <h1 className="text-base font-extrabold tracking-widest text-white uppercase">
+            💎 Deposit
+          </h1>
+          <div className="w-16" />
+        </div>
+
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div
+            className="w-full max-w-md rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(120,10,10,0.7), rgba(60,4,4,0.9))",
+              border: "1px solid rgba(255,80,80,0.25)",
+            }}
+          >
+            <div className="text-5xl">🔐</div>
+            <h2 className="text-lg font-extrabold text-red-400 tracking-wide">
+              Account Inactive
+            </h2>
+            <p className="text-sm text-white/60 leading-relaxed">
+              Your account has been deactivated by admin. Deposits are not
+              available while your account is inactive.
+            </p>
+            <p className="text-xs text-white/35 mt-1">
+              Please contact support for assistance.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const amountNumber = amountInput ? Number(amountInput) : NaN;
